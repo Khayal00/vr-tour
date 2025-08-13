@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>VR Tour with 3D Hotspots</title>
+    <title>VR Tour with Circular Hotspots</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <style>
@@ -33,7 +33,7 @@
       <!-- السماء -->
       <a-sky id="sky" rotation="0 -90 0"></a-sky>
 
-      <!-- حاوية للهوت سبوت -->
+      <!-- حاوية الهوت سبوت -->
       <a-entity id="hotspotContainer"></a-entity>
     </a-scene>
 
@@ -95,13 +95,14 @@
           // إزالة الهوت سبوت القديمة
           hotspotContainer.innerHTML = '';
 
-          // إضافة الهوت سبوت الجديدة على شكل 3D spheres
+          // إضافة الهوت سبوت الجديدة على شكل دوائر صغيرة
           scenes[sceneName].hotspots.forEach(hs => {
-            const el = document.createElement('a-sphere');
+            const el = document.createElement('a-circle');
             el.setAttribute('class', 'hotspot');
             el.setAttribute('position', hs.position);
             el.setAttribute('radius', 0.05);
             el.setAttribute('color', '#FFFFFF');
+            el.setAttribute('shader', 'flat'); // يجعلها مسطحة بدون تأثيرات اضاءة
             el.addEventListener('click', () => {
               changeScene(hs.target);
             });
