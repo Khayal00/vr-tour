@@ -16,19 +16,6 @@
     <a-scene>
       <!-- Sky (panorama background) -->
       <a-sky id="sky" src="assets/Living_Room.jpg" rotation="0 -90 0"></a-sky>
-
-      <!-- Hotspots for Living_Room -->
-      <a-image class="hotspot" id="toKitchen" src="https://cdn-icons-png.flaticon.com/512/25/25694.png"
-               position="2 1 -3" scale="0.5 0.5 0.5"
-               onclick="changeScene('Kitchen')"></a-image>
-
-      <a-image class="hotspot" id="toReception" src="https://cdn-icons-png.flaticon.com/512/25/25694.png"
-               position="-2 1 -3" scale="0.5 0.5 0.5"
-               onclick="changeScene('Reception')"></a-image>
-
-      <a-image class="hotspot" id="toCorridor" src="https://cdn-icons-png.flaticon.com/512/25/25694.png"
-               position="0 1 -4" scale="0.5 0.5 0.5"
-               onclick="changeScene('Corridor')"></a-image>
     </a-scene>
 
     <script>
@@ -36,41 +23,41 @@
         Kitchen: {
           src: 'assets/Kitchen.jpg',
           hotspots: [
-            { id: 'toLiving', target: 'Living_Room', position: '0 1 -3' }
+            { target: 'Living_Room', position: '0 1 -3' }
           ]
         },
         Reception: {
           src: 'assets/Reception.jpg',
           hotspots: [
-            { id: 'toLiving', target: 'Living_Room', position: '0 1 -3' }
+            { target: 'Living_Room', position: '0 1 -3' }
           ]
         },
         Corridor: {
           src: 'assets/Corridor.jpg',
           hotspots: [
-            { id: 'toBathroom', target: 'Bathroom', position: '-2 1 -3' },
-            { id: 'toBedroom', target: 'Bedroom', position: '2 1 -3' },
-            { id: 'toLiving', target: 'Living_Room', position: '0 1 -4' }
+            { target: 'Bathroom', position: '-2 1 -3' },
+            { target: 'Bedroom', position: '2 1 -3' },
+            { target: 'Living_Room', position: '0 1 -4' }
           ]
         },
         Bathroom: {
           src: 'assets/Bathroom.jpg',
           hotspots: [
-            { id: 'toCorridor', target: 'Corridor', position: '0 1 -3' }
+            { target: 'Corridor', position: '0 1 -3' }
           ]
         },
         Bedroom: {
           src: 'assets/Bedroom.jpg',
           hotspots: [
-            { id: 'toCorridor', target: 'Corridor', position: '0 1 -3' }
+            { target: 'Corridor', position: '0 1 -3' }
           ]
         },
         Living_Room: {
           src: 'assets/Living_Room.jpg',
           hotspots: [
-            { id: 'toKitchen', target: 'Kitchen', position: '2 1 -3' },
-            { id: 'toReception', target: 'Reception', position: '-2 1 -3' },
-            { id: 'toCorridor', target: 'Corridor', position: '0 1 -4' }
+            { target: 'Kitchen', position: '2 1 -3' },
+            { target: 'Reception', position: '-2 1 -3' },
+            { target: 'Corridor', position: '0 1 -4' }
           ]
         }
       };
@@ -90,10 +77,26 @@
           el.setAttribute('src', 'https://cdn-icons-png.flaticon.com/512/25/25694.png');
           el.setAttribute('position', hotspot.position);
           el.setAttribute('scale', '0.5 0.5 0.5');
-          el.setAttribute('onclick', `changeScene('${hotspot.target}')`);
+          el.setAttribute('hotspot-listener', `target: ${hotspot.target}`);
           scene.appendChild(el);
         });
       }
+
+      AFRAME.registerComponent('hotspot-listener', {
+        schema: {
+          target: { type: 'string' }
+        },
+        init: function () {
+          this.el.addEventListener('click', () => {
+            changeScene(this.data.target);
+          });
+        }
+      });
+
+      // Load initial scene
+      window.addEventListener('load', () => {
+        changeScene('Living_Room');
+      });
     </script>
   </body>
 </html>
