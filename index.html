@@ -7,14 +7,12 @@
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <style>
       body { margin: 0; }
-      .hotspot {
-        cursor: pointer;
-      }
+      .hotspot { cursor: pointer; }
     </style>
   </head>
   <body>
     <a-scene>
-      <!-- كاميرا تفاعلية مع مؤشر -->
+      <!-- الكاميرا والمؤشر -->
       <a-entity camera look-controls position="0 1.6 0">
         <a-cursor
           rayOrigin="mouse"
@@ -23,37 +21,29 @@
           geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
           material="color: white; shader: flat">
         </a-cursor>
+
+        <!-- طبقة التلاشي مثبتة داخل الكاميرا -->
+        <a-plane id="fadePlane" position="0 0 -0.5" width="2" height="2"
+                 material="color: black; opacity: 0; transparent: true"
+                 visible="true"
+                 animation__fadeout="startEvents: fadeout; property: material.opacity; from: 0; to: 1; dur: 1000"
+                 animation__fadein="startEvents: fadein; property: material.opacity; from: 1; to: 0; dur: 1000">
+        </a-plane>
       </a-entity>
 
       <!-- السماء البانورامية -->
-      <a-sky id="sky" src="assets/Living_Room.jpg" rotation="0 -90 0"></a-sky>
-
-      <!-- طبقة التلاشي السوداء في الخلف -->
-      <a-plane id="fadePlane" position="0 0 -100" rotation="0 0 0"
-               width="500" height="500"
-               material="color: black; opacity: 0; transparent: true"
-               visible="true"
-               animation__fadeout="startEvents: fadeout; property: material.opacity; from: 0; to: 1; dur: 1000"
-               animation__fadein="startEvents: fadein; property: material.opacity; from: 1; to: 0; dur: 1000">
-      </a-plane>
-
-      <!-- حاوية النقاط الساخنة -->
-      <a-entity id="hotspot-container"></a-entity>
+      <a-sky id="sky" rotation="0 -90 0"></a-sky>
     </a-scene>
 
     <script>
       const scenes = {
         Kitchen: {
           src: 'assets/Kitchen.jpg',
-          hotspots: [
-            { target: 'Living_Room', position: '0 1 -3' }
-          ]
+          hotspots: [{ target: 'Living_Room', position: '0 1 -3' }]
         },
         Reception: {
           src: 'assets/Reception.jpg',
-          hotspots: [
-            { target: 'Living_Room', position: '0 1 -3' }
-          ]
+          hotspots: [{ target: 'Living_Room', position: '0 1 -3' }]
         },
         Corridor: {
           src: 'assets/Corridor.jpg',
@@ -65,15 +55,11 @@
         },
         Bathroom: {
           src: 'assets/Bathroom.jpg',
-          hotspots: [
-            { target: 'Corridor', position: '0 1 -3' }
-          ]
+          hotspots: [{ target: 'Corridor', position: '0 1 -3' }]
         },
         Bedroom: {
           src: 'assets/Bedroom.jpg',
-          hotspots: [
-            { target: 'Corridor', position: '0 1 -3' }
-          ]
+          hotspots: [{ target: 'Corridor', position: '0 1 -3' }]
         },
         Living_Room: {
           src: 'assets/Living_Room.jpg',
@@ -93,42 +79,53 @@
       }
 
       function changeScene(sceneName) {
+        const scene = document.querySelector('a-scene');
         const sky = document.querySelector('#sky');
         const fadePlane = document.querySelector('#fadePlane');
-        const hotspotContainer = document.querySelector('#hotspot-container');
 
-        // إزالة النقاط الساخنة القديمة
-        hotspotContainer.innerHTML = '';
+        // إزالة النقاط القديمة
+        document.querySelectorAll('.hotspot').forEach(h => h.remove());
 
-        // بدء التلاشي إلى الأسود
+        // بدء التلاشي للخارج
         fadePlane.emit('fadeout');
 
-        // الانتظار حتى انتهاء التلاشي (1000ms)
         setTimeout(() => {
+          // تغيير صورة السماء
           sky.setAttribute('src', scenes[sceneName].src);
+
+          // بدء التلاشي للداخل
           fadePlane.emit('fadein');
 
-          // إضافة النقاط الساخنة الجديدة داخل الحاوية
+          // إضافة النقاط الجديدة
           scenes[sceneName].hotspots.forEach(hotspot => {
             const el = document.createElement('a-image');
             el.setAttribute('class', 'hotspot');
-            el.setAttribute('src', 'https://cdn-icons-png.flaticon.com/512/25/25694.png');
+            el.setAttribute('src', 'https://cdn-icons-png.flaticon.com/512/32/32213.png'); // سهم أبيض
             el.setAttribute('position', hotspot.position);
             el.setAttribute('scale', '0.5 0.5 0.5');
+            el.setAttribute('look-at', '[camera]');
             el.setAttribute('hotspot-listener', `target: ${hotspot.target}`);
-            hotspotContainer.appendChild(el);
+            scene.appendChild(el);
           });
-        }, 1000);
+        }, 1000); // نفس مدة التلاشي
       }
 
       AFRAME.registerComponent('hotspot-listener', {
-        schema: {
-          target: { type: 'string' }
-        },
+        schema: { target: { type: 'string' } },
         init: function () {
           this.el.addEventListener('click', () => {
             changeScene(this.data.target);
           });
+        }
+      });
+
+      // إضافة ميزة look-at لجعل الأيقونة تواجه المستخدم
+      AFRAME.registerComponent('look-at', {
+        schema: { type: 'selector' },
+        tick: function () {
+          if (this.data) {
+            this.el.object3D.lookAt(this.data.object3D.position);
+          }
         }
       });
 
