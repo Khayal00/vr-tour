@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>Simple VR Scene</title>
+    <title>Simple VR Scene with Fade</title>
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <style>
       body { margin: 0; }
@@ -10,7 +10,7 @@
   </head>
   <body>
     <a-scene>
-      <!-- السماء -->
+      <!-- السماء مع تلاشي -->
       <a-sky id="sky" src="assets/Living_Room.jpg"
              material="opacity: 1; transparent: true"
              animation__fadeout="startEvents: fadeout; property: material.opacity; from: 1; to: 0; dur: 300"
@@ -45,11 +45,14 @@
         init: function () {
           this.el.addEventListener('click', () => {
             const sky = document.querySelector('#sky');
+            const currentSrc = sky.getAttribute('src');
+            if (currentSrc === this.data.target) return; // لا تغيّر إذا كانت نفس الصورة
+
             sky.emit('fadeout');
             setTimeout(() => {
               sky.setAttribute('src', this.data.target);
               sky.emit('fadein');
-            }, 300);
+            }, 300); // نفس مدة التلاشي
           });
         }
       });
