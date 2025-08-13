@@ -1,33 +1,99 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>VR Walkthrough</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="https://unpkg.com/photo-sphere-viewer@5/dist/photo-sphere-viewer.css" />
-  <style>
-    html, body {
-      margin: 0;
-      height: 100%;
-      overflow: hidden;
-      background-color: #000;
-    }
-    #viewer {
-      width: 100%;
-      height: 100%;
-    }
-  </style>
-</head>
-<body>
-  <div id="viewer"></div>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>VR Tour with A-Frame</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <style>
+      body { margin: 0; }
+      .hotspot {
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <a-scene>
+      <!-- Sky (panorama background) -->
+      <a-sky id="sky" src="assets/Living_Room.jpg" rotation="0 -90 0"></a-sky>
 
-  <!-- مكتبة Three.js -->
-  <script src="https://unpkg.com/three@0.150.1/build/three.min.js"></script>
+      <!-- Hotspots for Living_Room -->
+      <a-image class="hotspot" id="toKitchen" src="https://cdn-icons-png.flaticon.com/512/25/25694.png"
+               position="2 1 -3" scale="0.5 0.5 0.5"
+               onclick="changeScene('Kitchen')"></a-image>
 
-  <!-- مكتبة Photo Sphere Viewer -->
-  <script src="https://unpkg.com/photo-sphere-viewer@5/dist/photo-sphere-viewer.js"></script>
+      <a-image class="hotspot" id="toReception" src="https://cdn-icons-png.flaticon.com/512/25/25694.png"
+               position="-2 1 -3" scale="0.5 0.5 0.5"
+               onclick="changeScene('Reception')"></a-image>
 
-  <!-- ملف التفاعل الخاص بك -->
-  <script src="viewer.js"></script>
-</body>
+      <a-image class="hotspot" id="toCorridor" src="https://cdn-icons-png.flaticon.com/512/25/25694.png"
+               position="0 1 -4" scale="0.5 0.5 0.5"
+               onclick="changeScene('Corridor')"></a-image>
+    </a-scene>
+
+    <script>
+      const scenes = {
+        Kitchen: {
+          src: 'assets/Kitchen.jpg',
+          hotspots: [
+            { id: 'toLiving', target: 'Living_Room', position: '0 1 -3' }
+          ]
+        },
+        Reception: {
+          src: 'assets/Reception.jpg',
+          hotspots: [
+            { id: 'toLiving', target: 'Living_Room', position: '0 1 -3' }
+          ]
+        },
+        Corridor: {
+          src: 'assets/Corridor.jpg',
+          hotspots: [
+            { id: 'toBathroom', target: 'Bathroom', position: '-2 1 -3' },
+            { id: 'toBedroom', target: 'Bedroom', position: '2 1 -3' },
+            { id: 'toLiving', target: 'Living_Room', position: '0 1 -4' }
+          ]
+        },
+        Bathroom: {
+          src: 'assets/Bathroom.jpg',
+          hotspots: [
+            { id: 'toCorridor', target: 'Corridor', position: '0 1 -3' }
+          ]
+        },
+        Bedroom: {
+          src: 'assets/Bedroom.jpg',
+          hotspots: [
+            { id: 'toCorridor', target: 'Corridor', position: '0 1 -3' }
+          ]
+        },
+        Living_Room: {
+          src: 'assets/Living_Room.jpg',
+          hotspots: [
+            { id: 'toKitchen', target: 'Kitchen', position: '2 1 -3' },
+            { id: 'toReception', target: 'Reception', position: '-2 1 -3' },
+            { id: 'toCorridor', target: 'Corridor', position: '0 1 -4' }
+          ]
+        }
+      };
+
+      function changeScene(sceneName) {
+        const scene = document.querySelector('a-scene');
+        const sky = document.querySelector('#sky');
+        sky.setAttribute('src', scenes[sceneName].src);
+
+        // Remove old hotspots
+        document.querySelectorAll('.hotspot').forEach(h => h.remove());
+
+        // Add new hotspots
+        scenes[sceneName].hotspots.forEach(hotspot => {
+          const el = document.createElement('a-image');
+          el.setAttribute('class', 'hotspot');
+          el.setAttribute('src', 'https://cdn-icons-png.flaticon.com/512/25/25694.png');
+          el.setAttribute('position', hotspot.position);
+          el.setAttribute('scale', '0.5 0.5 0.5');
+          el.setAttribute('onclick', `changeScene('${hotspot.target}')`);
+          scene.appendChild(el);
+        });
+      }
+    </script>
+  </body>
 </html>
