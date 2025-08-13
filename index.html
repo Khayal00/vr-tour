@@ -31,7 +31,7 @@
       <!-- طبقة التلاشي باللون الأسود -->
       <a-plane id="fadePlane" position="0 1.6 -1" width="10" height="10"
                material="color: black; opacity: 0; transparent: true"
-               visible="true"
+               visible="false"
                animation__fadeout="startEvents: fadeout; property: material.opacity; from: 0; to: 1; dur: 1000"
                animation__fadein="startEvents: fadein; property: material.opacity; from: 1; to: 0; dur: 1000">
       </a-plane>
@@ -96,10 +96,11 @@
         // إزالة النقاط الساخنة القديمة
         document.querySelectorAll('.hotspot').forEach(h => h.remove());
 
-        // بدء التلاشي إلى الأسود
+        // إظهار طبقة التلاشي وبدء التلاشي إلى الأسود
+        fadePlane.setAttribute('visible', true);
         fadePlane.emit('fadeout');
 
-        // الانتظار حتى انتهاء التلاشي (1000ms) قبل تغيير الصورة
+        // الانتظار حتى انتهاء التلاشي (1000ms)
         setTimeout(() => {
           sky.setAttribute('src', scenes[sceneName].src);
           fadePlane.emit('fadein');
@@ -114,7 +115,12 @@
             el.setAttribute('hotspot-listener', `target: ${hotspot.target}`);
             scene.appendChild(el);
           });
-        }, 1000); // نفس مدة التلاشي
+
+          // إخفاء طبقة التلاشي بعد انتهاء التلاشي
+          setTimeout(() => {
+            fadePlane.setAttribute('visible', false);
+          }, 1000);
+        }, 1000);
       }
 
       AFRAME.registerComponent('hotspot-listener', {
