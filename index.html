@@ -25,10 +25,11 @@
         </a-cursor>
       </a-entity>
 
-      <!-- السماء (الصورة البانورامية) مع تأثير التلاشي -->
+      <!-- السماء مع تأثير التلاشي -->
       <a-sky id="sky" src="assets/Living_Room.jpg" rotation="0 -90 0"
-             material="opacity: 1"
-             animation__fade="property: material.opacity; from: 0; to: 1; dur: 1000">
+             material="opacity: 1; transparent: true"
+             animation__fadeout="startEvents: fadeout; property: material.opacity; from: 1; to: 0; dur: 500"
+             animation__fadein="startEvents: fadein; property: material.opacity; from: 0; to: 1; dur: 500">
       </a-sky>
     </a-scene>
 
@@ -90,11 +91,13 @@
         // إزالة الهوت سبوت القديمة
         document.querySelectorAll('.hotspot').forEach(h => h.remove());
 
-        // تأثير التلاشي قبل تغيير الصورة
-        sky.setAttribute('material', 'opacity: 0');
+        // بدء التلاشي للخارج
+        sky.emit('fadeout');
+
+        // بعد انتهاء التلاشي، غيّر الصورة وابدأ التلاشي للداخل
         setTimeout(() => {
           sky.setAttribute('src', scenes[sceneName].src);
-          sky.setAttribute('material', 'opacity: 1');
+          sky.emit('fadein');
 
           // إضافة الهوت سبوت الجديدة
           scenes[sceneName].hotspots.forEach(hotspot => {
@@ -106,7 +109,7 @@
             el.setAttribute('hotspot-listener', `target: ${hotspot.target}`);
             scene.appendChild(el);
           });
-        }, 300); // تأخير بسيط لتفعيل التلاشي
+        }, 500); // نفس مدة التلاشي للخارج
       }
 
       AFRAME.registerComponent('hotspot-listener', {
