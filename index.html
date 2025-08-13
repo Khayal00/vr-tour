@@ -25,12 +25,16 @@
         </a-cursor>
       </a-entity>
 
-      <!-- السماء مع تأثير التلاشي -->
-      <a-sky id="sky" src="assets/Living_Room.jpg" rotation="0 -90 0"
-             material="opacity: 1; transparent: true"
-             animation__fadeout="startEvents: fadeout; property: material.opacity; from: 1; to: 0; dur: 500"
-             animation__fadein="startEvents: fadein; property: material.opacity; from: 0; to: 1; dur: 500">
-      </a-sky>
+      <!-- السماء البانورامية -->
+      <a-sky id="sky" src="assets/Living_Room.jpg" rotation="0 -90 0"></a-sky>
+
+      <!-- طبقة التلاشي -->
+      <a-plane id="fadePlane" position="0 1.6 -1" width="10" height="10"
+               material="color: black; opacity: 0; transparent: true"
+               visible="true"
+               animation__fadeout="startEvents: fadeout; property: material.opacity; from: 0; to: 1; dur: 500"
+               animation__fadein="startEvents: fadein; property: material.opacity; from: 1; to: 0; dur: 500">
+      </a-plane>
     </a-scene>
 
     <script>
@@ -87,19 +91,17 @@
       function changeScene(sceneName) {
         const scene = document.querySelector('a-scene');
         const sky = document.querySelector('#sky');
+        const fadePlane = document.querySelector('#fadePlane');
 
-        // إزالة الهوت سبوت القديمة
         document.querySelectorAll('.hotspot').forEach(h => h.remove());
 
-        // بدء التلاشي للخارج
-        sky.emit('fadeout');
+        // تفعيل التلاشي للخارج
+        fadePlane.emit('fadeout');
 
-        // بعد انتهاء التلاشي، غيّر الصورة وابدأ التلاشي للداخل
         setTimeout(() => {
           sky.setAttribute('src', scenes[sceneName].src);
-          sky.emit('fadein');
+          fadePlane.emit('fadein');
 
-          // إضافة الهوت سبوت الجديدة
           scenes[sceneName].hotspots.forEach(hotspot => {
             const el = document.createElement('a-image');
             el.setAttribute('class', 'hotspot');
