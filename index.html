@@ -2,11 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-<<<<<<< HEAD
     <title>VR Tour with 3D Hotspots</title>
-=======
-    <title>VR Tour with PNG Hotspots</title>
->>>>>>> 3c4188676eaf32b3cb8a28afe57d71e62ef5ef22
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <style>
@@ -42,10 +38,6 @@
     </a-scene>
 
     <script>
-<<<<<<< HEAD
-=======
-      // تعريف كل المشاهد والهوت سبوت
->>>>>>> 3c4188676eaf32b3cb8a28afe57d71e62ef5ef22
       const scenes = {
         Living_Room: {
           src: 'assets/Living_Room.jpg',
@@ -94,10 +86,6 @@
         const hotspotContainer = document.querySelector('#hotspotContainer');
         const fadePlane = document.querySelector('#fadePlane');
 
-<<<<<<< HEAD
-=======
-        // التلاشي للخارج
->>>>>>> 3c4188676eaf32b3cb8a28afe57d71e62ef5ef22
         fadePlane.emit('fadeout');
 
         setTimeout(() => {
@@ -107,7 +95,6 @@
           // إزالة الهوت سبوت القديمة
           hotspotContainer.innerHTML = '';
 
-<<<<<<< HEAD
           // إضافة الهوت سبوت الجديدة على شكل 3D spheres
           scenes[sceneName].hotspots.forEach(hs => {
             const el = document.createElement('a-sphere');
@@ -115,33 +102,16 @@
             el.setAttribute('position', hs.position);
             el.setAttribute('radius', 0.2);
             el.setAttribute('color', '#FF0000');
-=======
-          // إضافة الهوت سبوت الجديدة على شكل PNG
-          scenes[sceneName].hotspots.forEach(hs => {
-            const el = document.createElement('a-image');
-            el.setAttribute('class', 'hotspot');
-            el.setAttribute('src', 'assets/hotspot.png'); // صورة PNG للهوت سبوت
-            el.setAttribute('position', hs.position);
-            el.setAttribute('scale', '0.5 0.5 0.5');
->>>>>>> 3c4188676eaf32b3cb8a28afe57d71e62ef5ef22
             el.addEventListener('click', () => {
               changeScene(hs.target);
             });
             hotspotContainer.appendChild(el);
           });
 
-<<<<<<< HEAD
-=======
-          // التلاشي للداخل
->>>>>>> 3c4188676eaf32b3cb8a28afe57d71e62ef5ef22
           fadePlane.emit('fadein');
         }, 500);
       }
 
-<<<<<<< HEAD
-=======
-      // بدء الجولة
->>>>>>> 3c4188676eaf32b3cb8a28afe57d71e62ef5ef22
       window.addEventListener('load', () => {
         changeScene('Living_Room');
       });
