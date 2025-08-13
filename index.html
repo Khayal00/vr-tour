@@ -95,23 +95,25 @@
           // إزالة الهوت سبوت القديمة
           hotspotContainer.innerHTML = '';
 
-          // إضافة الهوت سبوت الجديدة على شكل دوائر صغيرة
+          // إضافة الهوت سبوت الجديدة على شكل دوائر صغيرة بيضاء متوهجة
           scenes[sceneName].hotspots.forEach(hs => {
             const el = document.createElement('a-circle');
             el.setAttribute('class', 'hotspot');
             el.setAttribute('position', hs.position);
             el.setAttribute('radius', 0.05);
             el.setAttribute('color', '#FFFFFF');
-            el.setAttribute('shader', 'flat'); 
+            el.setAttribute('shader', 'standard'); 
+            el.setAttribute('emissive', '#FFFFFF');       // لون التوهج الأساسي
+            el.setAttribute('emissiveIntensity', '0.3');  // شدة التوهج الابتدائية
 
             // تكبير وتوهج عند وضع المؤشر
             el.addEventListener('mouseenter', () => {
               el.setAttribute('scale', '1.5 1.5 1.5');  // تكبير
-              el.setAttribute('color', '#FFFFAA');       // لون متوهج خفيف
+              el.setAttribute('emissiveIntensity', '2'); // زيادة التوهج
             });
             el.addEventListener('mouseleave', () => {
-              el.setAttribute('scale', '1 1 1');        // إعادة الحجم الأصلي
-              el.setAttribute('color', '#FFFFFF');      // اللون الأصلي
+              el.setAttribute('scale', '1 1 1');        // العودة للحجم الأصلي
+              el.setAttribute('emissiveIntensity', '0.3'); // العودة لشدة التوهج الأصلية
             });
 
             el.addEventListener('click', () => {
