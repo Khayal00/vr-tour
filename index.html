@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>VR Walkthrough</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://unpkg.com/photo-sphere-viewer@5/dist/photo-sphere-viewer.css" />
+  <style>
+    html, body {
+      margin: 0;
+      height: 100%;
+      overflow: hidden;
+      background-color: #000;
+    }
+    #viewer {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div id="viewer"></div>
+
+  <!-- مكتبة Three.js -->
+  <script src="https://unpkg.com/three@0.150.1/build/three.min.js"></script>
+
+  <!-- مكتبة Photo Sphere Viewer -->
+  <script src="https://unpkg.com/photo-sphere-viewer@5/dist/photo-sphere-viewer.js"></script>
+
+  <!-- ملف التفاعل الخاص بك -->
+  <script src="viewer.js"></script>
+</body>
+</html>
