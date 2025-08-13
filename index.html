@@ -35,6 +35,9 @@
                animation__fadeout="startEvents: fadeout; property: material.opacity; from: 0; to: 1; dur: 1000"
                animation__fadein="startEvents: fadein; property: material.opacity; from: 1; to: 0; dur: 1000">
       </a-plane>
+
+      <!-- حاوية النقاط الساخنة -->
+      <a-entity id="hotspot-container"></a-entity>
     </a-scene>
 
     <script>
@@ -89,12 +92,12 @@
       }
 
       function changeScene(sceneName) {
-        const scene = document.querySelector('a-scene');
         const sky = document.querySelector('#sky');
         const fadePlane = document.querySelector('#fadePlane');
+        const hotspotContainer = document.querySelector('#hotspot-container');
 
         // إزالة النقاط الساخنة القديمة
-        document.querySelectorAll('.hotspot').forEach(h => h.remove());
+        hotspotContainer.innerHTML = '';
 
         // بدء التلاشي إلى الأسود
         fadePlane.emit('fadeout');
@@ -104,7 +107,7 @@
           sky.setAttribute('src', scenes[sceneName].src);
           fadePlane.emit('fadein');
 
-          // إضافة النقاط الساخنة الجديدة
+          // إضافة النقاط الساخنة الجديدة داخل الحاوية
           scenes[sceneName].hotspots.forEach(hotspot => {
             const el = document.createElement('a-image');
             el.setAttribute('class', 'hotspot');
@@ -112,9 +115,9 @@
             el.setAttribute('position', hotspot.position);
             el.setAttribute('scale', '0.5 0.5 0.5');
             el.setAttribute('hotspot-listener', `target: ${hotspot.target}`);
-            scene.appendChild(el);
+            hotspotContainer.appendChild(el);
           });
-        }, 1000); // نفس مدة التلاشي
+        }, 1000);
       }
 
       AFRAME.registerComponent('hotspot-listener', {
