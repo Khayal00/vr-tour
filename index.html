@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>VR Tour with Glowing Circular Hotspots</title>
+    <title>VR Tour with Smooth Glowing Hotspots</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <style>
@@ -95,7 +95,7 @@
           // إزالة الهوت سبوت القديمة
           hotspotContainer.innerHTML = '';
 
-          // إضافة الهوت سبوت الجديدة على شكل دوائر صغيرة بيضاء متوهجة
+          // إضافة الهوت سبوت الجديدة على شكل دوائر صغيرة بيضاء
           scenes[sceneName].hotspots.forEach(hs => {
             const el = document.createElement('a-circle');
             el.setAttribute('class', 'hotspot');
@@ -103,22 +103,41 @@
             el.setAttribute('radius', 0.05);
             el.setAttribute('color', '#FFFFFF');
             el.setAttribute('shader', 'standard'); 
-            el.setAttribute('emissive', '#FFFFFF');       // لون التوهج الأساسي
-            el.setAttribute('emissiveIntensity', '0.3');  // شدة التوهج الابتدائية
+            el.setAttribute('emissive', '#FFFFFF');
+            el.setAttribute('emissiveIntensity', '0.3');
 
-            // تكبير وتوهج عند وضع المؤشر
+            let glowInterval;
+
             el.addEventListener('mouseenter', () => {
-              el.setAttribute('scale', '1.5 1.5 1.5');  // تكبير
-              el.setAttribute('emissiveIntensity', '2'); // زيادة التوهج
+              clearInterval(glowInterval);
+              let intensity = parseFloat(el.getAttribute('emissiveIntensity'));
+              let scale = parseFloat(el.getAttribute('scale') || 1);
+              glowInterval = setInterval(() => {
+                if(intensity < 2) intensity += 0.05;
+                if(scale < 1.5) scale += 0.02;
+                el.setAttribute('emissiveIntensity', intensity);
+                el.setAttribute('scale', `${scale} ${scale} ${scale}`);
+                if(intensity >= 2 && scale >= 1.5) clearInterval(glowInterval);
+              }, 20);
             });
+
             el.addEventListener('mouseleave', () => {
-              el.setAttribute('scale', '1 1 1');        // العودة للحجم الأصلي
-              el.setAttribute('emissiveIntensity', '0.3'); // العودة لشدة التوهج الأصلية
+              clearInterval(glowInterval);
+              let intensity = parseFloat(el.getAttribute('emissiveIntensity'));
+              let scale = parseFloat(el.getAttribute('scale') || 1);
+              glowInterval = setInterval(() => {
+                if(intensity > 0.3) intensity -= 0.05;
+                if(scale > 1) scale -= 0.02;
+                el.setAttribute('emissiveIntensity', intensity);
+                el.setAttribute('scale', `${scale} ${scale} ${scale}`);
+                if(intensity <= 0.3 && scale <= 1) clearInterval(glowInterval);
+              }, 20);
             });
 
             el.addEventListener('click', () => {
               changeScene(hs.target);
             });
+
             hotspotContainer.appendChild(el);
           });
 
