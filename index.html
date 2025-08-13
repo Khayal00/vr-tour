@@ -28,12 +28,12 @@
       <!-- السماء البانورامية -->
       <a-sky id="sky" src="assets/Living_Room.jpg" rotation="0 -90 0"></a-sky>
 
-      <!-- طبقة التلاشي السريع -->
+      <!-- طبقة التلاشي باللون الأسود -->
       <a-plane id="fadePlane" position="0 1.6 -1" width="10" height="10"
                material="color: black; opacity: 0; transparent: true"
                visible="true"
-               animation__fadeout="startEvents: fadeout; property: material.opacity; from: 0; to: 1; dur: 200"
-               animation__fadein="startEvents: fadein; property: material.opacity; from: 1; to: 0; dur: 200">
+               animation__fadeout="startEvents: fadeout; property: material.opacity; from: 0; to: 1; dur: 100"
+               animation__fadein="startEvents: fadein; property: material.opacity; from: 1; to: 0; dur: 100">
       </a-plane>
     </a-scene>
 
@@ -111,7 +111,7 @@
             el.setAttribute('hotspot-listener', `target: ${hotspot.target}`);
             scene.appendChild(el);
           });
-        }, 200); // نفس مدة التلاشي للخارج
+        }, 100); // نفس مدة التلاشي للخارج
       }
 
       AFRAME.registerComponent('hotspot-listener', {
@@ -132,4 +132,3 @@
     </script>
   </body>
 </html>
-
