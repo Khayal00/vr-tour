@@ -15,14 +15,14 @@
   <body>
     <a-scene>
       <!-- كاميرا تفاعلية مع مؤشر -->
-      <a-entity camera look-controls wasd-controls position="0 1.6 0">
-        <a-entity 
-          cursor="rayOrigin: mouse" 
-          raycaster="objects: .hotspot" 
-          position="0 0 -1"
+      <a-entity camera look-controls position="0 1.6 0">
+        <a-cursor
+          rayOrigin="mouse"
+          raycaster="objects: .hotspot"
+          fuse="false"
           geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
-          material="color: #CCC; shader: flat">
-        </a-entity>
+          material="color: white; shader: flat">
+        </a-cursor>
       </a-entity>
 
       <!-- السماء (الصورة البانورامية) -->
