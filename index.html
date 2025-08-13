@@ -87,21 +87,33 @@
             el.setAttribute('src', 'https://cdn-icons-png.flaticon.com/512/25/25694.png');
             el.setAttribute('position', hotspot.position);
             el.setAttribute('scale', '0.5 0.5 0.5');
+            el.setAttribute('look-at', '[camera]');
             el.setAttribute('hotspot-listener', `target: ${hotspot.target}`);
             scene.appendChild(el);
           });
 
           // بدء التلاشي للداخل
           fadePlane.emit('fadein');
-        }, 1000); // نفس مدة التلاشي للخارج
+        }, 1000);
       }
 
+      // مكوّن لتغيير المشهد عند الضغط
       AFRAME.registerComponent('hotspot-listener', {
         schema: { target: { type: 'string' } },
         init: function () {
           this.el.addEventListener('click', () => {
             changeScene(this.data.target);
           });
+        }
+      });
+
+      // مكوّن لجعل الأيقونات تواجه الكاميرا دائمًا
+      AFRAME.registerComponent('look-at', {
+        schema: { type: 'selector' },
+        tick: function () {
+          if (this.data) {
+            this.el.object3D.lookAt(this.data.object3D.position);
+          }
         }
       });
 
