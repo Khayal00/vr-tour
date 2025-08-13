@@ -28,13 +28,15 @@
       <!-- السماء البانورامية -->
       <a-sky id="sky" src="assets/Living_Room.jpg" rotation="0 -90 0"></a-sky>
 
-      <!-- طبقة التلاشي باللون الأسود -->
-      <a-plane id="fadePlane" position="0 1.6 -1" width="10" height="10"
-               material="color: black; opacity: 0; transparent: true"
-               visible="true"
-               animation__fadeout="startEvents: fadeout; property: material.opacity; from: 0; to: 1; dur: 30"
-               animation__fadein="startEvents: fadein; property: material.opacity; from: 1; to: 0; dur: 30">
-      </a-plane>
+      <!-- طبقة التلاشي السوداء -->
+      <a-entity id="fadePlane"
+                geometry="primitive: plane; height: 100; width: 100"
+                material="color: black; opacity: 0; transparent: true"
+                position="0 1.6 -1"
+                rotation="0 0 0"
+                animation__fadeout="startEvents: fadeout; property: material.opacity; from: 0; to: 1; dur: 30"
+                animation__fadein="startEvents: fadein; property: material.opacity; from: 1; to: 0; dur: 30">
+      </a-entity>
     </a-scene>
 
     <script>
