@@ -25,8 +25,11 @@
         </a-cursor>
       </a-entity>
 
-      <!-- السماء (الصورة البانورامية) -->
-      <a-sky id="sky" src="assets/Living_Room.jpg" rotation="0 -90 0"></a-sky>
+      <!-- السماء (الصورة البانورامية) مع تأثير التلاشي -->
+      <a-sky id="sky" src="assets/Living_Room.jpg" rotation="0 -90 0"
+             material="opacity: 1"
+             animation__fade="property: material.opacity; from: 0; to: 1; dur: 1000">
+      </a-sky>
     </a-scene>
 
     <script>
@@ -73,24 +76,37 @@
         }
       };
 
+      function preloadImages() {
+        Object.values(scenes).forEach(scene => {
+          const img = new Image();
+          img.src = scene.src;
+        });
+      }
+
       function changeScene(sceneName) {
         const scene = document.querySelector('a-scene');
         const sky = document.querySelector('#sky');
-        sky.setAttribute('src', scenes[sceneName].src);
 
         // إزالة الهوت سبوت القديمة
         document.querySelectorAll('.hotspot').forEach(h => h.remove());
 
-        // إضافة الهوت سبوت الجديدة
-        scenes[sceneName].hotspots.forEach(hotspot => {
-          const el = document.createElement('a-image');
-          el.setAttribute('class', 'hotspot');
-          el.setAttribute('src', 'https://cdn-icons-png.flaticon.com/512/25/25694.png');
-          el.setAttribute('position', hotspot.position);
-          el.setAttribute('scale', '0.5 0.5 0.5');
-          el.setAttribute('hotspot-listener', `target: ${hotspot.target}`);
-          scene.appendChild(el);
-        });
+        // تأثير التلاشي قبل تغيير الصورة
+        sky.setAttribute('material', 'opacity: 0');
+        setTimeout(() => {
+          sky.setAttribute('src', scenes[sceneName].src);
+          sky.setAttribute('material', 'opacity: 1');
+
+          // إضافة الهوت سبوت الجديدة
+          scenes[sceneName].hotspots.forEach(hotspot => {
+            const el = document.createElement('a-image');
+            el.setAttribute('class', 'hotspot');
+            el.setAttribute('src', 'https://cdn-icons-png.flaticon.com/512/25/25694.png');
+            el.setAttribute('position', hotspot.position);
+            el.setAttribute('scale', '0.5 0.5 0.5');
+            el.setAttribute('hotspot-listener', `target: ${hotspot.target}`);
+            scene.appendChild(el);
+          });
+        }, 300); // تأخير بسيط لتفعيل التلاشي
       }
 
       AFRAME.registerComponent('hotspot-listener', {
@@ -104,8 +120,8 @@
         }
       });
 
-      // تحميل المشهد الأول عند بدء الصفحة
       window.addEventListener('load', () => {
+        preloadImages();
         changeScene('Living_Room');
       });
     </script>
