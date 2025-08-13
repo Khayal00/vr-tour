@@ -23,7 +23,7 @@
           material="color: white; shader: flat">
         </a-cursor>
 
-        <!-- طبقة التلاشي مثبتة داخل الكاميرا -->
+        <!-- طبقة التلاشي -->
         <a-plane id="fadePlane" position="0 0 -0.5" width="2" height="2"
                  material="color: black; opacity: 0; transparent: true"
                  animation__fadeout="startEvents: fadeout; property: material.opacity; from: 0; to: 1; dur: 500"
@@ -39,6 +39,7 @@
     </a-scene>
 
     <script>
+      // تأكد أن لديك ملفات hotspot.png و صور المشاهد داخل assets
       const scenes = {
         Living_Room: {
           src: 'assets/Living_Room.jpg',
@@ -87,6 +88,8 @@
           const img = new Image();
           img.src = scene.src;
         });
+        const hotspotImg = new Image();
+        hotspotImg.src = 'assets/hotspot.png';
       }
 
       function changeScene(sceneName) {
@@ -94,7 +97,7 @@
         const hotspotContainer = document.querySelector('#hotspotContainer');
         const fadePlane = document.querySelector('#fadePlane');
 
-        // تلاشي للخارج
+        // التلاشي للخارج
         fadePlane.emit('fadeout');
 
         setTimeout(() => {
@@ -108,7 +111,7 @@
           scenes[sceneName].hotspots.forEach(hs => {
             const el = document.createElement('a-image');
             el.setAttribute('class', 'hotspot');
-            el.setAttribute('src', 'https://cdn-icons-png.flaticon.com/512/32/32195.png');
+            el.setAttribute('src', 'assets/hotspot.png'); // صورة محلية
             el.setAttribute('position', hs.position);
             el.setAttribute('scale', '0.5 0.5 0.5');
             el.setAttribute('look-at', '#cameraRig');
@@ -118,9 +121,9 @@
             hotspotContainer.appendChild(el);
           });
 
-          // تلاشي للداخل
+          // التلاشي للداخل
           fadePlane.emit('fadein');
-        }, 500); // مدة التلاشي
+        }, 500);
       }
 
       window.addEventListener('load', () => {
