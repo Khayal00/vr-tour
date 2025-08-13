@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>VR Tour with Small White Hotspots</title>
+    <title>VR Tour with 3D Hotspots</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <style>
@@ -86,7 +86,6 @@
         const hotspotContainer = document.querySelector('#hotspotContainer');
         const fadePlane = document.querySelector('#fadePlane');
 
-        // تفعيل التلاشي للخارج
         fadePlane.emit('fadeout');
 
         setTimeout(() => {
@@ -96,22 +95,19 @@
           // إزالة الهوت سبوت القديمة
           hotspotContainer.innerHTML = '';
 
-          // إضافة الهوت سبوت الجديدة ككرات صغيرة بيضاء
+          // إضافة الهوت سبوت الجديدة على شكل 3D spheres
           scenes[sceneName].hotspots.forEach(hs => {
             const el = document.createElement('a-sphere');
             el.setAttribute('class', 'hotspot');
             el.setAttribute('position', hs.position);
-            el.setAttribute('radius', 0.1);       // حجم صغير
-            el.setAttribute('color', '#FFFFFF');  // اللون أبيض
-
+            el.setAttribute('radius', 0.05);
+            el.setAttribute('color', '#FFFFFF');
             el.addEventListener('click', () => {
               changeScene(hs.target);
             });
-
             hotspotContainer.appendChild(el);
           });
 
-          // التلاشي للداخل
           fadePlane.emit('fadein');
         }, 500);
       }
