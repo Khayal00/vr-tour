@@ -1,76 +1,124 @@
-<a-scene>
-  <!-- الكاميرا -->
-  <a-entity id="cameraRig" camera look-controls position="0 1.6 0">
-    <a-cursor
-      rayOrigin="mouse"
-      raycaster="objects: .hotspot"
-      fuse="false"
-      geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
-      material="color: white; shader: flat">
-    </a-cursor>
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>VR Tour with PNG Hotspots</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <style>
+      body { margin: 0; }
+      .hotspot { cursor: pointer; }
+    </style>
+  </head>
+  <body>
+    <a-scene>
+      <!-- الكاميرا -->
+      <a-entity id="cameraRig" camera look-controls position="0 1.6 0">
+        <a-cursor
+          rayOrigin="mouse"
+          raycaster="objects: .hotspot"
+          fuse="false"
+          geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
+          material="color: white; shader: flat">
+        </a-cursor>
 
-    <!-- طبقة التلاشي -->
-    <a-plane id="fadePlane" position="0 0 -0.5" width="2" height="2"
-             material="color: black; opacity: 0; transparent: true"
-             animation__fadeout="startEvents: fadeout; property: material.opacity; from: 0; to: 1; dur: 500"
-             animation__fadein="startEvents: fadein; property: material.opacity; from: 1; to: 0; dur: 500">
-    </a-plane>
-  </a-entity>
+        <!-- طبقة التلاشي -->
+        <a-plane id="fadePlane" position="0 0 -0.5" width="2" height="2"
+                 material="color: black; opacity: 0; transparent: true"
+                 animation__fadeout="startEvents: fadeout; property: material.opacity; from: 0; to: 1; dur: 500"
+                 animation__fadein="startEvents: fadein; property: material.opacity; from: 1; to: 0; dur: 500">
+        </a-plane>
+      </a-entity>
 
-  <!-- السماء -->
-  <a-sky id="sky" rotation="0 -90 0"></a-sky>
+      <!-- السماء -->
+      <a-sky id="sky" rotation="0 -90 0"></a-sky>
 
-  <!-- حاوية للهوت سبوت -->
-  <a-entity id="hotspotContainer"></a-entity>
-</a-scene>
+      <!-- حاوية للهوت سبوت -->
+      <a-entity id="hotspotContainer"></a-entity>
+    </a-scene>
 
-<script>
-  const scenes = {
-    Living_Room: {
-      src: 'assets/Living_Room.jpg',
-      hotspots: [
-        { target: 'Kitchen', position: '2 1.6 -2.5' },
-        { target: 'Reception', position: '-2 1.6 -2.5' },
-        { target: 'Corridor', position: '0 1.6 -2.5' }
-      ]
-    },
-    Kitchen: {
-      src: 'assets/Kitchen.jpg',
-      hotspots: [
-        { target: 'Living_Room', position: '0 1.6 -2.5' }
-      ]
-    }
-    // أكمل بقية المشاهد حسب حاجتك
-  };
+    <script>
+      // تعريف كل المشاهد والهوت سبوت
+      const scenes = {
+        Living_Room: {
+          src: 'assets/Living_Room.jpg',
+          hotspots: [
+            { target: 'Kitchen', position: '2 1.6 -2.5' },
+            { target: 'Reception', position: '-2 1.6 -2.5' },
+            { target: 'Corridor', position: '0 1.6 -2.5' }
+          ]
+        },
+        Kitchen: {
+          src: 'assets/Kitchen.jpg',
+          hotspots: [
+            { target: 'Living_Room', position: '0 1.6 -2.5' }
+          ]
+        },
+        Reception: {
+          src: 'assets/Reception.jpg',
+          hotspots: [
+            { target: 'Living_Room', position: '0 1.6 -2.5' }
+          ]
+        },
+        Corridor: {
+          src: 'assets/Corridor.jpg',
+          hotspots: [
+            { target: 'Bathroom', position: '-2 1.6 -2.5' },
+            { target: 'Bedroom', position: '2 1.6 -2.5' },
+            { target: 'Living_Room', position: '0 1.6 -2.5' }
+          ]
+        },
+        Bathroom: {
+          src: 'assets/Bathroom.jpg',
+          hotspots: [
+            { target: 'Corridor', position: '0 1.6 -2.5' }
+          ]
+        },
+        Bedroom: {
+          src: 'assets/Bedroom.jpg',
+          hotspots: [
+            { target: 'Corridor', position: '0 1.6 -2.5' }
+          ]
+        }
+      };
 
-  function changeScene(sceneName) {
-    const sky = document.querySelector('#sky');
-    const hotspotContainer = document.querySelector('#hotspotContainer');
-    const fadePlane = document.querySelector('#fadePlane');
+      function changeScene(sceneName) {
+        const sky = document.querySelector('#sky');
+        const hotspotContainer = document.querySelector('#hotspotContainer');
+        const fadePlane = document.querySelector('#fadePlane');
 
-    fadePlane.emit('fadeout');
+        // التلاشي للخارج
+        fadePlane.emit('fadeout');
 
-    setTimeout(() => {
-      sky.setAttribute('src', scenes[sceneName].src);
-      hotspotContainer.innerHTML = '';
+        setTimeout(() => {
+          // تغيير السماء
+          sky.setAttribute('src', scenes[sceneName].src);
 
-      scenes[sceneName].hotspots.forEach(hs => {
-        const el = document.createElement('a-image');
-        el.setAttribute('class', 'hotspot');
-        el.setAttribute('src', 'assets/hotspot.png'); // ضع صورة PNG هنا
-        el.setAttribute('position', hs.position);
-        el.setAttribute('scale', '0.5 0.5 0.5');
-        el.addEventListener('click', () => {
-          changeScene(hs.target);
-        });
-        hotspotContainer.appendChild(el);
+          // إزالة الهوت سبوت القديمة
+          hotspotContainer.innerHTML = '';
+
+          // إضافة الهوت سبوت الجديدة على شكل PNG
+          scenes[sceneName].hotspots.forEach(hs => {
+            const el = document.createElement('a-image');
+            el.setAttribute('class', 'hotspot');
+            el.setAttribute('src', 'assets/hotspot.png'); // صورة PNG للهوت سبوت
+            el.setAttribute('position', hs.position);
+            el.setAttribute('scale', '0.5 0.5 0.5');
+            el.addEventListener('click', () => {
+              changeScene(hs.target);
+            });
+            hotspotContainer.appendChild(el);
+          });
+
+          // التلاشي للداخل
+          fadePlane.emit('fadein');
+        }, 500);
+      }
+
+      // بدء الجولة
+      window.addEventListener('load', () => {
+        changeScene('Living_Room');
       });
-
-      fadePlane.emit('fadein');
-    }, 500);
-  }
-
-  window.addEventListener('load', () => {
-    changeScene('Living_Room');
-  });
-</script>
+    </script>
+  </body>
+</html>
