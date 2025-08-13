@@ -2,7 +2,11 @@
 <html>
   <head>
     <meta charset="utf-8">
+<<<<<<< HEAD
     <title>VR Tour with Glowing PNG Hotspots</title>
+=======
+    <title>VR Tour Glowing Hotspots Fixed</title>
+>>>>>>> 7fe4235f2b2c02197b109f10bc877f2712862a0f
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <style>
@@ -51,6 +55,7 @@
         hotspotContainer.innerHTML = '';
 
         scenes[sceneName].hotspots.forEach(hs => {
+<<<<<<< HEAD
           const el = document.createElement('a-image');
           el.setAttribute('class', 'hotspot');
           el.setAttribute('src', 'assets/hotspot.png'); // صورة PNG للهوت سبوت
@@ -67,6 +72,21 @@
           el.addEventListener('mouseleave', () => {
             el.setAttribute('opacity', '0.8');
             el.setAttribute('scale', '0.5 0.5 0.5');
+=======
+          const el = document.createElement('a-sphere');
+          el.setAttribute('class', 'hotspot');
+          el.setAttribute('position', hs.position);
+          el.setAttribute('radius', 0.1);
+          el.setAttribute('color', '#FFFFFF');
+          el.setAttribute('material', 'shader: standard; emissive: #FFFFFF; emissiveIntensity: 0.5');
+
+          // توهج عند المرور بالمؤشر
+          el.addEventListener('mouseenter', () => {
+            el.setAttribute('material', 'shader: standard; emissive: #FFFFFF; emissiveIntensity: 2');
+          });
+          el.addEventListener('mouseleave', () => {
+            el.setAttribute('material', 'shader: standard; emissive: #FFFFFF; emissiveIntensity: 0.5');
+>>>>>>> 7fe4235f2b2c02197b109f10bc877f2712862a0f
           });
 
           el.addEventListener('click', () => {
