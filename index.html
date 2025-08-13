@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>VR Tour with 3D Hotspots</title>
+    <title>VR Tour with Glowing Hotspots</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <style>
@@ -95,16 +95,29 @@
           // إزالة الهوت سبوت القديمة
           hotspotContainer.innerHTML = '';
 
-          // إضافة الهوت سبوت الجديدة على شكل 3D spheres
+          // إضافة الهوت سبوت الجديدة على شكل كرات صغيرة بيضاء مع توهج
           scenes[sceneName].hotspots.forEach(hs => {
             const el = document.createElement('a-sphere');
             el.setAttribute('class', 'hotspot');
             el.setAttribute('position', hs.position);
-            el.setAttribute('radius', 0.2);
-            el.setAttribute('color', '#FF0000');
+            el.setAttribute('radius', 0.1); // حجم صغير
+            el.setAttribute('color', '#FFFFFF');
+            el.setAttribute('shader', 'standard'); // للسماح بالتأثيرات
+            el.setAttribute('emissive', '#FFFFFF'); // لون التوهج الأساسي
+            el.setAttribute('emissiveIntensity', '0.5'); // شدة التوهج
+
+            // تأثير التوهج عند وضع المؤشر
+            el.addEventListener('mouseenter', () => {
+              el.setAttribute('emissiveIntensity', '2');
+            });
+            el.addEventListener('mouseleave', () => {
+              el.setAttribute('emissiveIntensity', '0.5');
+            });
+
             el.addEventListener('click', () => {
               changeScene(hs.target);
             });
+
             hotspotContainer.appendChild(el);
           });
 
