@@ -128,5 +128,22 @@
         changeScene('Living_Room');
       });
     </script>
+    <!-- أكواد إنشاء المشهد والهوت سبوتات هنا -->
+
+<script>
+// الاستماع للنقر على المشهد
+viewer.scene().view().addEventListener('mousedown', function(event) {
+    var coords = viewer.view().screenToCoordinates({ x: event.clientX, y: event.clientY });
+    var vector = Marzipano.util.sphericalToCartesian(coords);
+
+    console.log(
+        "position: '" +
+        vector.x.toFixed(2) + " " +
+        vector.y.toFixed(2) + " " +
+        vector.z.toFixed(2) + "'"
+    );
+});
+</script>
+
   </body>
 </html>
