@@ -42,9 +42,9 @@
         Living_Room: {
           src: 'assets/Living_Room.jpg',
           hotspots: [
-            { target: 'Kitchen', position: '-1.8 1.6 1.5' },
+            { target: 'Kitchen', position: '-1.8 1.6 -0.5' },
             { target: 'Reception', position: '-1.8 1.6 -1' },
-            { target: 'Corridor', position: '1.8 1.6 1.5' }
+            { target: 'Corridor', position: '1.8 1.6 -0.5' }
           ]
         },
         Kitchen: {
@@ -128,22 +128,6 @@
         changeScene('Living_Room');
       });
     </script>
-    <!-- أكواد إنشاء المشهد والهوت سبوتات هنا -->
-
-<script>
-// الاستماع للنقر على المشهد
-viewer.scene().view().addEventListener('mousedown', function(event) {
-    var coords = viewer.view().screenToCoordinates({ x: event.clientX, y: event.clientY });
-    var vector = Marzipano.util.sphericalToCartesian(coords);
-
-    console.log(
-        "position: '" +
-        vector.x.toFixed(2) + " " +
-        vector.y.toFixed(2) + " " +
-        vector.z.toFixed(2) + "'"
-    );
-});
-</script>
 
   </body>
 </html>
