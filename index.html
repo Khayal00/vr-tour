@@ -2,10 +2,13 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>Simple VR Scene with Fade</title>
+    <title>VR Tour: Living Room & Kitchen</title>
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <style>
       body { margin: 0; }
+      .hotspot {
+        cursor: pointer;
+      }
     </style>
   </head>
   <body>
@@ -27,34 +30,65 @@
           material="color: white; shader: flat">
         </a-cursor>
       </a-entity>
-
-      <!-- زر Hotspot -->
-      <a-image class="hotspot"
-               src="https://cdn-icons-png.flaticon.com/512/25/25694.png"
-               position="0 1.6 -3"
-               scale="0.5 0.5 0.5"
-               hotspot-listener="target: assets/Kitchen.jpg">
-      </a-image>
     </a-scene>
 
     <script>
+      const scenes = {
+        Living_Room: {
+          src: 'assets/Living_Room.jpg',
+          hotspots: [
+            { target: 'Kitchen', position: '0 1.6 -3' }
+          ]
+        },
+        Kitchen: {
+          src: 'assets/Kitchen.jpg',
+          hotspots: [
+            { target: 'Living_Room', position: '0 1.6 -3' }
+          ]
+        }
+      };
+
+      function changeScene(sceneName) {
+        const sky = document.querySelector('#sky');
+        const scene = document.querySelector('a-scene');
+
+        // إزالة الهوت سبوتات القديمة
+        document.querySelectorAll('.hotspot').forEach(h => h.remove());
+
+        // تفعيل التلاشي للخارج
+        sky.emit('fadeout');
+
+        setTimeout(() => {
+          // تغيير الصورة
+          sky.setAttribute('src', scenes[sceneName].src);
+          sky.emit('fadein');
+
+          // إضافة الهوت سبوتات الجديدة
+          scenes[sceneName].hotspots.forEach(hotspot => {
+            const el = document.createElement('a-image');
+            el.setAttribute('class', 'hotspot');
+            el.setAttribute('src', 'https://cdn-icons-png.flaticon.com/512/25/25694.png');
+            el.setAttribute('position', hotspot.position);
+            el.setAttribute('scale', '0.5 0.5 0.5');
+            el.setAttribute('hotspot-listener', `target: ${hotspot.target}`);
+            scene.appendChild(el);
+          });
+        }, 300); // نفس مدة التلاشي
+      }
+
       AFRAME.registerComponent('hotspot-listener', {
         schema: {
           target: { type: 'string' }
         },
         init: function () {
           this.el.addEventListener('click', () => {
-            const sky = document.querySelector('#sky');
-            const currentSrc = sky.getAttribute('src');
-            if (currentSrc === this.data.target) return; // لا تغيّر إذا كانت نفس الصورة
-
-            sky.emit('fadeout');
-            setTimeout(() => {
-              sky.setAttribute('src', this.data.target);
-              sky.emit('fadein');
-            }, 300); // نفس مدة التلاشي
+            changeScene(this.data.target);
           });
         }
+      });
+
+      window.addEventListener('load', () => {
+        changeScene('Living_Room');
       });
     </script>
   </body>
