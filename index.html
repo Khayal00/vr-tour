@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>VR Tour with Circular Hotspots</title>
+    <title>VR Tour with Glowing Circular Hotspots</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <style>
@@ -100,9 +100,20 @@
             const el = document.createElement('a-circle');
             el.setAttribute('class', 'hotspot');
             el.setAttribute('position', hs.position);
-            el.setAttribute('radius', 0.05);
+            el.setAttribute('radius', 0.1);
             el.setAttribute('color', '#FFFFFF');
-            el.setAttribute('shader', 'flat'); // يجعلها مسطحة بدون تأثيرات اضاءة
+            el.setAttribute('shader', 'flat'); 
+
+            // تكبير وتوهج عند وضع المؤشر
+            el.addEventListener('mouseenter', () => {
+              el.setAttribute('scale', '1.5 1.5 1.5');  // تكبير
+              el.setAttribute('color', '#FFFFAA');       // لون متوهج خفيف
+            });
+            el.addEventListener('mouseleave', () => {
+              el.setAttribute('scale', '1 1 1');        // إعادة الحجم الأصلي
+              el.setAttribute('color', '#FFFFFF');      // اللون الأصلي
+            });
+
             el.addEventListener('click', () => {
               changeScene(hs.target);
             });
