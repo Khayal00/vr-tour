@@ -1,170 +1,126 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8">
-    <title>VR Tour with 3D Labels</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-    <style>
-      body { margin: 0; overflow: hidden; }
-    </style>
-  </head>
-  <body>
-    <a-scene>
-      <a-sky id="sky" rotation="0 -90 0"></a-sky>
+<head>
+<meta charset="utf-8">
+<title>VR Tour with Fixed 3D Labels</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+<style>
+  body { margin:0; overflow:hidden; }
+</style>
+</head>
+<body>
+<a-scene>
+  <a-sky id="sky" rotation="0 -90 0"></a-sky>
 
-      <!-- الكاميرا -->
-      <a-entity id="cameraRig" camera look-controls position="0 1.6 0">
-        <a-cursor
-          rayOrigin="mouse"
-          raycaster="objects: .hotspot"
-          fuse="false"
-          geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
-          material="color: white; shader: flat">
-        </a-cursor>
+  <!-- الكاميرا مع نص ثابت أمامها -->
+  <a-entity id="cameraRig" camera look-controls position="0 1.6 0">
+    <a-cursor
+      rayOrigin="mouse"
+      raycaster="objects: .hotspot"
+      fuse="false"
+      geometry="primitive: ring; radiusInner:0.02; radiusOuter:0.03"
+      material="color:white; shader: flat">
+    </a-cursor>
 
-        <!-- طبقة التلاشي -->
-        <a-plane id="fadePlane" position="0 0 -0.5" width="2" height="2"
-                 material="color: black; opacity: 0; transparent: true"
-                 animation__fadeout="startEvents: fadeout; property: material.opacity; from:0; to:1; dur:500"
-                 animation__fadein="startEvents: fadein; property: material.opacity; from:1; to:0; dur:500">
-        </a-plane>
-      </a-entity>
+    <!-- طبقة التلاشي -->
+    <a-plane id="fadePlane" position="0 0 -0.5" width="2" height="2"
+             material="color:black; opacity:0; transparent:true"
+             animation__fadeout="startEvents: fadeout; property: material.opacity; from:0; to:1; dur:500"
+             animation__fadein="startEvents: fadein; property: material.opacity; from:1; to:0; dur:500">
+    </a-plane>
 
-      <!-- حاوية الهوت سبوتات -->
-      <a-entity id="hotspotContainer"></a-entity>
+    <!-- النصوص الثلاثية الأبعاد المثبتة أمام الكاميرا -->
+    <a-entity id="roomLabel" position="0 0 -2" text="value: ; align:center; color:white; width:4;"></a-entity>
+  </a-entity>
 
-      <!-- نص الغرفة ثلاثي الأبعاد -->
-      <a-entity id="roomLabel" position="0 2 -1.5" text="value: ; align: center; color: white; width: 4;">
-      </a-entity>
+  <!-- حاوية الهوت سبوت -->
+  <a-entity id="hotspotContainer"></a-entity>
 
-      <a-assets>
-        <audio id="transitionSound" src="assets/transition.mp3"></audio>
-      </a-assets>
-    </a-scene>
+  <a-assets>
+    <audio id="transitionSound" src="assets/transition.mp3"></audio>
+  </a-assets>
+</a-scene>
 
-    <script>
-      const scenes = {
-        Living_Room: {
-          src: 'assets/Living_Room.jpg',
-          label: 'Welcome to Living Room',
-          hotspots: [
-            { target: 'Kitchen', position: '-3 1.6 4' },
-            { target: 'Reception', position: '-3 1.6 -1.7' },
-            { target: 'Corridor', position: '3 1.6 3' }
-          ]
-        },
-        Kitchen: {
-          src: 'assets/Kitchen.jpg',
-          label: 'Welcome to Kitchen',
-          hotspots: [
-            { target: 'Living_Room', position: '4 1.6 -7' }
-          ]
-        },
-        Reception: {
-          src: 'assets/Reception.jpg',
-          label: 'Welcome to Reception',
-          hotspots: [
-            { target: 'Living_Room', position: '5 1.6 -1' }
-          ]
-        },
-        Corridor: {
-          src: 'assets/Corridor.jpg',
-          label: 'Welcome to Corridor',
-          hotspots: [
-            { target: 'Bathroom', position: '3 1.6 -0.5' },
-            { target: 'Bedroom', position: '-0.2 1.6 -3.5' },
-            { target: 'Living_Room', position: '1 1.6 3' }
-          ]
-        },
-        Bathroom: {
-          src: 'assets/Bathroom.jpg',
-          label: 'Welcome to Bathroom',
-          hotspots: [
-            { target: 'Corridor', position: '-1 1.6 4' }
-          ]
-        },
-        Bedroom: {
-          src: 'assets/Bedroom.jpg',
-          label: 'Welcome to Bedroom',
-          hotspots: [
-            { target: 'Corridor', position: '-0.5 1.6 4' }
-          ]
-        }
-      };
+<script>
+const scenes = {
+  Living_Room:{src:'assets/Living_Room.jpg', label:'Welcome to Living Room', hotspots:[{target:'Kitchen', position:'-3 1.6 4'},{target:'Reception', position:'-3 1.6 -1.7'},{target:'Corridor', position:'3 1.6 3'}]},
+  Kitchen:{src:'assets/Kitchen.jpg', label:'Welcome to Kitchen', hotspots:[{target:'Living_Room', position:'4 1.6 -7'}]},
+  Reception:{src:'assets/Reception.jpg', label:'Welcome to Reception', hotspots:[{target:'Living_Room', position:'5 1.6 -1'}]},
+  Corridor:{src:'assets/Corridor.jpg', label:'Welcome to Corridor', hotspots:[{target:'Bathroom', position:'3 1.6 -0.5'},{target:'Bedroom', position:'-0.2 1.6 -3.5'},{target:'Living_Room', position:'1 1.6 3'}]},
+  Bathroom:{src:'assets/Bathroom.jpg', label:'Welcome to Bathroom', hotspots:[{target:'Corridor', position:'-1 1.6 4'}]},
+  Bedroom:{src:'assets/Bedroom.jpg', label:'Welcome to Bedroom', hotspots:[{target:'Corridor', position:'-0.5 1.6 4'}]}
+};
 
-      const roomLabel = document.getElementById('roomLabel');
+const roomLabel = document.getElementById('roomLabel');
 
-      function changeScene(sceneName) {
-        const sky = document.getElementById('sky');
-        const hotspotContainer = document.getElementById('hotspotContainer');
-        const fadePlane = document.getElementById('fadePlane');
-        const audio = document.getElementById('transitionSound');
+function changeScene(sceneName){
+  const sky=document.getElementById('sky');
+  const hotspotContainer=document.getElementById('hotspotContainer');
+  const fadePlane=document.getElementById('fadePlane');
+  const audio=document.getElementById('transitionSound');
 
-        // إخفاء النص أثناء التلاشي
-        roomLabel.setAttribute('visible', false);
-        fadePlane.emit('fadeout');
+  // إخفاء النص قبل التلاشي
+  roomLabel.setAttribute('visible', false);
+  fadePlane.emit('fadeout');
 
-        setTimeout(() => {
-          // تغيير السماء
-          sky.setAttribute('src', scenes[sceneName].src);
+  setTimeout(()=>{
+    // تغيير السماء
+    sky.setAttribute('src', scenes[sceneName].src);
+    hotspotContainer.innerHTML='';
 
-          // إزالة الهوت سبوتات القديمة
-          hotspotContainer.innerHTML = '';
+    // إضافة الهوت سبوتات
+    scenes[sceneName].hotspots.forEach(hs=>{
+      const el=document.createElement('a-sphere');
+      el.setAttribute('class','hotspot');
+      el.setAttribute('position', hs.position);
+      el.setAttribute('radius',0.12);
+      el.setAttribute('color','#FFFFFF');
+      el.setAttribute('material','shader: standard; emissive: #FFD700; emissiveIntensity:0.0');
 
-          // إضافة الهوت سبوتات الجديدة
-          scenes[sceneName].hotspots.forEach(hs => {
-            const el = document.createElement('a-sphere');
-            el.setAttribute('class','hotspot');
-            el.setAttribute('position', hs.position);
-            el.setAttribute('radius', 0.12);
-            el.setAttribute('color', '#FFFFFF');
-            el.setAttribute('material', 'shader: standard; emissive: #FFD700; emissiveIntensity: 0.0');
+      const ring=document.createElement('a-ring');
+      ring.setAttribute('position','0 0 0');
+      ring.setAttribute('rotation','-90 0 0');
+      ring.setAttribute('radius-inner','0.25');
+      ring.setAttribute('radius-outer','1');
+      ring.setAttribute('material','color:#FFD700; shader:flat; opacity:0.5; transparent:true');
+      ring.setAttribute('scale','1 1 1');
+      el.appendChild(ring);
 
-            const ring = document.createElement('a-ring');
-            ring.setAttribute('position', '0 0 0');
-            ring.setAttribute('rotation', '-90 0 0');
-            ring.setAttribute('radius-inner','0.25');
-            ring.setAttribute('radius-outer','1');
-            ring.setAttribute('material','color: #FFD700; shader: flat; opacity: 0.5; transparent: true');
-            ring.setAttribute('scale','1 1 1');
-            el.appendChild(ring);
+      el.setAttribute('animation__hover','property: scale; startEvents: mouseenter; to:1.2 1.2 1.2; dur:200');
+      el.setAttribute('animation__hover_emissive','property: material.emissiveIntensity; startEvents: mouseenter; to:1; dur:200');
+      ring.setAttribute('animation__hover_ring','property: scale; startEvents: mouseenter; to:1.5 1.5 1.5; dur:200');
 
-            el.setAttribute('animation__hover','property: scale; startEvents: mouseenter; to: 1.2 1.2 1.2; dur: 200');
-            el.setAttribute('animation__hover_emissive','property: material.emissiveIntensity; startEvents: mouseenter; to: 1; dur: 200');
-            ring.setAttribute('animation__hover_ring','property: scale; startEvents: mouseenter; to: 1.5 1.5 1.5; dur: 200');
+      el.setAttribute('animation__leave','property: scale; startEvents: mouseleave; to:1 1 1; dur:200');
+      el.setAttribute('animation__leave_emissive','property: material.emissiveIntensity; startEvents: mouseleave; to:0; dur:200');
+      ring.setAttribute('animation__leave_ring','property: scale; startEvents: mouseleave; to:1 1 1; dur:200');
 
-            el.setAttribute('animation__leave','property: scale; startEvents: mouseleave; to: 1 1 1; dur: 200');
-            el.setAttribute('animation__leave_emissive','property: material.emissiveIntensity; startEvents: mouseleave; to: 0; dur: 200');
-            ring.setAttribute('animation__leave_ring','property: scale; startEvents: mouseleave; to: 1 1 1; dur: 200');
-
-            el.addEventListener('click', ()=>{
-              audio.pause();
-              audio.currentTime = 0;
-              audio.play().catch(()=>{});
-              changeScene(hs.target);
-            });
-
-            hotspotContainer.appendChild(el);
-          });
-
-          // تشغيل fade in
-          fadePlane.emit('fadein');
-
-          // عرض النص بعد التلاشي
-          roomLabel.setAttribute('text','value:' + scenes[sceneName].label);
-          roomLabel.setAttribute('visible', true);
-        }, 500);
-      }
-
-      window.addEventListener('load', ()=>{
-        document.body.addEventListener('click', ()=>{
-          const audio = document.getElementById('transitionSound');
-          audio.play().catch(()=>{});
-        },{once:true});
-
-        changeScene('Living_Room');
+      el.addEventListener('click', ()=>{
+        audio.pause();
+        audio.currentTime=0;
+        audio.play().catch(()=>{});
+        changeScene(hs.target);
       });
-    </script>
-  </body>
+
+      hotspotContainer.appendChild(el);
+    });
+
+    fadePlane.emit('fadein');
+
+    // عرض النص بعد التلاشي
+    roomLabel.setAttribute('text','value:' + scenes[sceneName].label);
+    roomLabel.setAttribute('visible', true);
+  },500);
+}
+
+window.addEventListener('load', ()=>{
+  document.body.addEventListener('click', ()=>{
+    const audio=document.getElementById('transitionSound');
+    audio.play().catch(()=>{});
+  }, {once:true});
+
+  changeScene('Living_Room');
+});
+</script>
+</body>
 </html>
