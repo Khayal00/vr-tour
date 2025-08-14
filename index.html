@@ -141,20 +141,19 @@
             hotspotContainer.appendChild(el);
 
             // إضافة تسمية الغرفة
-            const label = document.createElement('a-text');
-            label.setAttribute('value', hs.target.replace('_', ' '));
-            label.setAttribute('align', 'center');
-            label.setAttribute('color', '#FFF');
-            label.setAttribute('width', 2);
-            const pos = hs.position.split(' ');
-            label.setAttribute('position', `${pos[0]} ${parseFloat(pos[1]) + 0.6} ${pos[2]}`);
-            label.setAttribute('zOffset', 0.1);
-            hotspotContainer.appendChild(label);
-          });
+             // إضافة تسمية الغرفة
+  const label = document.createElement('a-text');
+  label.setAttribute('value', hs.target.replace('_', ' '));
+  label.setAttribute('align', 'center');
+  label.setAttribute('color', '#FFD700');
+  label.setAttribute('width', 4);
+  label.setAttribute('zOffset', 0.1);
 
-          fadePlane.emit('fadein');
-        }, 500);
-      }
+  const pos = hs.position.split(' ');
+  label.setAttribute('position', `${pos[0]} ${parseFloat(pos[1]) + 0.6} ${pos[2]}`);
+
+  hotspotContainer.appendChild(label);
+});
 
       window.addEventListener('load', () => {
         // تفعيل الصوت بعد أول نقرة (سياسة المتصفح)
