@@ -15,7 +15,7 @@
       <!-- إضاءة عامة -->
       <a-entity light="type: ambient; intensity: 0.6"></a-entity>
 
-      <!-- إضاءة اتجاهية لإظهار شكل الكرة -->
+      <!-- إضاءة اتجاهية -->
       <a-entity light="type: directional; intensity: 0.8" position="1 3 2"></a-entity>
 
       <!-- الكاميرا -->
@@ -107,41 +107,72 @@
           scenes[sceneName].hotspots.forEach(hs => {
             const pos = hs.position.split(' ');
 
-            // الكرة
+            // حاوية للنقطة الساخنة
+            const hotspot = document.createElement('a-entity');
+            hotspot.setAttribute('position', hs.position);
+
+            // الكرة الأصلية
             const sphere = document.createElement('a-sphere');
             sphere.setAttribute('class', 'hotspot');
-            sphere.setAttribute('position', hs.position);
             sphere.setAttribute('radius', 0.2);
             sphere.setAttribute('material', 'shader: standard; color: #FF0000');
+            sphere.setAttribute('id', `sphere-${hs.target}`);
 
-            sphere.setAttribute('animation__hover', 'property: scale; startEvents: mouseenter; to: 1.2 1.2 1.2; dur: 200');
-            sphere.setAttribute('animation__leave', 'property: scale; startEvents: mouseleave; to: 1 1 1; dur: 200');
+            // التوهج الخارجي
+            const glow = document.createElement('a-sphere');
+            glow.setAttribute('radius', 0.25);
+            glow.setAttribute('color', '#FFAAAA');
+            glow.setAttribute('opacity', '0.5');
+            glow.setAttribute('visible', 'false');
+            glow.setAttribute('scale', '1 1 1');
+            glow.setAttribute('id', `glow-${hs.target}`);
 
-            hotspotContainer.appendChild(sphere);
+            // نبض الحجم
+            const pulseScale = document.createElement('a-animation');
+            pulseScale.setAttribute('attribute', 'scale');
+            pulseScale.setAttribute('from', '1 1 1');
+            pulseScale.setAttribute('to', '1.5 1.5 1.5');
+            pulseScale.setAttribute('dur', '600');
+            pulseScale.setAttribute('direction', 'alternate');
+            pulseScale.setAttribute('repeat', 'indefinite');
+            pulseScale.setAttribute('begin', 'startPulse');
+            glow.appendChild(pulseScale);
 
-            // التوهج الضوئي
-            const light = document.createElement('a-light');
-            light.setAttribute('type', 'point');
-            light.setAttribute('color', '#FFA500');
-            light.setAttribute('intensity', '2');
-            light.setAttribute('distance', '1');
-            light.setAttribute('position', hs.position);
-            light.setAttribute('animation__pulse', `
-              property: intensity;
-              dir: alternate;
-              dur: 1000;
-              loop: true;
-              to: 3
-            `);
-            hotspotContainer.appendChild(light);
+            // نبض اللون
+            const pulseColor = document.createElement('a-animation');
+            pulseColor.setAttribute('attribute', 'color');
+            pulseColor.setAttribute('from', '#FFAAAA');
+            pulseColor.setAttribute('to', '#FF66CC');
+            pulseColor.setAttribute('dur', '600');
+            pulseColor.setAttribute('direction', 'alternate');
+            pulseColor.setAttribute('repeat', 'indefinite');
+            pulseColor.setAttribute('begin', 'startPulse');
+            glow.appendChild(pulseColor);
+
+            // التسمية بجانب الكرة
+            const label = document.createElement('a-text');
+            label.setAttribute('value', hs.target.replace('_', ' '));
+            label.setAttribute('align', 'left');
+            label.setAttribute('color', '#FFF');
+            label.setAttribute('width', 2);
+            label.setAttribute('position', '0.4 0 0');
+            label.setAttribute('visible', 'false');
+            label.setAttribute('id', `label-${hs.target}`);
 
             // التفاعل مع المؤشر
             sphere.addEventListener('mouseenter', () => {
               sphere.setAttribute('material', 'shader: standard; color: #FFAAAA');
+              glow.setAttribute('visible', true);
+              glow.emit('startPulse');
+              label.setAttribute('visible', true);
             });
 
             sphere.addEventListener('mouseleave', () => {
               sphere.setAttribute('material', 'shader: standard; color: #FF0000');
+              glow.setAttribute('visible', false);
+              glow.setAttribute('scale', '1 1 1');
+              glow.setAttribute('color', '#FFAAAA');
+              label.setAttribute('visible', false);
             });
 
             // الصوت والنقر
@@ -152,14 +183,11 @@
               changeScene(hs.target);
             });
 
-            // التسمية
-            const label = document.createElement('a-text');
-            label.setAttribute('value', hs.target.replace('_', ' '));
-            label.setAttribute('align', 'center');
-            label.setAttribute('color', '#FFF');
-            label.setAttribute('width', 2);
-            label.setAttribute('position', `${pos[0]} ${parseFloat(pos[1]) + 0.3} ${pos[2]}`);
-            hotspotContainer.appendChild(label);
+            // تجميع العناصر داخل الحاوية
+            hotspot.appendChild(sphere);
+            hotspot.appendChild(glow);
+            hotspot.appendChild(label);
+            hotspotContainer.appendChild(hotspot);
           });
 
           fadePlane.emit('fadein');
