@@ -2,11 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-<<<<<<< HEAD
     <title>VR Tour with 3D Hotspots</title>
-=======
-    <title>VR Tour with Glowing Circular Hotspots</title>
->>>>>>> 382b8904629f51f525165c27807e09589c1ee5b6
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <style>
@@ -37,11 +33,7 @@
       <!-- السماء -->
       <a-sky id="sky" rotation="0 -90 0"></a-sky>
 
-<<<<<<< HEAD
       <!-- حاوية للهوت سبوت -->
-=======
-      <!-- حاوية الهوت سبوت -->
->>>>>>> 382b8904629f51f525165c27807e09589c1ee5b6
       <a-entity id="hotspotContainer"></a-entity>
     </a-scene>
 
@@ -50,9 +42,9 @@
         Living_Room: {
           src: 'assets/Living_Room.jpg',
           hotspots: [
-            { target: 'Kitchen', position: '-1.8 1.6 -0.5' },
-            { target: 'Reception', position: '-1.8 1.6 -1' },
-            { target: 'Corridor', position: '1.8 1.6 -0.5' }
+            { target: 'Kitchen', position: '2 1.6 -2.5' },
+            { target: 'Reception', position: '-2 1.6 -2.5' },
+            { target: 'Corridor', position: '0 1.6 -2.5' }
           ]
         },
         Kitchen: {
@@ -81,35 +73,6 @@
             { target: 'Corridor', position: '0 1.6 -2.5' }
           ]
         },
-<<<<<<< HEAD
-        Kitchen: {
-          src: 'assets/Kitchen.jpg',
-          hotspots: [
-            { target: 'Living_Room', position: '0 1.6 -2.5' }
-          ]
-        },
-        Reception: {
-          src: 'assets/Reception.jpg',
-          hotspots: [
-            { target: 'Living_Room', position: '0 1.6 -2.5' }
-          ]
-        },
-        Corridor: {
-          src: 'assets/Corridor.jpg',
-          hotspots: [
-            { target: 'Bathroom', position: '-2 1.6 -2.5' },
-            { target: 'Bedroom', position: '2 1.6 -2.5' },
-            { target: 'Living_Room', position: '0 1.6 -2.5' }
-          ]
-        },
-        Bathroom: {
-          src: 'assets/Bathroom.jpg',
-          hotspots: [
-            { target: 'Corridor', position: '0 1.6 -2.5' }
-          ]
-        },
-=======
->>>>>>> 382b8904629f51f525165c27807e09589c1ee5b6
         Bedroom: {
           src: 'assets/Bedroom.jpg',
           hotspots: [
@@ -132,35 +95,13 @@
           // إزالة الهوت سبوت القديمة
           hotspotContainer.innerHTML = '';
 
-<<<<<<< HEAD
           // إضافة الهوت سبوت الجديدة على شكل 3D spheres
           scenes[sceneName].hotspots.forEach(hs => {
             const el = document.createElement('a-sphere');
             el.setAttribute('class', 'hotspot');
             el.setAttribute('position', hs.position);
-            el.setAttribute('radius', 0.2);
-            el.setAttribute('color', '#FF0000');
-=======
-          // إضافة الهوت سبوت الجديدة على شكل دوائر صغيرة
-          scenes[sceneName].hotspots.forEach(hs => {
-            const el = document.createElement('a-circle');
-            el.setAttribute('class', 'hotspot');
-            el.setAttribute('position', hs.position);
-            el.setAttribute('radius', 0.05);
+            el.setAttribute('radius', 0.08);
             el.setAttribute('color', '#FFFFFF');
-            el.setAttribute('shader', 'flat'); 
-
-            // تكبير وتوهج عند وضع المؤشر
-            el.addEventListener('mouseenter', () => {
-              el.setAttribute('scale', '1.5 1.5 1.5');  // تكبير
-              el.setAttribute('color', '#FFFFAA');       // لون متوهج خفيف
-            });
-            el.addEventListener('mouseleave', () => {
-              el.setAttribute('scale', '1 1 1');        // إعادة الحجم الأصلي
-              el.setAttribute('color', '#FFFFFF');      // اللون الأصلي
-            });
-
->>>>>>> 382b8904629f51f525165c27807e09589c1ee5b6
             el.addEventListener('click', () => {
               changeScene(hs.target);
             });
@@ -175,6 +116,5 @@
         changeScene('Living_Room');
       });
     </script>
-
   </body>
 </html>
