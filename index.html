@@ -8,7 +8,6 @@
     <style>
       body { margin: 0; }
       .hotspot { cursor: pointer; }
-      /* أسلوب جديد للتلميحات */
       .hotspot-tooltip {
         opacity: 0;
         transition: opacity 0.3s ease;
@@ -136,30 +135,31 @@
             el.setAttribute('animation__leave_emissive', 'property: material.emissiveIntensity; startEvents: mouseleave; to: 0; dur: 200');
             ring.setAttribute('animation__leave_ring', 'property: scale; startEvents: mouseleave; to: 1 1 1; dur: 200');
 
-            // إنشاء تلميح نصي متطور
+            // إنشاء تلميح نصي
             const tooltip = document.createElement('a-text');
             tooltip.setAttribute('class', 'hotspot-tooltip');
             tooltip.setAttribute('value', 'انتقل إلى ' + hs.target.replace('_', ' '));
             tooltip.setAttribute('align', 'center');
             tooltip.setAttribute('color', '#FFF');
-            tooltip.setAttribute('width', 3);
             tooltip.setAttribute('position', '0 0.5 0');
-            tooltip.setAttribute('background', 'color: #000; opacity: 0.7; padding: 0.2');
-            
-            // إضافة تأثيرات للتلميح
-            tooltip.setAttribute('animation__show', {
-              property: 'opacity',
-              startEvents: 'mouseenter',
-              to: '1',
-              dur: '200'
+            tooltip.setAttribute('visible', 'false');
+            tooltip.setAttribute('opacity', '0');
+            tooltip.setAttribute('scale', '0.8 0.8 0.8');
+            tooltip.setAttribute('geometry', 'primitive: plane; width: auto; height: auto');
+            tooltip.setAttribute('material', 'color: #000; opacity: 0; transparent: true');
+
+            // أحداث المؤشر للتلميح
+            el.addEventListener('mouseenter', function() {
+              tooltip.setAttribute('visible', 'true');
+              tooltip.setAttribute('material', 'opacity', '0.7');
+              tooltip.setAttribute('opacity', '1');
             });
-            tooltip.setAttribute('animation__hide', {
-              property: 'opacity',
-              startEvents: 'mouseleave',
-              to: '0',
-              dur: '200'
+
+            el.addEventListener('mouseleave', function() {
+              tooltip.setAttribute('visible', 'false');
+              tooltip.setAttribute('opacity', '0');
             });
-            
+
             el.appendChild(tooltip);
 
             // تشغيل الصوت والتنقل عند النقر
