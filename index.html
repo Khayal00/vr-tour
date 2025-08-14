@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>VR Tour with Interactive Glowing Hotspots</title>
+    <title>VR Tour with Reliable Sound</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <style>
@@ -95,65 +95,35 @@
         fadePlane.emit('fadeout');
 
         setTimeout(() => {
+          // تغيير الخلفية
           sky.setAttribute('src', scenes[sceneName].src);
+
+          // إزالة النقاط القديمة
           hotspotContainer.innerHTML = '';
 
+          // إضافة النقاط الجديدة
           scenes[sceneName].hotspots.forEach(hs => {
-            // إنشاء كيان يحتوي الكرة والحلقات
-            const hotspot = document.createElement('a-entity');
-            hotspot.setAttribute('class', 'hotspot');
-            hotspot.setAttribute('position', hs.position);
+            const el = document.createElement('a-sphere');
+            el.setAttribute('class', 'hotspot');
+            el.setAttribute('position', hs.position);
+            el.setAttribute('radius', 0.2);
+            el.setAttribute('color', '#FF0000');
 
-            // الكرة البيضاء
-            const sphere = document.createElement('a-sphere');
-            sphere.setAttribute('radius', 0.2);
-            sphere.setAttribute('color', '#FFFFFF');
-            sphere.setAttribute('material', 'shader: standard');
-            hotspot.appendChild(sphere);
+            // تأثيرات المرور
+            el.setAttribute('animation__hover', 'property: scale; startEvents: mouseenter; to: 1.2 1.2 1.2; dur: 200');
+            el.setAttribute('animation__leave', 'property: scale; startEvents: mouseleave; to: 1 1 1; dur: 200');
 
-            // الحلقة الداخلية للتوهج
-            const ringMain = document.createElement('a-ring');
-            ringMain.setAttribute('rotation', '-90 0 0');
-            ringMain.setAttribute('radius-inner', 0.25);
-            ringMain.setAttribute('radius-outer', 0.4);
-            ringMain.setAttribute('material', 'color: #FFFFFF; shader: flat; opacity: 0.3; transparent: true');
-            ringMain.setAttribute('animation__pulse', 'property: material.opacity; dir: alternate; dur: 1000; loop: true; to: 0.6');
-            hotspot.appendChild(ringMain);
-
-            // الحلقة الخارجية الضبابية
-            const ringOuter = document.createElement('a-ring');
-            ringOuter.setAttribute('rotation', '-90 0 0');
-            ringOuter.setAttribute('radius-inner', 0.42);
-            ringOuter.setAttribute('radius-outer', 0.6);
-            ringOuter.setAttribute('material', 'color: #FFFFFF; shader: flat; opacity: 0.15; transparent: true');
-            ringOuter.setAttribute('animation__pulse_outer', 'property: material.opacity; dir: alternate; dur: 1500; loop: true; to: 0.25');
-            hotspot.appendChild(ringOuter);
-
-            // تأثيرات المرور على الكيان كامل
-            hotspot.setAttribute('animation__hover', 'property: scale; startEvents: mouseenter; to: 1.2 1.2 1.2; dur: 200');
-            hotspot.setAttribute('animation__leave', 'property: scale; startEvents: mouseleave; to: 1 1 1; dur: 200');
-
-            // تكبير الحلقات عند المرور
-            hotspot.addEventListener('mouseenter', () => {
-              ringMain.setAttribute('scale', '1.5 1.5 1.5');
-              ringOuter.setAttribute('scale', '1.5 1.5 1.5');
-            });
-            hotspot.addEventListener('mouseleave', () => {
-              ringMain.setAttribute('scale', '1 1 1');
-              ringOuter.setAttribute('scale', '1 1 1');
-            });
-
-            // التنقل عند النقر
-            hotspot.addEventListener('click', () => {
+            // تشغيل الصوت عند النقر
+            el.addEventListener('click', () => {
               audio.pause();
               audio.currentTime = 0;
               audio.play().catch(() => {});
               changeScene(hs.target);
             });
 
-            hotspotContainer.appendChild(hotspot);
+            hotspotContainer.appendChild(el);
 
-            // إضافة تسمية الغرفة
+            // إضافة تسمية
             const label = document.createElement('a-text');
             label.setAttribute('value', hs.target.replace('_', ' '));
             label.setAttribute('align', 'center');
@@ -169,6 +139,7 @@
       }
 
       window.addEventListener('load', () => {
+        // تفعيل الصوت بعد أول نقرة (سياسة المتصفح)
         document.body.addEventListener('click', () => {
           const audio = document.querySelector('#transitionSound');
           audio.play().catch(() => {});
