@@ -89,44 +89,23 @@
         fadePlane.emit('fadeout');
 
         setTimeout(() => {
+          // تغيير السماء
           sky.setAttribute('src', scenes[sceneName].src);
+
+          // إزالة الهوت سبوت القديمة
           hotspotContainer.innerHTML = '';
 
+          // إضافة الهوت سبوت الجديدة على شكل 3D spheres
           scenes[sceneName].hotspots.forEach(hs => {
-            const hotspot = document.createElement('a-sphere');
-            hotspot.setAttribute('class', 'hotspot');
-            hotspot.setAttribute('position', hs.position);
-            hotspot.setAttribute('radius', 0.08);
-            hotspot.setAttribute('color', '#FFFFFF');
-
-            // عنصر النص
-            const label = document.createElement('a-text');
-            label.setAttribute('value', hs.target.replace('_', ' '));
-            label.setAttribute('align', 'center');
-            label.setAttribute('color', 'white');
-            label.setAttribute('position', `0 0.2 0`);
-            label.setAttribute('scale', '0 0 0'); // مخفي في البداية
-            label.setAttribute('side', 'double');
-
-            hotspot.appendChild(label);
-
-            // تكبير الكرة وعرض النص عند المرور
-            hotspot.addEventListener('mouseenter', () => {
-              hotspot.setAttribute('scale', '1.5 1.5 1.5');
-              label.setAttribute('scale', '1 1 1');
-            });
-
-            // رجوع للحجم الطبيعي وإخفاء النص
-            hotspot.addEventListener('mouseleave', () => {
-              hotspot.setAttribute('scale', '1 1 1');
-              label.setAttribute('scale', '0 0 0');
-            });
-
-            hotspot.addEventListener('click', () => {
+            const el = document.createElement('a-sphere');
+            el.setAttribute('class', 'hotspot');
+            el.setAttribute('position', hs.position);
+            el.setAttribute('radius', 0.2);
+            el.setAttribute('color', '#FF0000');
+            el.addEventListener('click', () => {
               changeScene(hs.target);
             });
-
-            hotspotContainer.appendChild(hotspot);
+            hotspotContainer.appendChild(el);
           });
 
           fadePlane.emit('fadein');
