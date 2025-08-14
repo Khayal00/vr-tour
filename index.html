@@ -32,6 +32,14 @@
 
       <!-- السماء -->
       <a-sky id="sky" rotation="0 -90 0"></a-sky>
+      <!-- النص المستقل -->
+  <a-text 
+    value="مرحبًا بك في الجولة الافتراضية" 
+    position="0 2 -3" 
+    align="center" 
+    color="#FFD700" 
+    width="4">
+  </a-text>
 
       <!-- حاوية للهوت سبوت -->
       <a-entity id="hotspotContainer"></a-entity>
@@ -164,15 +172,6 @@
 
         changeScene('Living_Room');
       });
-        <!-- نص يظهر في المشهد -->
-  <a-text 
-    value="مرحبًا بك في جولتي!" 
-    position="0 2 -3" 
-    color="#FFFFFF" 
-    align="center" 
-    width="4">
-  </a-text>
-</a-scene>
     </script>
   </body>
 </html>
