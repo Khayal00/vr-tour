@@ -141,19 +141,22 @@
             hotspotContainer.appendChild(el);
 
             // إضافة تسمية الغرفة
-           const label = document.createElement('a-text');
-label.setAttribute('value', hs.target.replace('_', ' '));
-label.setAttribute('align', 'center');
-label.setAttribute('color', '#FFF');
-label.setAttribute('width', 2);
-label.setAttribute('scale', '1 1 1');
-label.setAttribute('look-at', '#cameraRig');
+            const label = document.createElement('a-text');
+  label.setAttribute('value', hs.target.replace('_', ' '));
+  label.setAttribute('color', '#FFFFFF');
+  label.setAttribute('align', 'center');
+  label.setAttribute('width', 2);
+  label.setAttribute('scale', '1 1 1');
+  label.setAttribute('look-at', '#cameraRig');
 
-const pos = hs.position.split(' ');
-label.setAttribute('position', `${parseFloat(pos[0]) + 0.4} ${parseFloat(pos[1])} ${parseFloat(pos[2])}`);
+  // حساب الموضع بجانب الكرة
+  const pos = hs.position.split(' ').map(parseFloat);
+  const labelX = pos[0] + 0.5; // بجانب الكرة على المحور X
+  const labelY = pos[1];
+  const labelZ = pos[2];
+  label.setAttribute('position', `${labelX} ${labelY} ${labelZ}`);
 
-hotspotContainer.appendChild(label);
-
+  hotspotContainer.appendChild(label);
           });
 
           fadePlane.emit('fadein');
