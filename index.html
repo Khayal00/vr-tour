@@ -47,9 +47,9 @@
         Living_Room: {
           src: 'assets/Living_Room.jpg',
           hotspots: [
-            { target: 'Kitchen', position: '-2.5 1.6 -2.5' },
+            { target: 'Kitchen', position: '-3 1.6 2.8' },
             { target: 'Reception', position: '-2.5 1.6 -1.5' },
-            { target: 'Corridor', position: '2.5 1.6 3' }
+            { target: 'Corridor', position: '3 1.6 2.8' }
           ]
         },
         Kitchen: {
@@ -106,7 +106,7 @@
             const el = document.createElement('a-sphere');
             el.setAttribute('class', 'hotspot');
             el.setAttribute('position', hs.position);
-            el.setAttribute('radius', 0.07);
+            el.setAttribute('radius', 0.1);
             el.setAttribute('color', '#FFFFFF');
 
             // تأثيرات المرور
