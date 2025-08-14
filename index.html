@@ -55,13 +55,13 @@
         Kitchen: {
           src: 'assets/Kitchen.jpg',
           hotspots: [
-            { target: 'Living_Room', position: '4 1.6 -4' }
+            { target: 'Living_Room', position: '4 1.6 -7' }
           ]
         },
         Reception: {
           src: 'assets/Reception.jpg',
           hotspots: [
-            { target: 'Living_Room', position: '4 1.6 -1' }
+            { target: 'Living_Room', position: '5 1.6 -1' }
           ]
         },
         Corridor: {
@@ -141,53 +141,29 @@
             hotspotContainer.appendChild(el);
 
             // إضافة تسمية الغرفة
-           ld(sphere);
-
-          // حلقة التوهج
-          const ring = document.createElement('a-ring');
-          ring.setAttribute('position', '0 0 0');
-          ring.setAttribute('rotation', '-90 0 0');
-          ring.setAttribute('radius-inner', 0.25);
-          ring.setAttribute('radius-outer', 1);
-          ring.setAttribute('material', 'color: #FFD700; shader: flat; opacity: 0.5; transparent: true');
-          hotspotEntity.appendChild(ring);
-
-          // النص
-          const label = document.createElement('a-text');
-          label.setAttribute('value', hs.target);
-          label.setAttribute('align', 'center');
-          label.setAttribute('color', '#FFF');
-          label.setAttribute('width', 3);
-          label.setAttribute('visible', 'false');
-          label.setAttribute('position', `0 0.5 0`);
-          label.setAttribute('look-at', '#camera');
-          hotspotEntity.appendChild(label);
-
-          // الأحداث
-          sphere.addEventListener('mouseenter', () => {
-            label.setAttribute('visible', 'true');
-            sphere.setAttribute('scale', '1.2 1.2 1.2');
-            sphere.setAttribute('material', 'emissiveIntensity: 1');
-            ring.setAttribute('scale', '1.5 1.5 1.5');
+            const label = document.createElement('a-text');
+            label.setAttribute('value', hs.target.replace('_', ' '));
+            label.setAttribute('align', 'center');
+            label.setAttribute('color', '#FFF');
+            label.setAttribute('width', 2);
+            const pos = hs.position.split(' ');
+            label.setAttribute('position', `${pos[0]} ${parseFloat(pos[1]) + 0.3} ${pos[2]}`);
+            hotspotContainer.appendChild(label);
           });
 
-          sphere.addEventListener('mouseleave', () => {
-            label.setAttribute('visible', 'false');
-            sphere.setAttribute('scale', '1 1 1');
-            sphere.setAttribute('material', 'emissiveIntensity: 0');
-            ring.setAttribute('scale', '1 1 1');
-          });
+          fadePlane.emit('fadein');
+        }, 500);
+      }
 
-          sphere.addEventListener('click', () => {
-            audio.pause();
-            audio.currentTime = 0;
-            audio.play().catch(() => {});
-            changeScene(hs.target === 'Kitchen' ? 'scene2' : 'scene1');
-          });
+      window.addEventListener('load', () => {
+        // تفعيل الصوت بعد أول نقرة (سياسة المتصفح)
+        document.body.addEventListener('click', () => {
+          const audio = document.querySelector('#transitionSound');
+          audio.play().catch(() => {});
+        }, { once: true });
 
-          hotspotContainer.appendChild(hotspotEntity);
-        });
-     
+        changeScene('Living_Room');
+      });
     </script>
   </body>
 </html>
