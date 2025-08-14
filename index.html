@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>VR Tour with Room Labels</title>
+    <title>VR Tour with 3D Hotspots</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <style>
@@ -33,7 +33,7 @@
       <!-- السماء -->
       <a-sky id="sky" rotation="0 -90 0"></a-sky>
 
-      <!-- الحاوية -->
+      <!-- حاوية للهوت سبوت -->
       <a-entity id="hotspotContainer"></a-entity>
     </a-scene>
 
@@ -93,53 +93,40 @@
           hotspotContainer.innerHTML = '';
 
           scenes[sceneName].hotspots.forEach(hs => {
-            // الكرة
-            const el = document.createElement('a-sphere');
-            el.setAttribute('class', 'hotspot');
-            el.setAttribute('position', hs.position);
-            el.setAttribute('radius', 0.08);
-            el.setAttribute('color', '#FFD700');
-            el.setAttribute('emissive', '#FFD700');
-            el.setAttribute('emissiveIntensity', 0.5);
+            const hotspot = document.createElement('a-sphere');
+            hotspot.setAttribute('class', 'hotspot');
+            hotspot.setAttribute('position', hs.position);
+            hotspot.setAttribute('radius', 0.08);
+            hotspot.setAttribute('color', '#FFFFFF');
 
-            // النص
+            // عنصر النص
             const label = document.createElement('a-text');
             label.setAttribute('value', hs.target.replace('_', ' '));
             label.setAttribute('align', 'center');
             label.setAttribute('color', 'white');
-            label.setAttribute('position', '0 0.3 0');
-            label.setAttribute('scale', '0.8 0.8 0.8');
-            label.setAttribute('visible', 'false');
+            label.setAttribute('position', `0 0.2 0`);
+            label.setAttribute('scale', '0 0 0'); // مخفي في البداية
             label.setAttribute('side', 'double');
 
-            el.appendChild(label);
+            hotspot.appendChild(label);
 
-            // تأثير التكبير وظهور الاسم
-            el.addEventListener('mouseenter', () => {
-              el.setAttribute('animation__scale', {
-                property: 'scale',
-                to: '1.5 1.5 1.5',
-                dur: 200,
-                easing: 'easeOutQuad'
-              });
-              label.setAttribute('visible', 'true');
+            // تكبير الكرة وعرض النص عند المرور
+            hotspot.addEventListener('mouseenter', () => {
+              hotspot.setAttribute('scale', '1.5 1.5 1.5');
+              label.setAttribute('scale', '1 1 1');
             });
 
-            el.addEventListener('mouseleave', () => {
-              el.setAttribute('animation__scale', {
-                property: 'scale',
-                to: '1 1 1',
-                dur: 200,
-                easing: 'easeOutQuad'
-              });
-              label.setAttribute('visible', 'false');
+            // رجوع للحجم الطبيعي وإخفاء النص
+            hotspot.addEventListener('mouseleave', () => {
+              hotspot.setAttribute('scale', '1 1 1');
+              label.setAttribute('scale', '0 0 0');
             });
 
-            el.addEventListener('click', () => {
+            hotspot.addEventListener('click', () => {
               changeScene(hs.target);
             });
 
-            hotspotContainer.appendChild(el);
+            hotspotContainer.appendChild(hotspot);
           });
 
           fadePlane.emit('fadein');
