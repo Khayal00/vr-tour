@@ -47,9 +47,9 @@
         Living_Room: {
           src: 'assets/Living_Room.jpg',
           hotspots: [
-            { target: 'Kitchen', position: '-3 1.6 2.8' },
-            { target: 'Reception', position: '-2.5 1.6 -1.5' },
-            { target: 'Corridor', position: '3 1.6 2.8' }
+            { target: 'Kitchen', position: '-4 1.6 3' },
+            { target: 'Reception', position: '-4 1.6 -1.5' },
+            { target: 'Corridor', position: '4 1.6 3' }
           ]
         },
         Kitchen: {
@@ -106,11 +106,11 @@
             const el = document.createElement('a-sphere');
             el.setAttribute('class', 'hotspot');
             el.setAttribute('position', hs.position);
-            el.setAttribute('radius', 0.1);
+            el.setAttribute('radius', 0.08);
             el.setAttribute('color', '#FFFFFF');
 
             // تأثيرات المرور
-            el.setAttribute('animation__hover', 'property: scale; startEvents: mouseenter; to: 1.2 1.2 1.2; dur: 200');
+            el.setAttribute('animation__hover', 'property: scale; startEvents: mouseenter; to: 1.5 1.5 1.5; dur: 200');
             el.setAttribute('animation__leave', 'property: scale; startEvents: mouseleave; to: 1 1 1; dur: 200');
 
             // تشغيل الصوت عند النقر
