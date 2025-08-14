@@ -106,10 +106,10 @@
             // إنشاء كائن يحتوي الكرة والنص
             const hotspotEntity = document.createElement('a-entity');
             hotspotEntity.setAttribute('position', hs.position);
-            hotspotEntity.setAttribute('class', 'hotspot');
 
-            // الكرة البيضاء
+            // الكرة البيضاء (هي اللي تستجيب للمؤشر)
             const sphere = document.createElement('a-sphere');
+            sphere.setAttribute('class', 'hotspot');
             sphere.setAttribute('radius', 0.12);
             sphere.setAttribute('color', '#FFFFFF');
             sphere.setAttribute('material', 'shader: standard; emissive: #FFD700; emissiveIntensity: 0.0');
@@ -134,23 +134,23 @@
             label.setAttribute('position', `0 0.3 0`);
             hotspotEntity.appendChild(label);
 
-            // عند المرور بالماوس
-            hotspotEntity.addEventListener('mouseenter', () => {
+            // عند المرور على الكرة
+            sphere.addEventListener('mouseenter', () => {
               label.setAttribute('visible', 'true');
               sphere.setAttribute('scale', '1.2 1.2 1.2');
-              sphere.setAttribute('material', 'emissiveIntensity: 1');
+              sphere.setAttribute('material', 'emissiveIntensity: 1; color: #FFFFFF; shader: standard; emissive: #FFD700');
               ring.setAttribute('scale', '1.5 1.5 1.5');
             });
 
-            hotspotEntity.addEventListener('mouseleave', () => {
+            sphere.addEventListener('mouseleave', () => {
               label.setAttribute('visible', 'false');
               sphere.setAttribute('scale', '1 1 1');
-              sphere.setAttribute('material', 'emissiveIntensity: 0');
+              sphere.setAttribute('material', 'emissiveIntensity: 0; color: #FFFFFF; shader: standard; emissive: #FFD700');
               ring.setAttribute('scale', '1 1 1');
             });
 
-            // عند النقر
-            hotspotEntity.addEventListener('click', () => {
+            // عند النقر على الكرة
+            sphere.addEventListener('click', () => {
               audio.pause();
               audio.currentTime = 0;
               audio.play().catch(() => {});
