@@ -103,61 +103,61 @@
 
           // إضافة النقاط الجديدة
           scenes[sceneName].hotspots.forEach(hs => {
-            // إنشاء الكرة البيضاء
-            const el = document.createElement('a-sphere');
-            el.setAttribute('class', 'hotspot');
-            el.setAttribute('position', hs.position);
-            el.setAttribute('radius', 0.12);
-            el.setAttribute('color', '#FFFFFF');
-            el.setAttribute('material', 'shader: standard; emissive: #FFD700; emissiveIntensity: 0.0');
+            // إنشاء كائن يحتوي الكرة والنص
+            const hotspotEntity = document.createElement('a-entity');
+            hotspotEntity.setAttribute('position', hs.position);
+            hotspotEntity.setAttribute('class', 'hotspot');
 
-            // إنشاء حلقة توهج حول الكرة
+            // الكرة البيضاء
+            const sphere = document.createElement('a-sphere');
+            sphere.setAttribute('radius', 0.12);
+            sphere.setAttribute('color', '#FFFFFF');
+            sphere.setAttribute('material', 'shader: standard; emissive: #FFD700; emissiveIntensity: 0.0');
+            hotspotEntity.appendChild(sphere);
+
+            // حلقة التوهج
             const ring = document.createElement('a-ring');
             ring.setAttribute('position', '0 0 0');
             ring.setAttribute('rotation', '-90 0 0');
             ring.setAttribute('radius-inner', 0.25);
             ring.setAttribute('radius-outer', 1);
             ring.setAttribute('material', 'color: #FFD700; shader: flat; opacity: 0.5; transparent: true');
-            ring.setAttribute('scale', '1 1 1');
-            el.appendChild(ring);
+            hotspotEntity.appendChild(ring);
 
-            // إنشاء تسمية الغرفة (مخفية في البداية)
+            // النص (مخفي أولاً)
             const label = document.createElement('a-text');
             label.setAttribute('value', hs.target.replace('_', ' '));
             label.setAttribute('align', 'center');
             label.setAttribute('color', '#FFF');
             label.setAttribute('width', 2);
             label.setAttribute('visible', 'false');
-            const pos = hs.position.split(' ');
-            label.setAttribute('position', `${pos[0]} ${parseFloat(pos[1]) + 0.3} ${pos[2]}`);
-            hotspotContainer.appendChild(label);
+            label.setAttribute('position', `0 0.3 0`);
+            hotspotEntity.appendChild(label);
 
-            // تأثيرات المرور على الكرة والحلقة
-            el.setAttribute('animation__hover', 'property: scale; startEvents: mouseenter; to: 1.2 1.2 1.2; dur: 200');
-            el.setAttribute('animation__hover_emissive', 'property: material.emissiveIntensity; startEvents: mouseenter; to: 1; dur: 200');
-            ring.setAttribute('animation__hover_ring', 'property: scale; startEvents: mouseenter; to: 1.5 1.5 1.5; dur: 200');
-
-            el.setAttribute('animation__leave', 'property: scale; startEvents: mouseleave; to: 1 1 1; dur: 200');
-            el.setAttribute('animation__leave_emissive', 'property: material.emissiveIntensity; startEvents: mouseleave; to: 0; dur: 200');
-            ring.setAttribute('animation__leave_ring', 'property: scale; startEvents: mouseleave; to: 1 1 1; dur: 200');
-
-            // إظهار الاسم عند المرور
-            el.addEventListener('mouseenter', () => {
+            // عند المرور بالماوس
+            hotspotEntity.addEventListener('mouseenter', () => {
               label.setAttribute('visible', 'true');
-            });
-            el.addEventListener('mouseleave', () => {
-              label.setAttribute('visible', 'false');
+              sphere.setAttribute('scale', '1.2 1.2 1.2');
+              sphere.setAttribute('material', 'emissiveIntensity: 1');
+              ring.setAttribute('scale', '1.5 1.5 1.5');
             });
 
-            // تشغيل الصوت والتنقل عند النقر
-            el.addEventListener('click', () => {
+            hotspotEntity.addEventListener('mouseleave', () => {
+              label.setAttribute('visible', 'false');
+              sphere.setAttribute('scale', '1 1 1');
+              sphere.setAttribute('material', 'emissiveIntensity: 0');
+              ring.setAttribute('scale', '1 1 1');
+            });
+
+            // عند النقر
+            hotspotEntity.addEventListener('click', () => {
               audio.pause();
               audio.currentTime = 0;
               audio.play().catch(() => {});
               changeScene(hs.target);
             });
 
-            hotspotContainer.appendChild(el);
+            hotspotContainer.appendChild(hotspotEntity);
           });
 
           fadePlane.emit('fadein');
@@ -165,7 +165,7 @@
       }
 
       window.addEventListener('load', () => {
-        // تفعيل الصوت بعد أول نقرة (سياسة المتصفح)
+        // تفعيل الصوت بعد أول نقرة
         document.body.addEventListener('click', () => {
           const audio = document.querySelector('#transitionSound');
           audio.play().catch(() => {});
