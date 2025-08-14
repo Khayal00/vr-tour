@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>VR Tour with Hotspots and Independent Labels</title>
+    <title>VR Tour with Hotspots and Independent Text</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <style> body { margin: 0; } </style>
@@ -30,12 +30,12 @@
         </a-plane>
       </a-entity>
 
-      <!-- حاويات -->
+      <!-- حاوية الهوت سبوتات -->
       <a-entity id="hotspotContainer"></a-entity>
 
       <!-- نصوص مستقلة -->
-      <a-entity id="label1" text="value: Welcome to VR Tour; align: center; width: 4; color: #FFF" position="0 2 -3"></a-entity>
-      <a-entity id="label2" text="value: Explore Each Room; align: center; width: 3; color: #FFD700" position="2 1.5 -2"></a-entity>
+      <a-text id="label1" value="Welcome to VR Tour" align="center" width="4" color="#FFF" position="0 2 -3"></a-text>
+      <a-text id="label2" value="Explore Each Room" align="center" width="3" color="#FFD700" position="2 1.5 -2"></a-text>
 
       <!-- الأصوات -->
       <a-assets>
