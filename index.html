@@ -141,37 +141,53 @@
             hotspotContainer.appendChild(el);
 
             // إضافة تسمية الغرفة
-            const label = document.createElement('a-text');
-  label.setAttribute('value', hs.target.replace('_', ' '));
-  label.setAttribute('color', '#FFFFFF');
-  label.setAttribute('align', 'center');
-  label.setAttribute('width', 2);
-  label.setAttribute('scale', '1 1 1');
-  label.setAttribute('look-at', '#cameraRig');
+           ld(sphere);
 
-  // حساب الموضع بجانب الكرة
-  const pos = hs.position.split(' ').map(parseFloat);
-  const labelX = pos[0] + 0.5; // بجانب الكرة على المحور X
-  const labelY = pos[1];
-  const labelZ = pos[2];
-  label.setAttribute('position', `${labelX} ${labelY} ${labelZ}`);
+          // حلقة التوهج
+          const ring = document.createElement('a-ring');
+          ring.setAttribute('position', '0 0 0');
+          ring.setAttribute('rotation', '-90 0 0');
+          ring.setAttribute('radius-inner', 0.25);
+          ring.setAttribute('radius-outer', 1);
+          ring.setAttribute('material', 'color: #FFD700; shader: flat; opacity: 0.5; transparent: true');
+          hotspotEntity.appendChild(ring);
 
-  hotspotContainer.appendChild(label);
+          // النص
+          const label = document.createElement('a-text');
+          label.setAttribute('value', hs.target);
+          label.setAttribute('align', 'center');
+          label.setAttribute('color', '#FFF');
+          label.setAttribute('width', 3);
+          label.setAttribute('visible', 'false');
+          label.setAttribute('position', `0 0.5 0`);
+          label.setAttribute('look-at', '#camera');
+          hotspotEntity.appendChild(label);
+
+          // الأحداث
+          sphere.addEventListener('mouseenter', () => {
+            label.setAttribute('visible', 'true');
+            sphere.setAttribute('scale', '1.2 1.2 1.2');
+            sphere.setAttribute('material', 'emissiveIntensity: 1');
+            ring.setAttribute('scale', '1.5 1.5 1.5');
           });
 
-          fadePlane.emit('fadein');
-        }, 500);
-      }
+          sphere.addEventListener('mouseleave', () => {
+            label.setAttribute('visible', 'false');
+            sphere.setAttribute('scale', '1 1 1');
+            sphere.setAttribute('material', 'emissiveIntensity: 0');
+            ring.setAttribute('scale', '1 1 1');
+          });
 
-      window.addEventListener('load', () => {
-        // تفعيل الصوت بعد أول نقرة (سياسة المتصفح)
-        document.body.addEventListener('click', () => {
-          const audio = document.querySelector('#transitionSound');
-          audio.play().catch(() => {});
-        }, { once: true });
+          sphere.addEventListener('click', () => {
+            audio.pause();
+            audio.currentTime = 0;
+            audio.play().catch(() => {});
+            changeScene(hs.target === 'Kitchen' ? 'scene2' : 'scene1');
+          });
 
-        changeScene('Living_Room');
-      });
+          hotspotContainer.appendChild(hotspotEntity);
+        });
+     
     </script>
   </body>
 </html>
