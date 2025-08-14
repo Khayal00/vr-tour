@@ -12,6 +12,12 @@
   </head>
   <body>
     <a-scene>
+      <!-- تحميل الخط -->
+      <a-assets>
+        <a-asset-item id="robotoFont" src="https://cdn.aframe.io/fonts/Roboto-msdf.json"></a-asset-item>
+        <audio id="transitionSound" src="assets/transition.mp3"></audio>
+      </a-assets>
+
       <!-- الكاميرا -->
       <a-entity id="cameraRig" camera look-controls position="0 1.6 0">
         <a-cursor
@@ -39,10 +45,6 @@
       <!-- حاوية للنصوص المستقلة -->
       <a-entity id="labelContainer"></a-entity>
 
-      <!-- تحميل الصوت -->
-      <a-assets>
-        <audio id="transitionSound" src="assets/transition.mp3"></audio>
-      </a-assets>
     </a-scene>
 
     <script>
@@ -147,13 +149,14 @@
             hotspotContainer.appendChild(el);
           });
 
-          // إضافة النصوص المستقلة (يمكنك تعديل المواقع والنصوص حسب رغبتك)
+          // إضافة النصوص المستقلة (تظهر دائمًا وتختفي عند التنقل)
           const label1 = document.createElement('a-text');
           label1.setAttribute('value', 'Welcome to VR Tour');
           label1.setAttribute('color', '#FFFFFF');
           label1.setAttribute('align', 'center');
           label1.setAttribute('width', 4);
           label1.setAttribute('position', '0 3 -2');
+          label1.setAttribute('font', '#robotoFont'); // الخط مهم
           labelContainer.appendChild(label1);
 
           const label2 = document.createElement('a-text');
@@ -162,6 +165,7 @@
           label2.setAttribute('align', 'center');
           label2.setAttribute('width', 3);
           label2.setAttribute('position', '2 2 -1');
+          label2.setAttribute('font', '#robotoFont'); // الخط مهم
           labelContainer.appendChild(label2);
 
           fadePlane.emit('fadein');
@@ -169,6 +173,7 @@
       }
 
       window.addEventListener('load', () => {
+        // تفعيل الصوت بعد أول نقرة (سياسة المتصفح)
         document.body.addEventListener('click', () => {
           const audio = document.querySelector('#transitionSound');
           audio.play().catch(() => {});
