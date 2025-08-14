@@ -75,13 +75,13 @@
         Bathroom: {
           src: 'assets/Bathroom.jpg',
           hotspots: [
-            { target: 'Corridor', position: '-1 1.6 4' }
+            { target: 'Corridor', position: '-1 1.6 5' }
           ]
         },
         Bedroom: {
           src: 'assets/Bedroom.jpg',
           hotspots: [
-            { target: 'Corridor', position: '-0.5 1.6 4' }
+            { target: 'Corridor', position: '-1 1.6 4' }
           ]
         }
       };
@@ -121,6 +121,17 @@
             ring.setAttribute('scale', '1 1 1');
             el.appendChild(ring);
 
+            // إنشاء تسمية الغرفة (مخفية في البداية)
+            const label = document.createElement('a-text');
+            label.setAttribute('value', hs.target.replace('_', ' '));
+            label.setAttribute('align', 'center');
+            label.setAttribute('color', '#FFF');
+            label.setAttribute('width', 2);
+            label.setAttribute('visible', 'false');
+            const pos = hs.position.split(' ');
+            label.setAttribute('position', `${pos[0]} ${parseFloat(pos[1]) + 0.3} ${pos[2]}`);
+            hotspotContainer.appendChild(label);
+
             // تأثيرات المرور على الكرة والحلقة
             el.setAttribute('animation__hover', 'property: scale; startEvents: mouseenter; to: 1.2 1.2 1.2; dur: 200');
             el.setAttribute('animation__hover_emissive', 'property: material.emissiveIntensity; startEvents: mouseenter; to: 1; dur: 200');
@@ -129,6 +140,14 @@
             el.setAttribute('animation__leave', 'property: scale; startEvents: mouseleave; to: 1 1 1; dur: 200');
             el.setAttribute('animation__leave_emissive', 'property: material.emissiveIntensity; startEvents: mouseleave; to: 0; dur: 200');
             ring.setAttribute('animation__leave_ring', 'property: scale; startEvents: mouseleave; to: 1 1 1; dur: 200');
+
+            // إظهار الاسم عند المرور
+            el.addEventListener('mouseenter', () => {
+              label.setAttribute('visible', 'true');
+            });
+            el.addEventListener('mouseleave', () => {
+              label.setAttribute('visible', 'false');
+            });
 
             // تشغيل الصوت والتنقل عند النقر
             el.addEventListener('click', () => {
@@ -139,16 +158,6 @@
             });
 
             hotspotContainer.appendChild(el);
-
-            // إضافة تسمية الغرفة
-            const label = document.createElement('a-text');
-            label.setAttribute('value', hs.target.replace('_', ' '));
-            label.setAttribute('align', 'center');
-            label.setAttribute('color', '#FFF');
-            label.setAttribute('width', 2);
-            const pos = hs.position.split(' ');
-            label.setAttribute('position', `${pos[0]} ${parseFloat(pos[1]) + 0.3} ${pos[2]}`);
-            hotspotContainer.appendChild(label);
           });
 
           fadePlane.emit('fadein');
