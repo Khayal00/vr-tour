@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>VR Tour with 3D Hotspots</title>
+    <title>VR Tour with Room Labels</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <style>
@@ -33,7 +33,7 @@
       <!-- السماء -->
       <a-sky id="sky" rotation="0 -90 0"></a-sky>
 
-      <!-- حاوية للهوت سبوت -->
+      <!-- الحاوية -->
       <a-entity id="hotspotContainer"></a-entity>
     </a-scene>
 
@@ -42,9 +42,9 @@
         Living_Room: {
           src: 'assets/Living_Room.jpg',
           hotspots: [
-            { target: 'Kitchen', position: '-2.5 1.6 2.5' },
-            { target: 'Reception', position: '-2.5 1.6 -1.5' },
-            { target: 'Corridor', position: '2.5 1.6 2.5' }
+            { target: 'Kitchen', position: '2 1.6 -2.5' },
+            { target: 'Reception', position: '-2 1.6 -2.5' },
+            { target: 'Corridor', position: '0 1.6 -2.5' }
           ]
         },
         Kitchen: {
@@ -89,23 +89,32 @@
         fadePlane.emit('fadeout');
 
         setTimeout(() => {
-          // تغيير السماء
           sky.setAttribute('src', scenes[sceneName].src);
-
-          // إزالة الهوت سبوت القديمة
           hotspotContainer.innerHTML = '';
 
-          // إضافة الهوت سبوت الجديدة
           scenes[sceneName].hotspots.forEach(hs => {
+            // الكرة
             const el = document.createElement('a-sphere');
             el.setAttribute('class', 'hotspot');
             el.setAttribute('position', hs.position);
-            el.setAttribute('radius', 0.07);
-            el.setAttribute('color', '#FFFFFF'); // ذهبية
-            el.setAttribute('emissive', '#FFFFFF'); // توهج ذهبي
+            el.setAttribute('radius', 0.08);
+            el.setAttribute('color', '#FFD700');
+            el.setAttribute('emissive', '#FFD700');
             el.setAttribute('emissiveIntensity', 0.5);
 
-            // تأثير التكبير عند المرور
+            // النص
+            const label = document.createElement('a-text');
+            label.setAttribute('value', hs.target.replace('_', ' '));
+            label.setAttribute('align', 'center');
+            label.setAttribute('color', 'white');
+            label.setAttribute('position', '0 0.3 0');
+            label.setAttribute('scale', '0.8 0.8 0.8');
+            label.setAttribute('visible', 'false');
+            label.setAttribute('side', 'double');
+
+            el.appendChild(label);
+
+            // تأثير التكبير وظهور الاسم
             el.addEventListener('mouseenter', () => {
               el.setAttribute('animation__scale', {
                 property: 'scale',
@@ -113,7 +122,9 @@
                 dur: 200,
                 easing: 'easeOutQuad'
               });
+              label.setAttribute('visible', 'true');
             });
+
             el.addEventListener('mouseleave', () => {
               el.setAttribute('animation__scale', {
                 property: 'scale',
@@ -121,9 +132,9 @@
                 dur: 200,
                 easing: 'easeOutQuad'
               });
+              label.setAttribute('visible', 'false');
             });
 
-            // عند الضغط
             el.addEventListener('click', () => {
               changeScene(hs.target);
             });
