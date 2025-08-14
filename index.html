@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>VR Tour with Visible Glow</title>
+    <title>VR Tour with Light Glow</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <style>
@@ -116,62 +116,29 @@
 
             hotspotContainer.appendChild(sphere);
 
-            // التوهج كعنصر مستقل
-            const glow = document.createElement('a-ring');
-            const glowY = parseFloat(pos[1]); // نفس ارتفاع الكرة
-            glow.setAttribute('position', `${pos[0]} ${glowY} ${pos[2]}`);
-            glow.setAttribute('rotation', '-90 0 0');
-            glow.setAttribute('radius-inner', 0.3);
-            glow.setAttribute('radius-outer', 0.4);
-            glow.setAttribute('material', 'color: yellow; opacity: 0.8; shader: flat; transparent: true');
-
-            glow.setAttribute('animation__pulse', `
-              property: scale;
+            // التوهج الضوئي
+            const light = document.createElement('a-light');
+            light.setAttribute('type', 'point');
+            light.setAttribute('color', '#FFA500');
+            light.setAttribute('intensity', '2');
+            light.setAttribute('distance', '1');
+            light.setAttribute('position', hs.position);
+            light.setAttribute('animation__pulse', `
+              property: intensity;
               dir: alternate;
               dur: 1000;
               loop: true;
-              to: 1.3 1.3 1.3
+              to: 3
             `);
-
-            glow.setAttribute('animation__color', `
-              property: material.color;
-              dir: alternate;
-              dur: 1500;
-              loop: true;
-              to: orange
-            `);
-
-            hotspotContainer.appendChild(glow);
+            hotspotContainer.appendChild(light);
 
             // التفاعل مع المؤشر
             sphere.addEventListener('mouseenter', () => {
-              glow.setAttribute('animation__hoverGlow', `
-                property: scale;
-                to: 1.6 1.6 1.6;
-                dur: 300;
-                easing: easeOutQuad
-              `);
-              glow.setAttribute('animation__hoverColor', `
-                property: material.color;
-                to: white;
-                dur: 300;
-                easing: easeOutQuad
-              `);
+              sphere.setAttribute('color', '#FFFFFF');
             });
 
             sphere.addEventListener('mouseleave', () => {
-              glow.setAttribute('animation__hoverGlow', `
-                property: scale;
-                to: 1.3 1.3 1.3;
-                dur: 300;
-                easing: easeOutQuad
-              `);
-              glow.setAttribute('animation__hoverColor', `
-                property: material.color;
-                to: orange;
-                dur: 300;
-                easing: easeOutQuad
-              `);
+              sphere.setAttribute('color', '#FF0000');
             });
 
             // الصوت والنقر
