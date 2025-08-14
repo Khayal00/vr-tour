@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>VR Tour with White Glowing Hotspots</title>
+    <title>VR Tour with Advanced White Glowing Hotspots</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <style>
@@ -109,26 +109,38 @@
             el.setAttribute('position', hs.position);
             el.setAttribute('radius', 0.2);
             el.setAttribute('color', '#FFFFFF');
-            el.setAttribute('material', 'shader: standard; emissive: #FFFFFF; emissiveIntensity: 0.0');
+            el.setAttribute('material', 'shader: standard');
 
-            // إنشاء حلقة توهج حول الكرة
-            const ring = document.createElement('a-ring');
-            ring.setAttribute('position', '0 0 0');
-            ring.setAttribute('rotation', '-90 0 0');
-            ring.setAttribute('radius-inner', 0.25);
-            ring.setAttribute('radius-outer', 0.35);
-            ring.setAttribute('material', 'color: #FFFFFF; shader: flat; opacity: 0.5; transparent: true');
-            ring.setAttribute('scale', '1 1 1');
-            el.appendChild(ring);
+            // الحلقة الداخلية الرئيسية للتوهج
+            const ringMain = document.createElement('a-ring');
+            ringMain.setAttribute('position', '0 0 0');
+            ringMain.setAttribute('rotation', '-90 0 0');
+            ringMain.setAttribute('radius-inner', 0.25);
+            ringMain.setAttribute('radius-outer', 0.4);
+            ringMain.setAttribute('material', 'color: #FFFFFF; shader: flat; opacity: 0.3; transparent: true');
+            ringMain.setAttribute('scale', '1 1 1');
+            // توهج دائم خفيف
+            ringMain.setAttribute('animation__pulse', 'property: material.opacity; dir: alternate; dur: 1000; easing: linear; loop: true; to: 0.6');
+            // تكبير عند المرور
+            ringMain.setAttribute('animation__hover_ring', 'property: scale; startEvents: mouseenter; to: 1.5 1.5 1.5; dur: 200');
+            ringMain.setAttribute('animation__leave_ring', 'property: scale; startEvents: mouseleave; to: 1 1 1; dur: 200');
 
-            // تأثيرات المرور على الكرة والحلقة
-            el.setAttribute('animation__hover', 'property: scale; startEvents: mouseenter; to: 1.2 1.2 1.2; dur: 200');
-            el.setAttribute('animation__hover_emissive', 'property: material.emissiveIntensity; startEvents: mouseenter; to: 1; dur: 200');
-            ring.setAttribute('animation__hover_ring', 'property: scale; startEvents: mouseenter; to: 1.5 1.5 1.5; dur: 200');
+            el.appendChild(ringMain);
 
-            el.setAttribute('animation__leave', 'property: scale; startEvents: mouseleave; to: 1 1 1; dur: 200');
-            el.setAttribute('animation__leave_emissive', 'property: material.emissiveIntensity; startEvents: mouseleave; to: 0; dur: 200');
-            ring.setAttribute('animation__leave_ring', 'property: scale; startEvents: mouseleave; to: 1 1 1; dur: 200');
+            // الحلقة الخارجية الضبابية
+            const ringOuter = document.createElement('a-ring');
+            ringOuter.setAttribute('position', '0 0 0');
+            ringOuter.setAttribute('rotation', '-90 0 0');
+            ringOuter.setAttribute('radius-inner', 0.42);
+            ringOuter.setAttribute('radius-outer', 0.6);
+            ringOuter.setAttribute('material', 'color: #FFFFFF; shader: flat; opacity: 0.15; transparent: true');
+            ringOuter.setAttribute('scale', '1 1 1');
+            // حركة خفيفة مستمرة لإضفاء شعاع ضبابي
+            ringOuter.setAttribute('animation__pulse_outer', 'property: material.opacity; dir: alternate; dur: 1500; easing: linear; loop: true; to: 0.25');
+            ringOuter.setAttribute('animation__hover_ring_outer', 'property: scale; startEvents: mouseenter; to: 1.5 1.5 1.5; dur: 200');
+            ringOuter.setAttribute('animation__leave_ring_outer', 'property: scale; startEvents: mouseleave; to: 1 1 1; dur: 200');
+
+            el.appendChild(ringOuter);
 
             // تشغيل الصوت والتنقل عند النقر
             el.addEventListener('click', () => {
