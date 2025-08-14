@@ -48,7 +48,7 @@
           src: 'assets/Living_Room.jpg',
           hotspots: [
             { target: 'Kitchen', position: '-3 1.6 4' },
-            { target: 'Reception', position: '-3 1.6 -1.5' },
+            { target: 'Reception', position: '-3 1.6 -1.7' },
             { target: 'Corridor', position: '3 1.6 3' }
           ]
         },
@@ -107,9 +107,9 @@
             const el = document.createElement('a-sphere');
             el.setAttribute('class', 'hotspot');
             el.setAttribute('position', hs.position);
-            el.setAttribute('radius', 0.2);
+            el.setAttribute('radius', 0.1);
             el.setAttribute('color', '#FFFFFF');
-            el.setAttribute('material', 'shader: standard; emissive: #FFFFFF; emissiveIntensity: 0.0');
+            el.setAttribute('material', 'shader: standard; emissive: #FFD700; emissiveIntensity: 0.0');
 
             // إنشاء حلقة توهج حول الكرة
             const ring = document.createElement('a-ring');
