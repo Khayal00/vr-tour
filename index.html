@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>VR Tour with Reliable Sound</title>
+    <title>VR Tour with Reliable Sound and Glow</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <style>
@@ -103,17 +103,34 @@
 
           // إضافة النقاط الجديدة
           scenes[sceneName].hotspots.forEach(hs => {
+            // إنشاء الكرة
             const el = document.createElement('a-sphere');
             el.setAttribute('class', 'hotspot');
             el.setAttribute('position', hs.position);
             el.setAttribute('radius', 0.2);
             el.setAttribute('color', '#FF0000');
+            el.setAttribute('material', 'shader: standard; emissive: #FF4444; emissiveIntensity: 0.0');
+
+            // إنشاء حلقة التوهج حول الكرة
+            const ring = document.createElement('a-ring');
+            ring.setAttribute('position', '0 0 0');
+            ring.setAttribute('rotation', '-90 0 0');
+            ring.setAttribute('radius-inner', 0.25);
+            ring.setAttribute('radius-outer', 0.35);
+            ring.setAttribute('material', 'color: #FF4444; shader: flat; opacity: 0.5; transparent: true');
+            ring.setAttribute('scale', '1 1 1');
+            el.appendChild(ring);
 
             // تأثيرات المرور
             el.setAttribute('animation__hover', 'property: scale; startEvents: mouseenter; to: 1.2 1.2 1.2; dur: 200');
-            el.setAttribute('animation__leave', 'property: scale; startEvents: mouseleave; to: 1 1 1; dur: 200');
+            el.setAttribute('animation__hover_emissive', 'property: material.emissiveIntensity; startEvents: mouseenter; to: 1; dur: 200');
+            ring.setAttribute('animation__hover_ring', 'property: scale; startEvents: mouseenter; to: 1.5 1.5 1.5; dur: 200');
 
-            // تشغيل الصوت عند النقر
+            el.setAttribute('animation__leave', 'property: scale; startEvents: mouseleave; to: 1 1 1; dur: 200');
+            el.setAttribute('animation__leave_emissive', 'property: material.emissiveIntensity; startEvents: mouseleave; to: 0; dur: 200');
+            ring.setAttribute('animation__leave_ring', 'property: scale; startEvents: mouseleave; to: 1 1 1; dur: 200');
+
+            // تشغيل الصوت والتنقل
             el.addEventListener('click', () => {
               audio.pause();
               audio.currentTime = 0;
@@ -123,7 +140,7 @@
 
             hotspotContainer.appendChild(el);
 
-            // إضافة تسمية
+            // إضافة تسمية الغرفة
             const label = document.createElement('a-text');
             label.setAttribute('value', hs.target.replace('_', ' '));
             label.setAttribute('align', 'center');
