@@ -147,7 +147,8 @@
             label.setAttribute('color', '#FFF');
             label.setAttribute('width', 2);
             const pos = hs.position.split(' ');
-            label.setAttribute('position', `${pos[0]} ${parseFloat(pos[1]) + 0.3} ${pos[2]}`);
+            label.setAttribute('position', `${pos[0]} ${parseFloat(pos[1]) + 0.6} ${pos[2]}`);
+            label.setAttribute('zOffset', 0.1);
             hotspotContainer.appendChild(label);
           });
 
