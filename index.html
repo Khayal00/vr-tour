@@ -8,6 +8,12 @@
     <style>
       body { margin: 0; }
       .hotspot { cursor: pointer; }
+      /* أسلوب جديد للتلميحات */
+      .hotspot-tooltip {
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        pointer-events: none;
+      }
     </style>
   </head>
   <body>
@@ -130,6 +136,32 @@
             el.setAttribute('animation__leave_emissive', 'property: material.emissiveIntensity; startEvents: mouseleave; to: 0; dur: 200');
             ring.setAttribute('animation__leave_ring', 'property: scale; startEvents: mouseleave; to: 1 1 1; dur: 200');
 
+            // إنشاء تلميح نصي متطور
+            const tooltip = document.createElement('a-text');
+            tooltip.setAttribute('class', 'hotspot-tooltip');
+            tooltip.setAttribute('value', 'انتقل إلى ' + hs.target.replace('_', ' '));
+            tooltip.setAttribute('align', 'center');
+            tooltip.setAttribute('color', '#FFF');
+            tooltip.setAttribute('width', 3);
+            tooltip.setAttribute('position', '0 0.5 0');
+            tooltip.setAttribute('background', 'color: #000; opacity: 0.7; padding: 0.2');
+            
+            // إضافة تأثيرات للتلميح
+            tooltip.setAttribute('animation__show', {
+              property: 'opacity',
+              startEvents: 'mouseenter',
+              to: '1',
+              dur: '200'
+            });
+            tooltip.setAttribute('animation__hide', {
+              property: 'opacity',
+              startEvents: 'mouseleave',
+              to: '0',
+              dur: '200'
+            });
+            
+            el.appendChild(tooltip);
+
             // تشغيل الصوت والتنقل عند النقر
             el.addEventListener('click', () => {
               audio.pause();
@@ -139,21 +171,11 @@
             });
 
             hotspotContainer.appendChild(el);
+          });
 
-            // إضافة تسمية الغرفة
-             // إضافة تسمية الغرفة
-  const label = document.createElement('a-text');
-  label.setAttribute('value', hs.target.replace('_', ' '));
-  label.setAttribute('align', 'center');
-  label.setAttribute('color', '#FFD700');
-  label.setAttribute('width', 4);
-  label.setAttribute('zOffset', 0.1);
-
-  const pos = hs.position.split(' ');
-  label.setAttribute('position', `${pos[0]} ${parseFloat(pos[1]) + 0.6} ${pos[2]}`);
-
-  hotspotContainer.appendChild(label);
-});
+          fadePlane.emit('fadein');
+        }, 500);
+      }
 
       window.addEventListener('load', () => {
         // تفعيل الصوت بعد أول نقرة (سياسة المتصفح)
