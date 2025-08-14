@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>VR Tour with Hotspots and Visible Labels</title>
+    <title>VR Tour with Hotspots and Independent Labels</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <style> body { margin: 0; } </style>
@@ -48,18 +48,28 @@
             { target: 'Kitchen', position: '-3 1.6 4' },
             { target: 'Reception', position: '-3 1.6 -1.7' },
             { target: 'Corridor', position: '3 1.6 3' }
+          ],
+          labels: [
+            { value: 'Welcome to VR Tour', position: '0 2 -3', color: '#FFFFFF', width: 4 },
+            { value: 'Explore Each Room', position: '2 1.5 -2', color: '#FFD700', width: 3 }
           ]
         },
         Kitchen: {
           src: 'assets/Kitchen.jpg',
           hotspots: [
             { target: 'Living_Room', position: '4 1.6 -7' }
+          ],
+          labels: [
+            { value: 'Kitchen Area', position: '0 2 -3', color: '#FFFFFF', width: 4 }
           ]
         },
         Reception: {
           src: 'assets/Reception.jpg',
           hotspots: [
             { target: 'Living_Room', position: '5 1.6 -1' }
+          ],
+          labels: [
+            { value: 'Reception', position: '0 2 -3', color: '#FFD700', width: 4 }
           ]
         },
         Corridor: {
@@ -68,18 +78,27 @@
             { target: 'Bathroom', position: '3 1.6 -0.5' },
             { target: 'Bedroom', position: '-0.2 1.6 -3.5' },
             { target: 'Living_Room', position: '1 1.6 3' }
+          ],
+          labels: [
+            { value: 'Corridor', position: '0 2 -3', color: '#FFFFFF', width: 4 }
           ]
         },
         Bathroom: {
           src: 'assets/Bathroom.jpg',
           hotspots: [
             { target: 'Corridor', position: '-1 1.6 4' }
+          ],
+          labels: [
+            { value: 'Bathroom', position: '0 2 -3', color: '#FFD700', width: 4 }
           ]
         },
         Bedroom: {
           src: 'assets/Bedroom.jpg',
           hotspots: [
             { target: 'Corridor', position: '-0.5 1.6 4' }
+          ],
+          labels: [
+            { value: 'Bedroom', position: '0 2 -3', color: '#FF4444', width: 4 }
           ]
         }
       };
@@ -142,33 +161,24 @@
             hotspotContainer.appendChild(el);
           });
 
-          // إضافة النصوص المستقلة باستخدام text component
-          const label1 = document.createElement('a-entity');
-          label1.setAttribute('text', {
-            value: 'Welcome to VR Tour',
-            align: 'center',
-            width: 4,
-            color: '#FFFFFF'
+          // إضافة النصوص المستقلة لكل غرفة
+          scenes[sceneName].labels.forEach(lbl => {
+            const label = document.createElement('a-entity');
+            label.setAttribute('text', {
+              value: lbl.value,
+              align: 'center',
+              width: lbl.width,
+              color: lbl.color
+            });
+            label.setAttribute('position', lbl.position);
+            labelContainer.appendChild(label);
           });
-          label1.setAttribute('position', '0 3 -2');
-          labelContainer.appendChild(label1);
-
-          const label2 = document.createElement('a-entity');
-          label2.setAttribute('text', {
-            value: 'Explore Each Room',
-            align: 'center',
-            width: 3,
-            color: '#FFD700'
-          });
-          label2.setAttribute('position', '2 2 -1');
-          labelContainer.appendChild(label2);
 
           fadePlane.emit('fadein');
         }, 500);
       }
 
       window.addEventListener('load', () => {
-        // تفعيل الصوت بعد أول نقرة
         document.body.addEventListener('click', () => {
           const audio = document.querySelector('#transitionSound');
           audio.play().catch(() => {});
