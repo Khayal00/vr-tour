@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>VR Tour with Interactive Glow</title>
+    <title>VR Tour with Visible Glow</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <style>
@@ -12,6 +12,9 @@
   </head>
   <body>
     <a-scene>
+      <!-- إضاءة عامة -->
+      <a-entity light="type: ambient; intensity: 1"></a-entity>
+
       <!-- الكاميرا -->
       <a-entity id="cameraRig" camera look-controls position="0 1.6 0">
         <a-cursor
@@ -115,12 +118,12 @@
 
             // التوهج كعنصر مستقل
             const glow = document.createElement('a-ring');
-            const glowY = parseFloat(pos[1]) + 0.01;
+            const glowY = parseFloat(pos[1]); // نفس ارتفاع الكرة
             glow.setAttribute('position', `${pos[0]} ${glowY} ${pos[2]}`);
             glow.setAttribute('rotation', '-90 0 0');
-            glow.setAttribute('radius-inner', 0.25);
-            glow.setAttribute('radius-outer', 0.35);
-            glow.setAttribute('material', 'color: yellow; opacity: 0.6; shader: flat; transparent: true');
+            glow.setAttribute('radius-inner', 0.3);
+            glow.setAttribute('radius-outer', 0.4);
+            glow.setAttribute('material', 'color: yellow; opacity: 0.8; shader: flat; transparent: true');
 
             glow.setAttribute('animation__pulse', `
               property: scale;
