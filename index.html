@@ -130,6 +130,26 @@
             ring.setAttribute('scale', '1 1 1');
             el.appendChild(ring);
 
+            // إضافة تسمية الغرفة مرتبطة بالكرة
+            const label = document.createElement('a-text');
+            label.setAttribute('value', hs.target.replace('_', ' '));
+            label.setAttribute('align', 'center');
+            label.setAttribute('color', '#FFF');
+            label.setAttribute('width', 2);
+            label.setAttribute('opacity', 0); // مخفي مبدئيًا
+            label.setAttribute('position', `0 0.3 0`); // فوق الكرة
+            el.appendChild(label);
+
+            // إظهار النص عند المرور
+            el.addEventListener('mouseenter', () => {
+              label.setAttribute('opacity', 1);
+            });
+
+            // إخفاء النص عند الابتعاد
+            el.addEventListener('mouseleave', () => {
+              label.setAttribute('opacity', 0);
+            });
+
             // تأثيرات المرور على الكرة والحلقة
             el.setAttribute('animation__hover', 'property: scale; startEvents: mouseenter; to: 1.2 1.2 1.2; dur: 200');
             el.setAttribute('animation__hover_emissive', 'property: material.emissiveIntensity; startEvents: mouseenter; to: 1; dur: 200');
@@ -138,27 +158,6 @@
             el.setAttribute('animation__leave', 'property: scale; startEvents: mouseleave; to: 1 1 1; dur: 200');
             el.setAttribute('animation__leave_emissive', 'property: material.emissiveIntensity; startEvents: mouseleave; to: 0; dur: 200');
             ring.setAttribute('animation__leave_ring', 'property: scale; startEvents: mouseleave; to: 1 1 1; dur: 200');
-
-            // إضافة تسمية الغرفة (مخفية مبدئيًا)
-            const label = document.createElement('a-text');
-            label.setAttribute('value', hs.target.replace('_', ' '));
-            label.setAttribute('align', 'center');
-            label.setAttribute('color', '#FFF');
-            label.setAttribute('width', 2);
-            label.setAttribute('opacity', 0);
-            const pos = hs.position.split(' ');
-            label.setAttribute('position', `${pos[0]} ${parseFloat(pos[1]) + 0.3} ${pos[2]}`);
-            hotspotContainer.appendChild(label);
-
-            // إظهار النص عند المرور على الكرة
-            el.addEventListener('mouseenter', () => {
-              label.setAttribute('opacity', 1);
-            });
-
-            // إخفاء النص عند الخروج
-            el.addEventListener('mouseleave', () => {
-              label.setAttribute('opacity', 0);
-            });
 
             // تشغيل الصوت والتنقل عند النقر
             el.addEventListener('click', () => {
