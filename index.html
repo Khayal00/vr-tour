@@ -360,6 +360,28 @@
         .hotspot-container {
             position: relative;
         }
+        
+        /* توجيه المستخدم */
+        .user-guide {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 15;
+            max-width: 600px;
+            animation: fadeInOut 5s forwards;
+        }
+        
+        @keyframes fadeInOut {
+            0% { opacity: 0; }
+            20% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { opacity: 0; }
+        }
     </style>
 </head>
 <body>
@@ -438,30 +460,46 @@
             <div class="scene-dot" data-scene="scene6"></div>
         </div>
         
-        <!-- النقاط الساخنة المعدلة بمواقع غير متداخلة ومرئية -->
-        <a-entity class="hotspot" position="1 1.5 -3" data-scene="scene2">
-            <a-image class="hotspot-icon" src="assets/Kitchen1.png" scale="0.8 0.8 0.8" animation="property: scale; to: 0.9 0.9 0.9; dir: alternate; dur: 1000; loop: true"></a-image>
-            <a-entity position="0 -0.7 0" class="hotspot-label" text="value: المشهد الجبلي; align: center; color: white; width: 4"></a-entity>
+        <!-- النقاط الساخنة المعدلة لتواجه الكاميرا دائماً -->
+        <a-entity class="hotspot" position="0 1.5 -3" data-scene="scene2">
+            <!-- استخدام look-at لجعل الهوت سبوت تواجه الكاميرا دائماً -->
+            <a-image class="hotspot-icon" src="#hotspot" scale="0.8 0.8 0.8" 
+                     look-at="[camera]"
+                     animation="property: scale; to: 0.9 0.9 0.9; dir: alternate; dur: 1000; loop: true"></a-image>
+            <a-entity position="0 -0.7 0" class="hotspot-label" 
+                      text="value: المشهد الجبلي; align: center; color: white; width: 4"></a-entity>
         </a-entity>
         
-        <a-entity class="hotspot" position="3 1.5 1" data-scene="scene3">
-            <a-image class="hotspot-icon" src="#hotspot" scale="0.8 0.8 0.8" animation="property: scale; to: 0.9 0.9 0.9; dir: alternate; dur: 1000; loop: true"></a-image>
-            <a-entity position="0 -0.7 0" class="hotspot-label" text="value: شاطئ البحر; align: center; color: white; width: 4"></a-entity>
+        <a-entity class="hotspot" position="3 1.5 0" data-scene="scene3">
+            <a-image class="hotspot-icon" src="#hotspot" scale="0.8 0.8 0.8" 
+                     look-at="[camera]"
+                     animation="property: scale; to: 0.9 0.9 0.9; dir: alternate; dur: 1000; loop: true"></a-image>
+            <a-entity position="0 -0.7 0" class="hotspot-label" 
+                      text="value: شاطئ البحر; align: center; color: white; width: 4"></a-entity>
         </a-entity>
         
-        <a-entity class="hotspot" position="-3 1.5 1" data-scene="scene4">
-            <a-image class="hotspot-icon" src="#hotspot" scale="0.8 0.8 0.8" animation="property: scale; to: 0.9 0.9 0.9; dir: alternate; dur: 1000; loop: true"></a-image>
-            <a-entity position="0 -0.7 0" class="hotspot-label" text="value: الغابة الخضراء; align: center; color: white; width: 4"></a-entity>
+        <a-entity class="hotspot" position="-3 1.5 0" data-scene="scene4">
+            <a-image class="hotspot-icon" src="#hotspot" scale="0.8 0.8 0.8" 
+                     look-at="[camera]"
+                     animation="property: scale; to: 0.9 0.9 0.9; dir: alternate; dur: 1000; loop: true"></a-image>
+            <a-entity position="0 -0.7 0" class="hotspot-label" 
+                      text="value: الغابة الخضراء; align: center; color: white; width: 4"></a-entity>
         </a-entity>
         
-        <a-entity class="hotspot" position="1 1.5 3" data-scene="scene5">
-            <a-image class="hotspot-icon" src="#hotspot" scale="0.8 0.8 0.8" animation="property: scale; to: 0.9 0.9 0.9; dir: alternate; dur: 1000; loop: true"></a-image>
-            <a-entity position="0 -0.7 0" class="hotspot-label" text="value: الصحراء الذهبية; align: center; color: white; width: 4"></a-entity>
+        <a-entity class="hotspot" position="0 1.5 3" data-scene="scene5">
+            <a-image class="hotspot-icon" src="#hotspot" scale="0.8 0.8 0.8" 
+                     look-at="[camera]"
+                     animation="property: scale; to: 0.9 0.9 0.9; dir: alternate; dur: 1000; loop: true"></a-image>
+            <a-entity position="0 -0.7 0" class="hotspot-label" 
+                      text="value: الصحراء الذهبية; align: center; color: white; width: 4"></a-entity>
         </a-entity>
         
-        <a-entity class="hotspot" position="1 3 -2" data-scene="scene6">
-            <a-image class="hotspot-icon" src="#hotspot" scale="0.8 0.8 0.8" animation="property: scale; to: 0.9 0.9 0.9; dir: alternate; dur: 1000; loop: true"></a-image>
-            <a-entity position="0 -0.7 0" class="hotspot-label" text="value: المدينة الحديثة; align: center; color: white; width: 4"></a-entity>
+        <a-entity class="hotspot" position="0 3 -2" data-scene="scene6">
+            <a-image class="hotspot-icon" src="#hotspot" scale="0.8 0.8 0.8" 
+                     look-at="[camera]"
+                     animation="property: scale; to: 0.9 0.9 0.9; dir: alternate; dur: 1000; loop: true"></a-image>
+            <a-entity position="0 -0.7 0" class="hotspot-label" 
+                      text="value: المدينة الحديثة; align: center; color: white; width: 4"></a-entity>
         </a-entity>
         
         <!-- معلومات المشهد -->
@@ -487,6 +525,12 @@
             </div>
         </div>
         
+        <!-- توجيه المستخدم -->
+        <div class="user-guide" id="userGuide">
+            <h3>حرك رأسك لتستكشف المشهد</h3>
+            <p>انظر إلى النقاط المضيئة للانتقال بين المشاهد</p>
+        </div>
+        
         <!-- تأثيرات الانتقال -->
         <a-entity id="transitionOverlay" geometry="primitive: plane; height: 100; width: 100" 
                   material="color: black; opacity: 0" 
@@ -510,6 +554,7 @@
             const progressCircle = progressRing.querySelector('.progress-ring-circle');
             const sceneDots = document.querySelectorAll('.scene-dot');
             const errorMessage = document.getElementById('errorMessage');
+            const userGuide = document.getElementById('userGuide');
             
             // إعداد حلقة النظر والتفاعل
             let currentHotspot = null;
@@ -559,6 +604,11 @@
                             hotspot.setAttribute('visible', 'true');
                         });
                     }, 500);
+                    
+                    // إخفاء توجيه المستخدم بعد 5 ثوان
+                    setTimeout(() => {
+                        userGuide.style.display = 'none';
+                    }, 5000);
                 }, 1500);
             });
             
