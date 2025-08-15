@@ -50,15 +50,15 @@
       <img id="pano6" src="assets/pano6.jpg" crossorigin="anonymous">
 
       <!-- Thumbs for gallery (optional) -->
-      <img id="thumb1" src="assets/Living_Room.jpg">
-      <img id="thumb2" src="assets/Reception.jpg">
+      <img id="thumb1" src="assets/thumb1.jpg">
+      <img id="thumb2" src="assets/thumb2.jpg">
       <img id="thumb3" src="assets/thumb3.jpg">
       <img id="thumb4" src="assets/thumb4.jpg">
       <img id="thumb5" src="assets/thumb5.jpg">
       <img id="thumb6" src="assets/thumb6.jpg">
 
       <!-- Optional ambient audio per-scene -->
-      <audio id="amb1" src="assets/transition.mp3" preload="auto"></audio>
+      <audio id="amb1" src="assets/amb1.mp3" preload="auto"></audio>
     </a-assets>
 
     <!-- Main sky (we swap its texture on scene changes) -->
@@ -157,23 +157,61 @@
 
       let current = 0;
       let autoRotate = false;
-      let assets = Array.from(document.querySelectorAll('#assets img'));
 
-      // Progress loader: check images loaded
-      function updateProgress(){
-        let loaded = assets.filter(img => img.complete && img.naturalWidth > 0).length;
-        let percent = Math.round((loaded / assets.length) * 100);
+      // Gather assets (images + audio/video) and robust loader with fallback
+      const imageEls = Array.from(document.querySelectorAll('#assets img'));
+      const mediaEls = Array.from(document.querySelectorAll('#assets audio, #assets video'));
+      const assetsToLoad = imageEls.concat(mediaEls);
+      let loadedCount = 0;
+      let totalCount = assetsToLoad.length;
+      const missing = [];
+
+      // update progress bar helper
+      function updateBar(){
+        const percent = totalCount === 0 ? 100 : Math.round((loadedCount / totalCount) * 100);
         bar.style.width = percent + '%';
-        if(loaded === assets.length){
+        if(loadedCount >= totalCount){
+          // all assets processed (loaded or errored)
           startBtn.disabled = false;
           document.querySelector('#overlay h2').innerText = 'جاهز — اضغط ابدأ';
+          clearTimeout(fallbackTimer);
         }
       }
 
-      // Poll until all assets loaded or timeout
-      let poll = setInterval(updateProgress, 200);
-      // initial
-      updateProgress();
+      if(totalCount === 0){
+        // no assets found (allow start)
+        loadedCount = 0; updateBar();
+      } else {
+        assetsToLoad.forEach(el => {
+          if(el.tagName.toLowerCase() === 'img'){
+            if(el.complete && el.naturalWidth > 0){ loadedCount++; updateBar(); }
+            else{
+              el.addEventListener('load', ()=>{ loadedCount++; updateBar(); });
+              el.addEventListener('error', ()=>{ missing.push(el.getAttribute('src') || el.id); loadedCount++; updateBar(); });
+            }
+          } else {
+            // audio/video
+            if(el.readyState >= 3){ loadedCount++; updateBar(); }
+            else{
+              el.addEventListener('canplaythrough', ()=>{ loadedCount++; updateBar(); });
+              el.addEventListener('error', ()=>{ missing.push(el.getAttribute('src') || el.id); loadedCount++; updateBar(); });
+            }
+          }
+        });
+      }
+
+      // fallback: after 5s allow start and warn about missing assets
+      const fallbackTimer = setTimeout(()=>{
+        if(startBtn.disabled){
+          console.warn('Loader fallback: بعض الملفات لم تُحمل أو استغرق تحميلها وقتاً طويلاً', missing);
+          document.querySelector('#overlay h2').innerText = 'جاهز (تحذير: بعض الملفات لم تُحمل) — اضغط ابدأ';
+          startBtn.disabled = false;
+          bar.style.width = '100%';
+        }
+      }, 5000);
+
+      // initial bar update
+      updateBar();
 
       startBtn.addEventListener('click', ()=>{
         overlay.classList.add('hidden');
