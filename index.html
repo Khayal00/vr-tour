@@ -12,6 +12,28 @@
   </head>
   <body>
     <a-scene>
+      <!-- تحميل الصور مسبقًا -->
+      <a-assets>
+        <audio id="transitionSound" src="assets/transition.mp3"></audio>
+        <!-- Living Room Hotspots -->
+        <img id="Kitchen1" src="assets/Kitchen1.png">
+        <img id="Kitchen2" src="assets/Kitchen2.png">
+        <img id="Reception1" src="assets/Reception1.png">
+        <img id="Reception2" src="assets/Reception2.png">
+        <img id="Corridor1" src="assets/Corridor1.png">
+        <!-- Kitchen Hotspots -->
+        <img id="Living_Room1" src="assets/Living_Room1.png">
+        <!-- Reception Hotspots -->
+        <img id="Living_Room2" src="assets/Living_Room2.png">
+        <!-- Corridor Hotspots -->
+        <img id="Bathroom1" src="assets/Bathroom1.png">
+        <img id="Bedroom1" src="assets/Bedroom1.png">
+        <!-- Bathroom Hotspots -->
+        <img id="Corridor2" src="assets/Corridor2.png">
+        <!-- Bedroom Hotspots -->
+        <img id="Corridor3" src="assets/Corridor3.png">
+      </a-assets>
+
       <!-- الكاميرا -->
       <a-entity id="cameraRig" camera look-controls position="0 1.6 0">
         <a-cursor
@@ -35,11 +57,6 @@
 
       <!-- حاوية للهوت سبوت -->
       <a-entity id="hotspotContainer"></a-entity>
-
-      <!-- تحميل الصوت -->
-      <a-assets>
-        <audio id="transitionSound" src="assets/transition.mp3"></audio>
-      </a-assets>
     </a-scene>
 
     <script>
@@ -48,17 +65,17 @@
           src: 'assets/Living_Room.jpg',
           hotspots: [
             { target: 'Kitchen', images: [
-                { src: 'assets/Kitchen1.png', position: '-3 1.6 4', width: 0.5, height: 0.5 },
-                { src: 'assets/Kitchen2.png', position: '-2.5 1.8 3.5', width: 0.4, height: 0.4 }
+                { src: '#Kitchen1', position: '-3 1.6 4', width: 0.5, height: 0.5 },
+                { src: '#Kitchen2', position: '-2.5 1.8 3.5', width: 0.4, height: 0.4 }
               ]
             },
             { target: 'Reception', images: [
-                { src: 'assets/Reception1.png', position: '-3 1.6 -1.7', width: 0.5, height: 0.5 },
-                { src: 'assets/Reception2.png', position: '-2.7 1.8 -1.5', width: 0.4, height: 0.4 }
+                { src: '#Reception1', position: '-3 1.6 -1.7', width: 0.5, height: 0.5 },
+                { src: '#Reception2', position: '-2.7 1.8 -1.5', width: 0.4, height: 0.4 }
               ]
             },
             { target: 'Corridor', images: [
-                { src: 'assets/Corridor1.png', position: '3 1.6 3', width: 0.5, height: 0.5 }
+                { src: '#Corridor1', position: '3 1.6 3', width: 0.5, height: 0.5 }
               ]
             }
           ]
@@ -67,7 +84,7 @@
           src: 'assets/Kitchen.jpg',
           hotspots: [
             { target: 'Living_Room', images: [
-                { src: 'assets/Living_Room1.png', position: '4 1.6 -7', width: 0.5, height: 0.5 }
+                { src: '#Living_Room1', position: '4 1.6 -7', width: 0.5, height: 0.5 }
               ]
             }
           ]
@@ -76,7 +93,7 @@
           src: 'assets/Reception.jpg',
           hotspots: [
             { target: 'Living_Room', images: [
-                { src: 'assets/Living_Room1.png', position: '5 1.6 -1', width: 0.5, height: 0.5 }
+                { src: '#Living_Room2', position: '5 1.6 -1', width: 0.5, height: 0.5 }
               ]
             }
           ]
@@ -85,15 +102,15 @@
           src: 'assets/Corridor.jpg',
           hotspots: [
             { target: 'Bathroom', images: [
-                { src: 'assets/Bathroom1.png', position: '3 1.6 -0.5', width: 0.5, height: 0.5 }
+                { src: '#Bathroom1', position: '3 1.6 -0.5', width: 0.5, height: 0.5 }
               ]
             },
             { target: 'Bedroom', images: [
-                { src: 'assets/Bedroom1.png', position: '-0.2 1.6 -3.5', width: 0.5, height: 0.5 }
+                { src: '#Bedroom1', position: '-0.2 1.6 -3.5', width: 0.5, height: 0.5 }
               ]
             },
             { target: 'Living_Room', images: [
-                { src: 'assets/Living_Room1.png', position: '1 1.6 3', width: 0.5, height: 0.5 }
+                { src: '#Living_Room1', position: '1 1.6 3', width: 0.5, height: 0.5 }
               ]
             }
           ]
@@ -102,7 +119,7 @@
           src: 'assets/Bathroom.jpg',
           hotspots: [
             { target: 'Corridor', images: [
-                { src: 'assets/Corridor1.png', position: '-1 1.6 4', width: 0.5, height: 0.5 }
+                { src: '#Corridor2', position: '-1 1.6 4', width: 0.5, height: 0.5 }
               ]
             }
           ]
@@ -111,7 +128,7 @@
           src: 'assets/Bedroom.jpg',
           hotspots: [
             { target: 'Corridor', images: [
-                { src: 'assets/Corridor1.png', position: '-0.5 1.6 4', width: 0.5, height: 0.5 }
+                { src: '#Corridor3', position: '-0.5 1.6 4', width: 0.5, height: 0.5 }
               ]
             }
           ]
@@ -127,13 +144,9 @@
         fadePlane.emit('fadeout');
 
         setTimeout(() => {
-          // تغيير الخلفية
           sky.setAttribute('src', scenes[sceneName].src);
-
-          // إزالة النقاط القديمة
           hotspotContainer.innerHTML = '';
 
-          // إضافة النقاط الجديدة
           scenes[sceneName].hotspots.forEach(hs => {
             hs.images.forEach(img => {
               const el = document.createElement('a-image');
@@ -155,7 +168,6 @@
 
               hotspotContainer.appendChild(el);
 
-              // إضافة تسمية الغرفة
               const label = document.createElement('a-text');
               label.setAttribute('value', hs.target.replace('_', ' '));
               label.setAttribute('align', 'center');
@@ -172,7 +184,6 @@
       }
 
       window.addEventListener('load', () => {
-        // تفعيل الصوت بعد أول نقرة (سياسة المتصفح)
         document.body.addEventListener('click', () => {
           const audio = document.querySelector('#transitionSound');
           audio.play().catch(() => {});
