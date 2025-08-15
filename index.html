@@ -23,6 +23,12 @@
         </a-cursor>
             <!-- حاوية للهوت سبوت -->
       <a-entity id="hotspotContainer"></a-entity>
+        <a-assets>
+        <audio id="transitionSound" src="assets/transition.mp3"></audio>
+        <!-- إضافة صور الهوت سبوت هنا -->
+        <img id="hotspotImage" src="assets/Kitchen1.png">
+        <img id="hotspotHover" src="assets/Reception1.png">
+      </a-assets>
 
         <!-- طبقة التلاشي -->
         <a-plane id="fadePlane" position="0 0 -0.5" width="2" height="2"
@@ -34,14 +40,6 @@
 
       <!-- السماء -->
       <a-sky id="sky" rotation="0 -90 0"></a-sky>
-
-      <!-- تحميل الصوت والصور -->
-      <a-assets>
-        <audio id="transitionSound" src="assets/transition.mp3"></audio>
-        <!-- إضافة صور الهوت سبوت هنا -->
-        <img id="hotspotImage" src="assets/Kitchen1.png">
-        <img id="hotspotHover" src="assets/Reception1.png">
-      </a-assets>
     </a-scene>
 
     <script>
