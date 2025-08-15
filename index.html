@@ -3,135 +3,297 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>جولة افتراضية مع نقاط انتقال مرئية</title>
-    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <title>جولة افتراضية متكاملة</title>
+    <script src="https://cdn.jsdelivr.net/npm/aframe@1.4.2/dist/aframe-master.min.js"></script>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        html, body {
+        body {
             width: 100%;
-            height: 100%;
+            height: 100vh;
             overflow: hidden;
+            background: #000;
         }
-        a-scene {
-            display: block;
+        #scene-container {
             width: 100%;
             height: 100%;
+            position: relative;
         }
-        .loading {
+        #loading {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: #000;
-            color: white;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: #fff;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 1000;
-            font-family: Arial, sans-serif;
-            font-size: 24px;
+            transition: opacity 0.5s;
+        }
+        .logo {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #4cc9f0;
+            text-shadow: 0 0 10px rgba(76, 201, 240, 0.7);
+        }
+        #progress-container {
+            width: 300px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+        #progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #4361ee, #4cc9f0);
+            transition: width 0.3s;
+        }
+        #scene-title {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: white;
+            font-size: 1.5rem;
+            z-index: 10;
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+        }
+        .instructions {
+            margin-top: 20px;
+            text-align: center;
+            max-width: 500px;
+            line-height: 1.6;
+            color: #b8c1ec;
         }
     </style>
 </head>
 <body>
-    <div class="loading">جاري تحميل الجولة الافتراضية...</div>
+    <div id="loading">
+        <div class="logo">الجولة الافتراضية</div>
+        <div>جاري تحميل المشهد...</div>
+        <div id="progress-container">
+            <div id="progress-bar"></div>
+        </div>
+        <div class="instructions">
+            يمكنك استخدام الماوس للتحريك في جميع الاتجاهات.<br>
+            انقر على النقاط البيضاء للانتقال بين الغرف.
+        </div>
+    </div>
     
-    <a-scene>
-        <!-- الكاميرا -->
-        <a-entity id="camera" camera="fov: 80" look-controls position="0 1.6 0">
-            <a-cursor
-                rayOrigin="mouse"
-                fuse="false"
-                material="color: white; shader: flat"
-                geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03">
-            </a-cursor>
-        </a-entity>
+    <div id="scene-container">
+        <a-scene>
+            <!-- الكاميرا -->
+            <a-entity id="camera" camera="fov: 80" look-controls="pointerLockEnabled: true" position="0 1.6 0">
+                <a-cursor
+                    rayOrigin="mouse"
+                    fuse="false"
+                    material="color: white; shader: flat"
+                    geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03">
+                </a-cursor>
+            </a-entity>
 
-        <!-- السماء -->
-        <a-sky id="sky"></a-sky>
+            <!-- السماء -->
+            <a-sky id="sky"></a-sky>
 
-        <!-- حاوية نقاط الانتقال -->
-        <a-entity id="hotspotContainer"></a-entity>
-
-        <!-- الأصول -->
-        <a-assets timeout="10000">
-            <audio id="transitionSound" src="https://cdn.aframe.io/360-image-gallery-boilerplate/audio/click.ogg"></audio>
-            <img id="hotspotImage" src="assets/Kitchen1.png">
-            <img id="hotspotHover" src="assets/Reception1.png">
-            
-            <!-- صور المشاهد -->
-            <img id="Living_Room" src="assets/Living_Room.jpg">
-            <img id="Kitchen" src="assets/Kitchen.jpg">
-            <img id="Reception" src="assets/Receotion.jpg">
-        </a-assets>
-    </a-scene>
+            <!-- حاوية نقاط الانتقال -->
+            <a-entity id="hotspotContainer"></a-entity>
+        </a-scene>
+        <div id="scene-title">غرفة المعيشة</div>
+    </div>
 
     <script>
+        // ============================================
+        // === هنا تكتب أسماء الصور الخاصة بك ===
+        // ============================================
+        
+        // روابط صور المشاهد (يجب استبدالها بصورك الخاصة)
+        const sceneImages = {
+            livingRoom: 'assets/Living_Room.jpg',
+            kitchen: 'assets/Kitchen.jpg',
+            bedroom: 'assets/Reception.jpg',
+            // يمكنك إضافة المزيد من الصور هنا:
+            // scene4: 'مسار/صورة_المشهد_الرابع.jpg'
+        };
+
+        // روابط صور نقاط الانتقال
+        const hotspotImages = {
+            normal: 'assets/kitchen1.png',
+            hover: 'assets/Living_Room1.png'
+            // يمكنك استبدالها بصورك الخاصة:
+            // normal: 'مسار/صورة_النقطة_العادية.png',
+            // hover: 'مسار/صورة_النقطة_عند_المرور.png'
+        };
+
+        // رابط صوت الانتقال
+        const audioFile = 'https://cdn.aframe.io/360-image-gallery-boilerplate/audio/click.ogg';
+        // يمكنك استبداله بصوتك الخاص:
+        // const audioFile = 'مسار/صوت_الانتقال.mp3';
+
+        // ============================================
+        // === تعريف المشاهد ونقاط الانتقال ===
+        // ============================================
+        
         // تعريف المشاهد
         const scenes = {
-            scene1: {
-                name: "الصالة",
-                src: "assets/Living_Room.jpg",
+            livingRoom: {
+                name: "غرفة المعيشة",
+                image: sceneImages.livingRoom,
                 hotspots: [
-                    { target: "Kitchen", position: "-1 1.6 -3", label: "المطبخ" },
-                    { target: "Reception", position: "1 1.6 -3", label: "غرفة النوم" }
+                    { target: "kitchen", position: "-1 1.6 -3", label: "المطبخ" },
+                    { target: "bedroom", position: "1 1.6 -3", label: "غرفة النوم" }
                 ]
             },
-            scene2: {
+            kitchen: {
                 name: "المطبخ",
-                src: "assets/Kitchen.jpg",
+                image: sceneImages.kitchen,
                 hotspots: [
-                    { target: "Living_Room", position: "0 1.6 -4", label: "غرفة المعيشة" }
+                    { target: "livingRoom", position: "0 1.6 -4", label: "غرفة المعيشة" }
                 ]
             },
-            scene3: {
+            bedroom: {
                 name: "غرفة النوم",
-                src: "#scene3",
+                image: sceneImages.bedroom,
                 hotspots: [
-                    { target: "Living_Room", position: "0 1.6 -4", label: "غرفة المعيشة" }
+                    { target: "livingRoom", position: "0 1.6 -4", label: "غرفة المعيشة" }
                 ]
             }
+            // يمكنك إضافة المزيد من المشاهد هنا:
+            /*
+            bathroom: {
+                name: "الحمام",
+                image: sceneImages.bathroom,
+                hotspots: [
+                    { target: "livingRoom", position: "0 1.6 -4", label: "غرفة المعيشة" }
+                ]
+            }
+            */
         };
+
+        // ============================================
+        // === بقية الكود (لا داعي للتعديل هنا عادةً) ===
+        // ============================================
+        
+        // متغيرات التطبيق
+        let assetsLoaded = false;
+        let audioElement;
+        let hotspotImageNormal;
+        let hotspotImageHover;
+        
+        // تحميل جميع الأصول
+        function loadAssets() {
+            const totalAssets = Object.keys(sceneImages).length + 3; // 3 للصور الإضافية
+            let loadedCount = 0;
+            
+            function updateProgress() {
+                loadedCount++;
+                const progress = Math.round((loadedCount / totalAssets) * 100);
+                document.getElementById('progress-bar').style.width = `${progress}%`;
+                
+                if (loadedCount === totalAssets) {
+                    setTimeout(() => {
+                        document.getElementById('loading').style.opacity = '0';
+                        setTimeout(() => {
+                            document.getElementById('loading').style.display = 'none';
+                        }, 500);
+                        changeScene('livingRoom');
+                    }, 500);
+                }
+            }
+            
+            // تحميل الصوت
+            audioElement = new Audio(audioFile);
+            audioElement.preload = 'auto';
+            audioElement.addEventListener('canplaythrough', updateProgress);
+            audioElement.addEventListener('error', () => console.log("خطأ في تحميل الصوت"));
+            
+            // تحميل صور النقاط
+            hotspotImageNormal = new Image();
+            hotspotImageNormal.src = hotspotImages.normal;
+            hotspotImageNormal.addEventListener('load', updateProgress);
+            hotspotImageNormal.addEventListener('error', () => console.log("خطأ في تحميل صورة النقطة"));
+            
+            hotspotImageHover = new Image();
+            hotspotImageHover.src = hotspotImages.hover;
+            hotspotImageHover.addEventListener('load', updateProgress);
+            hotspotImageHover.addEventListener('error', () => console.log("خطأ في تحميل صورة النقطة عند المرور"));
+            
+            // تحميل صور المشاهد
+            Object.keys(sceneImages).forEach(sceneId => {
+                const img = new Image();
+                img.src = sceneImages[sceneId];
+                img.addEventListener('load', updateProgress);
+                img.addEventListener('error', () => console.log(`خطأ في تحميل مشهد ${sceneId}`));
+            });
+            
+            assetsLoaded = true;
+        }
 
         // الانتقال بين المشاهد
         function changeScene(sceneId) {
+            if (!scenes[sceneId]) {
+                console.error(`المشهد ${sceneId} غير موجود`);
+                return;
+            }
+            
+            const scene = scenes[sceneId];
             const sky = document.querySelector('#sky');
             const hotspotContainer = document.querySelector('#hotspotContainer');
-            const scene = scenes[sceneId];
+            const sceneTitle = document.getElementById('scene-title');
             
             // تحديث السماء
-            sky.setAttribute('src', scene.src);
+            sky.setAttribute('material', 'src', scene.image);
+            
+            // تحديث عنوان المشهد
+            sceneTitle.textContent = scene.name;
             
             // إزالة النقاط القديمة
             hotspotContainer.innerHTML = '';
             
             // إضافة النقاط الجديدة
             scene.hotspots.forEach(hotspot => {
-                const hotspotEl = document.createElement('a-image');
+                if (!scenes[hotspot.target]) {
+                    console.error(`المشهد الهدف ${hotspot.target} غير موجود`);
+                    return;
+                }
+                
+                const hotspotEl = document.createElement('a-entity');
                 hotspotEl.setAttribute('class', 'hotspot');
-                hotspotEl.setAttribute('src', '#hotspotImage');
                 hotspotEl.setAttribute('position', hotspot.position);
-                hotspotEl.setAttribute('width', 0.5);
-                hotspotEl.setAttribute('height', 0.5);
                 hotspotEl.setAttribute('look-at', '[camera]');
-                hotspotEl.setAttribute('data-target', hotspot.target);
+                
+                // إنشاء الصورة
+                const image = document.createElement('a-image');
+                image.setAttribute('src', hotspotImageNormal.src);
+                image.setAttribute('width', 0.5);
+                image.setAttribute('height', 0.5);
+                hotspotEl.appendChild(image);
                 
                 // تأثيرات المرور
                 hotspotEl.addEventListener('mouseenter', () => {
-                    hotspotEl.setAttribute('src', '#hotspotHover');
-                    hotspotEl.setAttribute('scale', '1.2 1.2 1.2');
-                    label.setAttribute('visible', 'true');
+                    image.setAttribute('src', hotspotImageHover.src);
+                    image.setAttribute('width', 0.6);
+                    image.setAttribute('height', 0.6);
                 });
                 
                 hotspotEl.addEventListener('mouseleave', () => {
-                    hotspotEl.setAttribute('src', '#hotspotImage');
-                    hotspotEl.setAttribute('scale', '1 1 1');
-                    label.setAttribute('visible', 'false');
+                    image.setAttribute('src', hotspotImageNormal.src);
+                    image.setAttribute('width', 0.5);
+                    image.setAttribute('height', 0.5);
                 });
                 
                 // التسمية
@@ -144,43 +306,44 @@
                 label.setAttribute('look-at', '[camera]');
                 hotspotEl.appendChild(label);
                 
+                // إظهار التسمية عند المرور
+                hotspotEl.addEventListener('mouseenter', () => {
+                    label.setAttribute('visible', 'true');
+                });
+                
+                hotspotEl.addEventListener('mouseleave', () => {
+                    label.setAttribute('visible', 'false');
+                });
+                
                 // النقلة عند النقر
                 hotspotEl.addEventListener('click', () => {
-                    const audio = document.querySelector('#transitionSound');
-                    audio.currentTime = 0;
-                    audio.play().catch(e => console.log("تشغيل الصوت:", e));
+                    audioElement.currentTime = 0;
+                    audioElement.play().catch(e => console.log("تشغيل الصوت:", e));
                     changeScene(hotspot.target);
                 });
                 
                 hotspotContainer.appendChild(hotspotEl);
             });
-            
-            // تحديث عنوان الصفحة
-            document.title = "جولة افتراضية - " + scene.name;
         }
 
-        // بدء الجولة بعد تحميل المشهد
+        // بدء التحميل عند تهيئة المشهد
         document.querySelector('a-scene').addEventListener('loaded', () => {
-            // إخفاء شاشة التحميل
-            document.querySelector('.loading').style.display = 'none';
-            
-            // بدء المشهد الأول
-            changeScene('scene1');
-            
-            // تفعيل الصوت بعد التفاعل الأول
-            document.body.addEventListener('click', () => {
-                const audio = document.querySelector('#transitionSound');
-                audio.play().catch(e => console.log("التفعيل الأولي للصوت:", e));
-            }, { once: true });
+            loadAssets();
         });
+        
+        // تفعيل الصوت بعد التفاعل الأول
+        document.body.addEventListener('click', () => {
+            if (assetsLoaded && audioElement) {
+                audioElement.play().catch(e => console.log("التفعيل الأولي للصوت:", e));
+            }
+        }, { once: true });
         
         // حل بديل إذا لم يعمل حدث loaded
         setTimeout(() => {
-            if (document.querySelector('.loading').style.display !== 'none') {
-                document.querySelector('.loading').style.display = 'none';
-                changeScene('scene1');
+            if (document.getElementById('loading').style.display !== 'none') {
+                loadAssets();
             }
-        }, 3000);
+        }, 2000);
     </script>
 </body>
 </html>
