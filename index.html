@@ -355,6 +355,11 @@
             z-index: 2000;
             display: none;
         }
+        
+        /* طبقة إصلاح التداخل */
+        .hotspot-container {
+            position: relative;
+        }
     </style>
 </head>
 <body>
@@ -434,30 +439,37 @@
         </div>
         
         <!-- النقاط الساخنة المعدلة بمواقع غير متداخلة -->
-        <a-entity class="hotspot" position="0 1.5 -5" data-scene="scene2">
-            <a-image class="hotspot-icon" src="#hotspot" scale="0.5 0.5 0.5" animation="property: scale; to: 0.6 0.6 0.6; dir: alternate; dur: 1000; loop: true"></a-image>
-            <a-entity position="0 -0.5 0" class="hotspot-label" text="value: المشهد الجبلي; align: center; color: white; width: 4"></a-entity>
-        </a-entity>
-        
-        <a-entity class="hotspot" position="-4 1.5 0" data-scene="scene2">
-            <a-image class="hotspot-icon" src="#hotspot" scale="0.5 0.5 0.5" animation="property: scale; to: 0.6 0.6 0.6; dir: alternate; dur: 1000; loop: true"></a-image>
-            <a-entity position="0 -0.5 0" class="hotspot-label" text="value: شاطئ البحر; align: center; color: white; width: 4"></a-entity>
-        </a-entity>
-        
-        <a-entity class="hotspot" position="0 1.5 4" data-scene="scene2">
-            <a-image class="hotspot-icon" src="#hotspot" scale="0.5 0.5 0.5" animation="property: scale; to: 0.6 0.6 0.6; dir: alternate; dur: 1000; loop: true"></a-image>
-            <a-entity position="0 -0.5 0" class="hotspot-label" text="value: الغابة الخضراء; align: center; color: white; width: 4"></a-entity>
-        </a-entity>
-        
-        <a-entity class="hotspot" position="4 1.5 0" data-scene="scene2">
-            <a-image class="hotspot-icon" src="#hotspot" scale="0.5 0.5 0.5" animation="property: scale; to: 0.6 0.6 0.6; dir: alternate; dur: 1000; loop: true"></a-image>
-            <a-entity position="0 -0.5 0" class="hotspot-label" text="value: الصحراء الذهبية; align: center; color: white; width: 4"></a-entity>
-        </a-entity>
-        
-        <a-entity class="hotspot" position="0 1.5 -3" data-scene="scene2">
-            <a-image class="hotspot-icon" src="#hotspot" scale="0.5 0.5 0.5" animation="property: scale; to: 0.6 0.6 0.6; dir: alternate; dur: 1000; loop: true"></a-image>
-            <a-entity position="0 -0.5 0" class="hotspot-label" text="value: المدينة الحديثة; align: center; color: white; width: 4"></a-entity>
-        </a-entity>
+        <div class="hotspot-container">
+            <!-- أمام الكاميرا -->
+            <a-entity class="hotspot" position="0 1.5 -5" data-scene="scene2">
+                <a-image class="hotspot-icon" src="#hotspot" scale="0.6 0.6 0.6" animation="property: scale; to: 0.7 0.7 0.7; dir: alternate; dur: 1000; loop: true"></a-image>
+                <a-entity position="0 -0.7 0" class="hotspot-label" text="value: المشهد الجبلي; align: center; color: white; width: 4"></a-entity>
+            </a-entity>
+            
+            <!-- يمين الكاميرا -->
+            <a-entity class="hotspot" position="5 1.5 0" data-scene="scene3">
+                <a-image class="hotspot-icon" src="#hotspot" scale="0.6 0.6 0.6" animation="property: scale; to: 0.7 0.7 0.7; dir: alternate; dur: 1000; loop: true"></a-image>
+                <a-entity position="0 -0.7 0" class="hotspot-label" text="value: شاطئ البحر; align: center; color: white; width: 4"></a-entity>
+            </a-entity>
+            
+            <!-- يسار الكاميرا -->
+            <a-entity class="hotspot" position="-5 1.5 0" data-scene="scene4">
+                <a-image class="hotspot-icon" src="#hotspot" scale="0.6 0.6 0.6" animation="property: scale; to: 0.7 0.7 0.7; dir: alternate; dur: 1000; loop: true"></a-image>
+                <a-entity position="0 -0.7 0" class="hotspot-label" text="value: الغابة الخضراء; align: center; color: white; width: 4"></a-entity>
+            </a-entity>
+            
+            <!-- خلف الكاميرا -->
+            <a-entity class="hotspot" position="0 1.5 5" data-scene="scene5">
+                <a-image class="hotspot-icon" src="#hotspot" scale="0.6 0.6 0.6" animation="property: scale; to: 0.7 0.7 0.7; dir: alternate; dur: 1000; loop: true"></a-image>
+                <a-entity position="0 -0.7 0" class="hotspot-label" text="value: الصحراء الذهبية; align: center; color: white; width: 4"></a-entity>
+            </a-entity>
+            
+            <!-- فوق الكاميرا -->
+            <a-entity class="hotspot" position="0 3.5 -3" data-scene="scene6">
+                <a-image class="hotspot-icon" src="#hotspot" scale="0.6 0.6 0.6" animation="property: scale; to: 0.7 0.7 0.7; dir: alternate; dur: 1000; loop: true"></a-image>
+                <a-entity position="0 -0.7 0" class="hotspot-label" text="value: المدينة الحديثة; align: center; color: white; width: 4"></a-entity>
+            </a-entity>
+        </div>
         
         <!-- معلومات المشهد -->
         <a-entity class="scene-title" text="value: المشهد الأول: الوادي السحري; align: center; color: white; width: 8"></a-entity>
@@ -689,7 +701,9 @@
                     if (progress >= 100) {
                         // اكتمل المؤقت، تنفيذ النقر
                         clearInterval(progressTimer);
-                        currentHotspot.dispatchEvent(new Event('click'));
+                        if (currentHotspot) {
+                            currentHotspot.dispatchEvent(new Event('click'));
+                        }
                         progressRing.classList.remove('visible');
                         currentHotspot = null;
                     }
