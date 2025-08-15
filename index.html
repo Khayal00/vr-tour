@@ -1,98 +1,186 @@
 <!DOCTYPE html>
-<html>
+<html lang="ar">
 <head>
-    <meta charset="utf-8">
-    <title>VR Tour Working Solution</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>جولة افتراضية مع نقاط انتقال مرئية</title>
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <style>
-        body { margin: 0; overflow: hidden; }
-        .hotspot { cursor: pointer; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        a-scene {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            font-family: Arial, sans-serif;
+            font-size: 24px;
+        }
     </style>
 </head>
 <body>
-    <a-scene loading-screen="enabled: false">
-        <!-- Camera -->
-        <a-entity id="camera" camera look-controls position="0 1.6 0">
-            <a-cursor></a-cursor>
+    <div class="loading">جاري تحميل الجولة الافتراضية...</div>
+    
+    <a-scene>
+        <!-- الكاميرا -->
+        <a-entity id="camera" camera="fov: 80" look-controls position="0 1.6 0">
+            <a-cursor
+                rayOrigin="mouse"
+                fuse="false"
+                material="color: white; shader: flat"
+                geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03">
+            </a-cursor>
         </a-entity>
 
-        <!-- Sky -->
-        <a-sky id="sky" src="#livingRoom"></a-sky>
+        <!-- السماء -->
+        <a-sky id="sky"></a-sky>
 
-        <!-- Hotspots Container -->
+        <!-- حاوية نقاط الانتقال -->
         <a-entity id="hotspotContainer"></a-entity>
 
-        <!-- Assets with working CDN URLs -->
-        <a-assets timeout="30000">
-            <audio id="clickSound" src="https://cdn.aframe.io/360-image-gallery-boilerplate/audio/click.ogg"></audio>
-            <img id="hotspotIcon" src="https://cdn.aframe.io/360-image-gallery-boilerplate/img/hotspot.png">
-            <img id="livingRoom" src="https://cdn.aframe.io/360-image-gallery-boilerplate/img/living-room.jpg">
-            <img id="kitchen" src="https://cdn.aframe.io/360-image-gallery-boilerplate/img/kitchen.jpg">
-            <img id="bedroom" src="https://cdn.aframe.io/360-image-gallery-boilerplate/img/bedroom.jpg">
+        <!-- الأصول -->
+        <a-assets timeout="10000">
+            <audio id="transitionSound" src="https://cdn.aframe.io/360-image-gallery-boilerplate/audio/click.ogg"></audio>
+            <img id="hotspotImage" src="https://cdn.aframe.io/360-image-gallery-boilerplate/img/hotspot.png">
+            <img id="hotspotHover" src="https://cdn.aframe.io/360-image-gallery-boilerplate/img/hotspot-hover.png">
+            
+            <!-- صور المشاهد -->
+            <img id="scene1" src="https://cdn.aframe.io/360-image-gallery-boilerplate/img/living-room.jpg">
+            <img id="scene2" src="https://cdn.aframe.io/360-image-gallery-boilerplate/img/kitchen.jpg">
+            <img id="scene3" src="https://cdn.aframe.io/360-image-gallery-boilerplate/img/bedroom.jpg">
         </a-assets>
     </a-scene>
 
     <script>
-        // Scene configuration
+        // تعريف المشاهد
         const scenes = {
-            Living_Room: {
-                src: '#livingRoom',
+            scene1: {
+                name: "غرفة المعيشة",
+                src: "#scene1",
                 hotspots: [
-                    { target: 'Kitchen', position: '-2 1.6 -3' },
-                    { target: 'Bedroom', position: '2 1.6 -3' }
+                    { target: "scene2", position: "-1 1.6 -3", label: "المطبخ" },
+                    { target: "scene3", position: "1 1.6 -3", label: "غرفة النوم" }
                 ]
             },
-            Kitchen: {
-                src: '#kitchen',
+            scene2: {
+                name: "المطبخ",
+                src: "#scene2",
                 hotspots: [
-                    { target: 'Living_Room', position: '0 1.6 -4' }
+                    { target: "scene1", position: "0 1.6 -4", label: "غرفة المعيشة" }
                 ]
             },
-            Bedroom: {
-                src: '#bedroom',
+            scene3: {
+                name: "غرفة النوم",
+                src: "#scene3",
                 hotspots: [
-                    { target: 'Living_Room', position: '0 1.6 -4' }
+                    { target: "scene1", position: "0 1.6 -4", label: "غرفة المعيشة" }
                 ]
             }
         };
 
-        // Initialize scene after assets load
-        document.querySelector('a-scene').addEventListener('loaded', function() {
-            // Create initial hotspots
-            createHotspots('Living_Room');
+        // الانتقال بين المشاهد
+        function changeScene(sceneId) {
+            const sky = document.querySelector('#sky');
+            const hotspotContainer = document.querySelector('#hotspotContainer');
+            const scene = scenes[sceneId];
             
-            // Enable audio after first interaction
-            document.body.addEventListener('click', function() {
-                const audio = document.querySelector('#clickSound');
-                audio.play().catch(e => console.log("Audio play requires user interaction first"));
-            }, { once: true });
-        });
-
-        // Hotspot creation function
-        function createHotspots(sceneName) {
-            const container = document.querySelector('#hotspotContainer');
-            container.innerHTML = '';
+            // تحديث السماء
+            sky.setAttribute('src', scene.src);
             
-            scenes[sceneName].hotspots.forEach(hotspot => {
+            // إزالة النقاط القديمة
+            hotspotContainer.innerHTML = '';
+            
+            // إضافة النقاط الجديدة
+            scene.hotspots.forEach(hotspot => {
                 const hotspotEl = document.createElement('a-image');
                 hotspotEl.setAttribute('class', 'hotspot');
-                hotspotEl.setAttribute('src', '#hotspotIcon');
+                hotspotEl.setAttribute('src', '#hotspotImage');
                 hotspotEl.setAttribute('position', hotspot.position);
                 hotspotEl.setAttribute('width', 0.5);
                 hotspotEl.setAttribute('height', 0.5);
                 hotspotEl.setAttribute('look-at', '[camera]');
+                hotspotEl.setAttribute('data-target', hotspot.target);
                 
-                // Click event
-                hotspotEl.addEventListener('click', () => {
-                    document.querySelector('#sky').setAttribute('src', scenes[hotspot.target].src);
-                    createHotspots(hotspot.target);
-                    document.querySelector('#clickSound').play().catch(console.error);
+                // تأثيرات المرور
+                hotspotEl.addEventListener('mouseenter', () => {
+                    hotspotEl.setAttribute('src', '#hotspotHover');
+                    hotspotEl.setAttribute('scale', '1.2 1.2 1.2');
+                    label.setAttribute('visible', 'true');
                 });
                 
-                container.appendChild(hotspotEl);
+                hotspotEl.addEventListener('mouseleave', () => {
+                    hotspotEl.setAttribute('src', '#hotspotImage');
+                    hotspotEl.setAttribute('scale', '1 1 1');
+                    label.setAttribute('visible', 'false');
+                });
+                
+                // التسمية
+                const label = document.createElement('a-text');
+                label.setAttribute('value', hotspot.label);
+                label.setAttribute('position', '0 0.6 0');
+                label.setAttribute('color', '#FFF');
+                label.setAttribute('align', 'center');
+                label.setAttribute('visible', 'false');
+                label.setAttribute('look-at', '[camera]');
+                hotspotEl.appendChild(label);
+                
+                // النقلة عند النقر
+                hotspotEl.addEventListener('click', () => {
+                    const audio = document.querySelector('#transitionSound');
+                    audio.currentTime = 0;
+                    audio.play().catch(e => console.log("تشغيل الصوت:", e));
+                    changeScene(hotspot.target);
+                });
+                
+                hotspotContainer.appendChild(hotspotEl);
             });
+            
+            // تحديث عنوان الصفحة
+            document.title = "جولة افتراضية - " + scene.name;
         }
+
+        // بدء الجولة بعد تحميل المشهد
+        document.querySelector('a-scene').addEventListener('loaded', () => {
+            // إخفاء شاشة التحميل
+            document.querySelector('.loading').style.display = 'none';
+            
+            // بدء المشهد الأول
+            changeScene('scene1');
+            
+            // تفعيل الصوت بعد التفاعل الأول
+            document.body.addEventListener('click', () => {
+                const audio = document.querySelector('#transitionSound');
+                audio.play().catch(e => console.log("التفعيل الأولي للصوت:", e));
+            }, { once: true });
+        });
+        
+        // حل بديل إذا لم يعمل حدث loaded
+        setTimeout(() => {
+            if (document.querySelector('.loading').style.display !== 'none') {
+                document.querySelector('.loading').style.display = 'none';
+                changeScene('scene1');
+            }
+        }, 3000);
     </script>
 </body>
 </html>
