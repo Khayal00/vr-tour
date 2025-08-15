@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>VR Tour with Blue Hotspots & White Glow</title>
+<title>VR Tour with Image Hotspots & Glow</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/supermedium/aframe-effects/dist/aframe-effects.min.js"></script>
@@ -40,6 +40,7 @@
 
   <a-assets>
     <audio id="transitionSound" src="assets/transition.mp3"></audio>
+    <img id="hotspotImg" src="assets/hotspot.png">
   </a-assets>
 </a-scene>
 
@@ -69,18 +70,23 @@ function changeScene(sceneName){
     hotspotContainer.innerHTML='';
 
     scenes[sceneName].hotspots.forEach(hs=>{
-      const el=document.createElement('a-sphere');
+      const el = document.createElement('a-entity');
       el.setAttribute('class','hotspot');
       el.setAttribute('position', hs.position);
-      el.setAttribute('radius',0.12);
-      el.setAttribute('color','#87CEFA'); // لون الكرة ثابت
-      el.setAttribute('material','shader: standard; emissive: white; emissiveIntensity: 1');
 
-      // التوهج الأبيض
-      const glow = document.createElement('a-sphere');
-      glow.setAttribute('radius', 0.18);
-      glow.setAttribute('material', 'color: white; emissive: white; emissiveIntensity: 4; opacity: 0.3; transparent: true; shader: standard');
-      el.appendChild(glow);
+      // صورة الهوت سبوت
+      const imgPlane = document.createElement('a-plane');
+      imgPlane.setAttribute('width', 0.5);
+      imgPlane.setAttribute('height', 0.5);
+      imgPlane.setAttribute('material', 'src: #hotspotImg; transparent: true; shader: standard');
+      el.appendChild(imgPlane);
+
+      // التوهج حول الصورة
+      const glowPlane = document.createElement('a-plane');
+      glowPlane.setAttribute('width', 0.7);
+      glowPlane.setAttribute('height', 0.7);
+      glowPlane.setAttribute('material', 'color:white; emissive:white; emissiveIntensity:4; opacity:0.3; transparent:true; shader: standard');
+      el.appendChild(glowPlane);
 
       // حلقة أرضية
       const ring=document.createElement('a-ring');
@@ -93,14 +99,12 @@ function changeScene(sceneName){
 
       // حركة عند المرور
       el.setAttribute('animation__hover','property: scale; startEvents: mouseenter; to:1.3 1.3 1.3; dur:200');
-      el.setAttribute('animation__hover_emissive','property: material.emissiveIntensity; startEvents: mouseenter; to:5; dur:200');
-      glow.setAttribute('animation__glow_hover','property: material.emissiveIntensity; startEvents: mouseenter; to:6; dur:200');
+      glowPlane.setAttribute('animation__glow_hover','property: material.emissiveIntensity; startEvents: mouseenter; to:6; dur:200');
       ring.setAttribute('animation__hover_ring','property: scale; startEvents: mouseenter; to:1.5 1.5 1.5; dur:200');
 
       // حركة عند الخروج
       el.setAttribute('animation__leave','property: scale; startEvents: mouseleave; to:1 1 1; dur:200');
-      el.setAttribute('animation__leave_emissive','property: material.emissiveIntensity; startEvents: mouseleave; to:1; dur:200');
-      glow.setAttribute('animation__glow_leave','property: material.emissiveIntensity; startEvents: mouseleave; to:4; dur:200');
+      glowPlane.setAttribute('animation__glow_leave','property: material.emissiveIntensity; startEvents: mouseleave; to:4; dur:200');
       ring.setAttribute('animation__leave_ring','property: scale; startEvents: mouseleave; to:1 1 1; dur:200');
 
       // عند الضغط
