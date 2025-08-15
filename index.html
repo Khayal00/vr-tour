@@ -41,17 +41,23 @@
   <a-assets>
     <audio id="transitionSound" src="assets/transition.mp3"></audio>
     <img id="hotspotImg" src="assets/hotspot.png">
+    <img id="Living_Room" src="assets/Living_Room.jpg">
+    <img id="Kitchen" src="assets/Kitchen.jpg">
+    <img id="Reception" src="assets/Reception.jpg">
+    <img id="Corridor" src="assets/Corridor.jpg">
+    <img id="Bathroom" src="assets/Bathroom.jpg">
+    <img id="Bedroom" src="assets/Bedroom.jpg">
   </a-assets>
 </a-scene>
 
 <script>
 const scenes = {
-  Living_Room:{src:'assets/Living_Room.jpg', label:'Welcome to Living Room', hotspots:[{target:'Kitchen', position:'-3 1.6 4'},{target:'Reception', position:'-3 1.6 -1.7'},{target:'Corridor', position:'3 1.6 3'}]},
-  Kitchen:{src:'assets/Kitchen.jpg', label:'Welcome to Kitchen', hotspots:[{target:'Living_Room', position:'4 1.6 -7'}]},
-  Reception:{src:'assets/Reception.jpg', label:'Welcome to Reception', hotspots:[{target:'Living_Room', position:'5 1.6 -1'}]},
-  Corridor:{src:'assets/Corridor.jpg', label:'Welcome to Corridor', hotspots:[{target:'Bathroom', position:'3 1.6 -0.5'},{target:'Bedroom', position:'-0.2 1.6 -3.5'},{target:'Living_Room', position:'1 1.6 3'}]},
-  Bathroom:{src:'assets/Bathroom.jpg', label:'Welcome to Bathroom', hotspots:[{target:'Corridor', position:'-1 1.6 4'}]},
-  Bedroom:{src:'assets/Bedroom.jpg', label:'Welcome to Bedroom', hotspots:[{target:'Corridor', position:'-0.5 1.6 4'}]}
+  Living_Room:{src:'#Living_Room', label:'Welcome to Living Room', hotspots:[{target:'Kitchen', position:'-3 1.6 4'},{target:'Reception', position:'-3 1.6 -1.7'},{target:'Corridor', position:'3 1.6 3'}]},
+  Kitchen:{src:'#Kitchen', label:'Welcome to Kitchen', hotspots:[{target:'Living_Room', position:'4 1.6 -7'}]},
+  Reception:{src:'#Reception', label:'Welcome to Reception', hotspots:[{target:'Living_Room', position:'5 1.6 -1'}]},
+  Corridor:{src:'#Corridor', label:'Welcome to Corridor', hotspots:[{target:'Bathroom', position:'3 1.6 -0.5'},{target:'Bedroom', position:'-0.2 1.6 -3.5'},{target:'Living_Room', position:'1 1.6 3'}]},
+  Bathroom:{src:'#Bathroom', label:'Welcome to Bathroom', hotspots:[{target:'Corridor', position:'-1 1.6 4'}]},
+  Bedroom:{src:'#Bedroom', label:'Welcome to Bedroom', hotspots:[{target:'Corridor', position:'-0.5 1.6 4'}]}
 };
 
 const roomLabel = document.getElementById('roomLabel');
@@ -78,7 +84,7 @@ function changeScene(sceneName){
       const imgPlane = document.createElement('a-plane');
       imgPlane.setAttribute('width', 0.5);
       imgPlane.setAttribute('height', 0.5);
-      imgPlane.setAttribute('material', 'src: #hotspotImg; transparent: true; shader: standard');
+      imgPlane.setAttribute('material', 'src: #hotspotImg; transparent: true; shader: flat');
       el.appendChild(imgPlane);
 
       // التوهج حول الصورة
