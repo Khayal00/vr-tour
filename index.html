@@ -1,43 +1,133 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8">
-    <title>VR Tour with Bloom Glow</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-    <!-- مكتبة الـ Bloom Effect -->
-    <script src="https://cdn.jsdelivr.net/gh/supermedium/aframe-effects/dist/aframe-effects.min.js"></script>
-  </head>
-  <body>
-    <a-scene effects="bloom" bloom="strength: 2; radius: 0.5; threshold: 0.1">
-      <!-- صورة بانورامية -->
-      <a-sky src="your-pano.jpg"></a-sky>
+<head>
+<meta charset="utf-8">
+<title>VR Tour with Blue Hotspots & White Glow</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/supermedium/aframe-effects/dist/aframe-effects.min.js"></script>
+<style>
+  body { margin:0; overflow:hidden; }
+</style>
+</head>
+<body>
+<a-scene effects="bloom" bloom="strength: 2.5; radius: 0.5; threshold: 0.1">
+  <a-sky id="sky" rotation="0 -90 0"></a-sky>
 
-      <!-- هوت سبوت -->
-      <a-entity id="hotspot1" position="0 1.6 -3"></a-entity>
-    </a-scene>
+  <!-- الكاميرا مع النص -->
+  <a-entity id="cameraRig" camera look-controls position="0 1.6 0">
+    <a-cursor
+      rayOrigin="mouse"
+      raycaster="objects: .hotspot"
+      fuse="false"
+      geometry="primitive: ring; radiusInner:0.02; radiusOuter:0.03"
+      material="color:white; shader: flat">
+    </a-cursor>
 
-    <script>
-      function createHotspot(id, position, label) {
-        const hotspot = document.getElementById(id);
+    <!-- طبقة التلاشي -->
+    <a-plane id="fadePlane" position="0 0 -0.5" width="2" height="2"
+             material="color:black; opacity:0; transparent:true"
+             animation__fadeout="startEvents: fadeout; property: material.opacity; from:0; to:1; dur:500"
+             animation__fadein="startEvents: fadein; property: material.opacity; from:1; to:0; dur:500">
+    </a-plane>
 
-        // الكرة الأساسية (لون واحد)
-        const sphere = document.createElement('a-sphere');
-        sphere.setAttribute('radius', '0.15');
-        sphere.setAttribute('color', '#87cefa'); // أزرق سماوي
-        sphere.setAttribute('material', 'shader: standard');
-        hotspot.appendChild(sphere);
+    <!-- النص الثابت أمام الكاميرا -->
+    <a-entity id="roomLabel" position="0 0 -2" text="value: ; align:center; color:white; width:4;"></a-entity>
+  </a-entity>
 
-        // التوهج (لون أبيض مع Bloom)
-        const glow = document.createElement('a-sphere');
-        glow.setAttribute('radius', '0.22');
-        glow.setAttribute('material', 'color: #ffffff; emissive: #ffffff; emissiveIntensity: 6; opacity: 0.4; transparent: true; shader: standard');
-        hotspot.appendChild(glow);
+  <!-- حاوية الهوت سبوت -->
+  <a-entity id="hotspotContainer"></a-entity>
 
-        hotspot.setAttribute('position', position);
-      }
+  <a-assets>
+    <audio id="transitionSound" src="assets/transition.mp3"></audio>
+  </a-assets>
+</a-scene>
 
-      createHotspot('hotspot1', '0 1.6 -3', 'Room 1');
-    </script>
-  </body>
+<script>
+const scenes = {
+  Living_Room:{src:'assets/Living_Room.jpg', label:'Welcome to Living Room', hotspots:[{target:'Kitchen', position:'-3 1.6 4'},{target:'Reception', position:'-3 1.6 -1.7'},{target:'Corridor', position:'3 1.6 3'}]},
+  Kitchen:{src:'assets/Kitchen.jpg', label:'Welcome to Kitchen', hotspots:[{target:'Living_Room', position:'4 1.6 -7'}]},
+  Reception:{src:'assets/Reception.jpg', label:'Welcome to Reception', hotspots:[{target:'Living_Room', position:'5 1.6 -1'}]},
+  Corridor:{src:'assets/Corridor.jpg', label:'Welcome to Corridor', hotspots:[{target:'Bathroom', position:'3 1.6 -0.5'},{target:'Bedroom', position:'-0.2 1.6 -3.5'},{target:'Living_Room', position:'1 1.6 3'}]},
+  Bathroom:{src:'assets/Bathroom.jpg', label:'Welcome to Bathroom', hotspots:[{target:'Corridor', position:'-1 1.6 4'}]},
+  Bedroom:{src:'assets/Bedroom.jpg', label:'Welcome to Bedroom', hotspots:[{target:'Corridor', position:'-0.5 1.6 4'}]}
+};
+
+const roomLabel = document.getElementById('roomLabel');
+
+function changeScene(sceneName){
+  const sky=document.getElementById('sky');
+  const hotspotContainer=document.getElementById('hotspotContainer');
+  const fadePlane=document.getElementById('fadePlane');
+  const audio=document.getElementById('transitionSound');
+
+  roomLabel.setAttribute('visible', false);
+  fadePlane.emit('fadeout');
+
+  setTimeout(()=>{
+    sky.setAttribute('src', scenes[sceneName].src);
+    hotspotContainer.innerHTML='';
+
+    scenes[sceneName].hotspots.forEach(hs=>{
+      const el=document.createElement('a-sphere');
+      el.setAttribute('class','hotspot');
+      el.setAttribute('position', hs.position);
+      el.setAttribute('radius',0.12);
+      el.setAttribute('color','#87CEFA'); // لون الكرة ثابت
+      el.setAttribute('material','shader: standard; emissive: white; emissiveIntensity: 1');
+
+      // التوهج الأبيض
+      const glow = document.createElement('a-sphere');
+      glow.setAttribute('radius', 0.18);
+      glow.setAttribute('material', 'color: white; emissive: white; emissiveIntensity: 4; opacity: 0.3; transparent: true; shader: standard');
+      el.appendChild(glow);
+
+      // حلقة أرضية
+      const ring=document.createElement('a-ring');
+      ring.setAttribute('position','0 0 0');
+      ring.setAttribute('rotation','-90 0 0');
+      ring.setAttribute('radius-inner','0.25');
+      ring.setAttribute('radius-outer','1');
+      ring.setAttribute('material','color:white; shader:flat; opacity:0.5; transparent:true');
+      el.appendChild(ring);
+
+      // حركة عند المرور
+      el.setAttribute('animation__hover','property: scale; startEvents: mouseenter; to:1.3 1.3 1.3; dur:200');
+      el.setAttribute('animation__hover_emissive','property: material.emissiveIntensity; startEvents: mouseenter; to:5; dur:200');
+      glow.setAttribute('animation__glow_hover','property: material.emissiveIntensity; startEvents: mouseenter; to:6; dur:200');
+      ring.setAttribute('animation__hover_ring','property: scale; startEvents: mouseenter; to:1.5 1.5 1.5; dur:200');
+
+      // حركة عند الخروج
+      el.setAttribute('animation__leave','property: scale; startEvents: mouseleave; to:1 1 1; dur:200');
+      el.setAttribute('animation__leave_emissive','property: material.emissiveIntensity; startEvents: mouseleave; to:1; dur:200');
+      glow.setAttribute('animation__glow_leave','property: material.emissiveIntensity; startEvents: mouseleave; to:4; dur:200');
+      ring.setAttribute('animation__leave_ring','property: scale; startEvents: mouseleave; to:1 1 1; dur:200');
+
+      // عند الضغط
+      el.addEventListener('click', ()=>{
+        audio.pause();
+        audio.currentTime=0;
+        audio.play().catch(()=>{});
+        changeScene(hs.target);
+      });
+
+      hotspotContainer.appendChild(el);
+    });
+
+    fadePlane.emit('fadein');
+    roomLabel.setAttribute('text','value:' + scenes[sceneName].label);
+    roomLabel.setAttribute('visible', true);
+  },500);
+}
+
+window.addEventListener('load', ()=>{
+  document.body.addEventListener('click', ()=>{
+    const audio=document.getElementById('transitionSound');
+    audio.play().catch(()=>{});
+  }, {once:true});
+
+  changeScene('Living_Room');
+});
+</script>
+</body>
 </html>
