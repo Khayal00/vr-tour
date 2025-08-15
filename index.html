@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تجربة VR 360° مع حلقة النظر | Meta Quest</title>
+    <title>تجربة 360° احترافية مع حلقة النظر | Meta Quest</title>
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <script src="https://unpkg.com/aframe-animation-component@5.1.2/dist/aframe-animation-component.min.js"></script>
     <script src="https://unpkg.com/aframe-event-set-component@5.0.0/dist/aframe-event-set-component.min.js"></script>
@@ -341,6 +341,20 @@
             background: #00c3ff;
             transform: scale(1.3);
         }
+        
+        /* رسالة الخطأ */
+        .error-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 0, 0, 0.7);
+            padding: 15px 30px;
+            border-radius: 10px;
+            text-align: center;
+            z-index: 2000;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -369,6 +383,12 @@
                 <p>• حرك رأسك لتستكشف المشهد من جميع الزوايا</p>
             </div>
         </div>
+    </div>
+    
+    <!-- رسالة خطأ -->
+    <div class="error-message" id="errorMessage">
+        <h3>حدث خطأ في تحميل المشهد!</h3>
+        <p>الرجاء التحقق من اتصال الإنترنت والمحاولة مرة أخرى.</p>
     </div>
     
     <!-- مشهد A-Frame -->
@@ -413,28 +433,28 @@
             <div class="scene-dot" data-scene="scene6"></div>
         </div>
         
-        <!-- النقاط الساخنة -->
-        <a-entity class="hotspot" position="0 1.5 -3" data-scene="scene2">
+        <!-- النقاط الساخنة المعدلة بمواقع غير متداخلة -->
+        <a-entity class="hotspot" position="0 1.5 -5" data-scene="scene2">
             <a-image class="hotspot-icon" src="#hotspot" scale="0.5 0.5 0.5" animation="property: scale; to: 0.6 0.6 0.6; dir: alternate; dur: 1000; loop: true"></a-image>
             <a-entity position="0 -0.5 0" class="hotspot-label" text="value: المشهد الجبلي; align: center; color: white; width: 4"></a-entity>
         </a-entity>
         
-        <a-entity class="hotspot" position="-3 1.5 0" data-scene="scene3">
+        <a-entity class="hotspot" position="-4 1.5 0" data-scene="scene3">
             <a-image class="hotspot-icon" src="#hotspot" scale="0.5 0.5 0.5" animation="property: scale; to: 0.6 0.6 0.6; dir: alternate; dur: 1000; loop: true"></a-image>
             <a-entity position="0 -0.5 0" class="hotspot-label" text="value: شاطئ البحر; align: center; color: white; width: 4"></a-entity>
         </a-entity>
         
-        <a-entity class="hotspot" position="0 1.5 3" data-scene="scene4">
+        <a-entity class="hotspot" position="0 1.5 4" data-scene="scene4">
             <a-image class="hotspot-icon" src="#hotspot" scale="0.5 0.5 0.5" animation="property: scale; to: 0.6 0.6 0.6; dir: alternate; dur: 1000; loop: true"></a-image>
             <a-entity position="0 -0.5 0" class="hotspot-label" text="value: الغابة الخضراء; align: center; color: white; width: 4"></a-entity>
         </a-entity>
         
-        <a-entity class="hotspot" position="3 1.5 0" data-scene="scene5">
+        <a-entity class="hotspot" position="4 1.5 0" data-scene="scene5">
             <a-image class="hotspot-icon" src="#hotspot" scale="0.5 0.5 0.5" animation="property: scale; to: 0.6 0.6 0.6; dir: alternate; dur: 1000; loop: true"></a-image>
             <a-entity position="0 -0.5 0" class="hotspot-label" text="value: الصحراء الذهبية; align: center; color: white; width: 4"></a-entity>
         </a-entity>
         
-        <a-entity class="hotspot" position="0 1.5 -2" data-scene="scene6">
+        <a-entity class="hotspot" position="0 1.5 -3" data-scene="scene6">
             <a-image class="hotspot-icon" src="#hotspot" scale="0.5 0.5 0.5" animation="property: scale; to: 0.6 0.6 0.6; dir: alternate; dur: 1000; loop: true"></a-image>
             <a-entity position="0 -0.5 0" class="hotspot-label" text="value: المدينة الحديثة; align: center; color: white; width: 4"></a-entity>
         </a-entity>
@@ -484,6 +504,7 @@
             const progressRing = document.getElementById('progressRing');
             const progressCircle = progressRing.querySelector('.progress-ring-circle');
             const sceneDots = document.querySelectorAll('.scene-dot');
+            const errorMessage = document.getElementById('errorMessage');
             
             // إعداد حلقة النظر والتفاعل
             let currentHotspot = null;
@@ -531,6 +552,7 @@
             
             // معالجة النقاط الساخنة
             hotspots.forEach(hotspot => {
+                // إضافة حدث النقر بشكل صحيح
                 hotspot.addEventListener('click', function() {
                     const targetScene = this.getAttribute('data-scene');
                     changeScene(targetScene);
@@ -550,6 +572,12 @@
                 
                 setTimeout(() => {
                     // تغيير المشهد
+                    const sceneEl = document.querySelector(`#${targetScene}`);
+                    if (!sceneEl) {
+                        showError('لم يتم العثور على المشهد المطلوب!');
+                        return;
+                    }
+                    
                     currentScene.setAttribute('src', `#${targetScene}`);
                     
                     // تحديث عنوان المشهد
@@ -677,6 +705,16 @@
                 progressRing.classList.remove('visible');
             }
             
+            // إظهار رسالة خطأ
+            function showError(message) {
+                errorMessage.innerHTML = `<h3>${message}</h3>`;
+                errorMessage.style.display = 'block';
+                
+                setTimeout(() => {
+                    errorMessage.style.display = 'none';
+                }, 5000);
+            }
+            
             // كشف الحركة لأجهزة VR
             if (navigator.getVRDisplays) {
                 navigator.getVRDisplays().then(displays => {
@@ -685,6 +723,13 @@
                     }
                 });
             }
+            
+            // إضافة حدث لمعالجة أخطاء تحميل الصور
+            document.querySelectorAll('img').forEach(img => {
+                img.addEventListener('error', function() {
+                    showError('فشل تحميل أحد الموارد!');
+                });
+            });
         });
     </script>
 </body>
