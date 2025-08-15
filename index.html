@@ -65,9 +65,9 @@
             <img id="hotspotHover" src="assets/Reception1.png">
             
             <!-- صور المشاهد -->
-            <img id="scene1" src="https://cdn.aframe.io/360-image-gallery-boilerplate/img/living-room.jpg">
-            <img id="scene2" src="https://cdn.aframe.io/360-image-gallery-boilerplate/img/kitchen.jpg">
-            <img id="scene3" src="https://cdn.aframe.io/360-image-gallery-boilerplate/img/bedroom.jpg">
+            <img id="Living_Room" src="assets/Living_Room.jpg">
+            <img id="Kitchen" src="assets/Kitchen.jpg">
+            <img id="Reception" src="assets/Receotion.jpg">
         </a-assets>
     </a-scene>
 
@@ -75,25 +75,25 @@
         // تعريف المشاهد
         const scenes = {
             scene1: {
-                name: "غرفة المعيشة",
+                name: "Living_Room",
                 src: "assets/Living_Room.jpg",
                 hotspots: [
-                    { target: "المطبخ", position: "-1 1.6 -3", label: "المطبخ" },
-                    { target: "scene3", position: "1 1.6 -3", label: "غرفة النوم" }
+                    { target: "Kitchen", position: "-1 1.6 -3", label: "المطبخ" },
+                    { target: "Reception", position: "1 1.6 -3", label: "غرفة النوم" }
                 ]
             },
             scene2: {
-                name: "المطبخ",
+                name: "Kitchen",
                 src: "assets/Kitchen.jpg",
                 hotspots: [
-                    { target: "scene1", position: "0 1.6 -4", label: "غرفة المعيشة" }
+                    { target: "Living_Room", position: "0 1.6 -4", label: "غرفة المعيشة" }
                 ]
             },
             scene3: {
                 name: "غرفة النوم",
                 src: "#scene3",
                 hotspots: [
-                    { target: "scene1", position: "0 1.6 -4", label: "غرفة المعيشة" }
+                    { target: "Living_Room", position: "0 1.6 -4", label: "غرفة المعيشة" }
                 ]
             }
         };
