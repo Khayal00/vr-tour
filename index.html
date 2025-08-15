@@ -8,7 +8,6 @@
     <script src="https://unpkg.com/aframe-animation-component@5.1.2/dist/aframe-animation-component.min.js"></script>
     <script src="https://unpkg.com/aframe-event-set-component@5.0.0/dist/aframe-event-set-component.min.js"></script>
     <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -296,15 +295,12 @@
         .hotspot-icon {
             animation: pulse 1.5s infinite;
             transition: all 0.3s ease;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 50px;
-            height: 50px;
-            background: radial-gradient(circle, #00c3ff, #0077ff);
+            display: block;
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
-            color: white;
-            font-size: 24px;
+            background-size: cover;
+            background-position: center;
             box-shadow: 0 0 15px rgba(0, 195, 255, 0.7);
         }
         
@@ -473,7 +469,7 @@
         <div id="loadingContent">
             <div class="logo-container">
                 <div class="logo">
-                    <i class="fa-solid fa-vr-cardboard"></i>
+                    <i>VR</i>
                 </div>
             </div>
             <h1>تجربة الواقع الافتراضي 360°</h1>
@@ -506,12 +502,15 @@
         <!-- الأصول -->
         <a-assets>
             <!-- الصور الـ 360 -->
-            <img id="scene1" src="assets/Living_Room.jpg">
+            <img id="scene1" src="https://cdn.glitch.global/6a11d0d7-1a41-4e96-8b7b-9d6e5b9c4a0c/equirectangular1.jpg">
             <img id="scene2" src="https://cdn.glitch.global/6a11d0d7-1a41-4e96-8b7b-9d6e5b9c4a0c/equirectangular2.jpg">
             <img id="scene3" src="https://cdn.glitch.global/6a11d0d7-1a41-4e96-8b7b-9d6e5b9c4a0c/equirectangular3.jpg">
             <img id="scene4" src="https://cdn.glitch.global/6a11d0d7-1a41-4e96-8b7b-9d6e5b9c4a0c/equirectangular4.jpg">
             <img id="scene5" src="https://cdn.glitch.global/6a11d0d7-1a41-4e96-8b7b-9d6e5b9c4a0c/equirectangular5.jpg">
             <img id="scene6" src="https://cdn.glitch.global/6a11d0d7-1a41-4e96-8b7b-9d6e5b9c4a0c/equirectangular6.jpg">
+            
+            <!-- صورة النقطة الساخنة - يجب استبدالها بصورتك -->
+            <img id="hotspot-img" src="assets/Kitchen1.png">
         </a-assets>
         
         <!-- المشاهد الـ 360 (سيتم تبديلها) -->
@@ -541,43 +540,34 @@
             <div class="scene-dot" data-scene="scene6"></div>
         </div>
         
-        <!-- النقاط الساخنة المعدلة لتواجه الكاميرا دائماً -->
+        <!-- النقاط الساخنة باستخدام صورتك -->
+        <!-- الموقع: في المشهد ثلاثي الأبعاد باستخدام عنصر a-image -->
         <a-entity class="hotspot" position="0 1.5 -3" data-scene="scene2">
-            <a-entity class="hotspot-icon" look-at="[camera]">
-                <i class="fa-solid fa-mountain"></i>
-            </a-entity>
+            <a-image class="hotspot-icon" src="#hotspot-img" scale="0.8 0.8 0.8" look-at="[camera]"></a-image>
             <a-entity class="hotspot-label" 
                       text="value: المشهد الجبلي; align: center; color: white; width: 4"></a-entity>
         </a-entity>
         
         <a-entity class="hotspot" position="3 1.5 0" data-scene="scene3">
-            <a-entity class="hotspot-icon" look-at="[camera]">
-                <i class="fa-solid fa-umbrella-beach"></i>
-            </a-entity>
+            <a-image class="hotspot-icon" src="#hotspot-img" scale="0.8 0.8 0.8" look-at="[camera]"></a-image>
             <a-entity class="hotspot-label" 
                       text="value: شاطئ البحر; align: center; color: white; width: 4"></a-entity>
         </a-entity>
         
         <a-entity class="hotspot" position="-3 1.5 0" data-scene="scene4">
-            <a-entity class="hotspot-icon" look-at="[camera]">
-                <i class="fa-solid fa-tree"></i>
-            </a-entity>
+            <a-image class="hotspot-icon" src="#hotspot-img" scale="0.8 0.8 0.8" look-at="[camera]"></a-image>
             <a-entity class="hotspot-label" 
                       text="value: الغابة الخضراء; align: center; color: white; width: 4"></a-entity>
         </a-entity>
         
         <a-entity class="hotspot" position="0 1.5 3" data-scene="scene5">
-            <a-entity class="hotspot-icon" look-at="[camera]">
-                <i class="fa-solid fa-sun"></i>
-            </a-entity>
+            <a-image class="hotspot-icon" src="#hotspot-img" scale="0.8 0.8 0.8" look-at="[camera]"></a-image>
             <a-entity class="hotspot-label" 
                       text="value: الصحراء الذهبية; align: center; color: white; width: 4"></a-entity>
         </a-entity>
         
         <a-entity class="hotspot" position="0 3 -2" data-scene="scene6">
-            <a-entity class="hotspot-icon" look-at="[camera]">
-                <i class="fa-solid fa-city"></i>
-            </a-entity>
+            <a-image class="hotspot-icon" src="#hotspot-img" scale="0.8 0.8 0.8" look-at="[camera]"></a-image>
             <a-entity class="hotspot-label" 
                       text="value: المدينة الحديثة; align: center; color: white; width: 4"></a-entity>
         </a-entity>
@@ -724,7 +714,7 @@
                 });
                 
                 hotspot.addEventListener('mouseleave', function() {
-                    hotspotIcon.setAttribute('scale', '1 1 1');
+                    hotspotIcon.setAttribute('scale', '0.8 0.8 0.8');
                     hotspotLabel.setAttribute('visible', 'false');
                     
                     // إخفاء تأثير التمييز
