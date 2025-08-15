@@ -21,14 +21,6 @@
           geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
           material="color: white; shader: flat">
         </a-cursor>
-            <!-- حاوية للهوت سبوت -->
-      <a-entity id="hotspotContainer"></a-entity>
-        <a-assets>
-        <audio id="transitionSound" src="assets/transition.mp3"></audio>
-        <!-- إضافة صور الهوت سبوت هنا -->
-        <img id="hotspotImage" src="assets/Kitchen1.png">
-        <img id="hotspotHover" src="assets/Reception1.png">
-      </a-assets>
 
         <!-- طبقة التلاشي -->
         <a-plane id="fadePlane" position="0 0 -0.5" width="2" height="2"
@@ -40,48 +32,43 @@
 
       <!-- السماء -->
       <a-sky id="sky" rotation="0 -90 0"></a-sky>
+
+      <!-- حاوية للهوت سبوت -->
+      <a-entity id="hotspotContainer"></a-entity>
+
+      <!-- تحميل الصوت والصور -->
+      <a-assets>
+        <audio id="transitionSound" src="https://cdn.aframe.io/360-image-gallery-boilerplate/audio/click.ogg"></audio>
+        <!-- صور افتراضية يمكن استبدالها -->
+        <img id="hotspotImage" src="https://cdn.aframe.io/360-image-gallery-boilerplate/img/hotspot.png">
+        <img id="hotspotHover" src="https://cdn.aframe.io/360-image-gallery-boilerplate/img/hotspot-hover.png">
+        
+        <!-- صور المشاهد الافتراضية -->
+        <img id="livingRoom" src="https://cdn.aframe.io/360-image-gallery-boilerplate/img/living-room.jpg">
+        <img id="kitchen" src="https://cdn.aframe.io/360-image-gallery-boilerplate/img/kitchen.jpg">
+        <img id="bedroom" src="https://cdn.aframe.io/360-image-gallery-boilerplate/img/bedroom.jpg">
+      </a-assets>
     </a-scene>
 
     <script>
       const scenes = {
         Living_Room: {
-          src: 'assets/Living_Room.jpg',
+          src: '#livingRoom',
           hotspots: [
-            { target: 'Kitchen', position: '-3 1.6 4' },
-            { target: 'Reception', position: '-3 1.6 -1.7' },
-            { target: 'Corridor', position: '3 1.6 3' }
+            { target: 'Kitchen', position: '-2 1.6 -3', rotation: "0 0 0" },
+            { target: 'Bedroom', position: '3 1.6 -3', rotation: "0 0 0" }
           ]
         },
         Kitchen: {
-          src: 'assets/Kitchen.jpg',
+          src: '#kitchen',
           hotspots: [
-            { target: 'Living_Room', position: '4 1.6 -7' }
-          ]
-        },
-        Reception: {
-          src: 'assets/Reception.jpg',
-          hotspots: [
-            { target: 'Living_Room', position: '5 1.6 -1' }
-          ]
-        },
-        Corridor: {
-          src: 'assets/Corridor.jpg',
-          hotspots: [
-            { target: 'Bathroom', position: '3 1.6 -0.5' },
-            { target: 'Bedroom', position: '-0.2 1.6 -3.5' },
-            { target: 'Living_Room', position: '1 1.6 3' }
-          ]
-        },
-        Bathroom: {
-          src: 'assets/Bathroom.jpg',
-          hotspots: [
-            { target: 'Corridor', position: '-1 1.6 4' }
+            { target: 'Living_Room', position: '1 1.6 -3', rotation: "0 180 0" }
           ]
         },
         Bedroom: {
-          src: 'assets/Bedroom.jpg',
+          src: '#bedroom',
           hotspots: [
-            { target: 'Corridor', position: '-0.5 1.6 4' }
+            { target: 'Living_Room', position: '0 1.6 -4', rotation: "0 0 0" }
           ]
         }
       };
@@ -103,32 +90,34 @@
 
           // إضافة النقاط الجديدة
           scenes[sceneName].hotspots.forEach(hs => {
-            // إنشاء صورة الهوت سبوت
             const el = document.createElement('a-image');
             el.setAttribute('class', 'hotspot');
             el.setAttribute('position', hs.position);
+            el.setAttribute('rotation', hs.rotation || "0 0 0");
             el.setAttribute('src', '#hotspotImage');
             el.setAttribute('width', 0.5);
             el.setAttribute('height', 0.5);
             el.setAttribute('look-at', '[camera]');
+            el.setAttribute('material', 'transparent: true; alphaTest: 0.5');
             
-            // تأثيرات المرور على الصورة
-            el.setAttribute('animation__hover', 'property: scale; startEvents: mouseenter; to: 1.2 1.2 1.2; dur: 200');
-            el.setAttribute('animation__leave', 'property: scale; startEvents: mouseleave; to: 1 1 1; dur: 200');
-            
-            // تغيير الصورة عند المرور
+            // تأثيرات التكبير عند المرور
             el.addEventListener('mouseenter', () => {
               el.setAttribute('src', '#hotspotHover');
+              el.setAttribute('width', 0.6);
+              el.setAttribute('height', 0.6);
             });
+            
             el.addEventListener('mouseleave', () => {
               el.setAttribute('src', '#hotspotImage');
+              el.setAttribute('width', 0.5);
+              el.setAttribute('height', 0.5);
             });
 
-            // تشغيل الصوت والتنقل عند النقر
-            el.addEventListener('click', () => {
-              audio.pause();
+            // التنقل عند النقر
+            el.addEventListener('click', (e) => {
+              e.stopPropagation();
               audio.currentTime = 0;
-              audio.play().catch(() => {});
+              audio.play().catch(e => console.log("Audio play failed:", e));
               changeScene(hs.target);
             });
 
@@ -139,26 +128,36 @@
             label.setAttribute('value', hs.target.replace('_', ' '));
             label.setAttribute('align', 'center');
             label.setAttribute('color', '#FFF');
-            label.setAttribute('width', 2);
-            const pos = hs.position.split(' ');
-            label.setAttribute('position', `${pos[0]} ${parseFloat(pos[1]) + 0.3} ${pos[2]}`);
+            label.setAttribute('position', `0 0.4 0`);
             label.setAttribute('look-at', '[camera]');
-            hotspotContainer.appendChild(label);
+            label.setAttribute('visible', false);
+            
+            el.appendChild(label);
+            
+            // إظهار التسمية عند المرور
+            el.addEventListener('mouseenter', () => {
+              label.setAttribute('visible', true);
+            });
+            
+            el.addEventListener('mouseleave', () => {
+              label.setAttribute('visible', false);
+            });
           });
 
           fadePlane.emit('fadein');
         }, 500);
       }
 
-      window.addEventListener('load', () => {
-        // تفعيل الصوت بعد أول نقرة (سياسة المتصفح)
-        document.body.addEventListener('click', () => {
-          const audio = document.querySelector('#transitionSound');
-          audio.play().catch(() => {});
-        }, { once: true });
-
+      // بدء المشهد بعد تحميل جميع الأصول
+      document.querySelector('a-scene').addEventListener('loaded', () => {
         changeScene('Living_Room');
       });
+
+      // تفعيل الصوت بعد التفاعل الأول (متطلبات المتصفح)
+      document.body.addEventListener('click', () => {
+        const audio = document.querySelector('#transitionSound');
+        audio.play().catch(e => console.log("Initial audio play failed:", e));
+      }, { once: true });
     </script>
   </body>
 </html>
