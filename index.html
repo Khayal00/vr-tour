@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>VR Tour with Fixed 3D Labels</title>
+<title>VR Tour with Fixed 3D Labels & Glow</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
 <style>
@@ -13,7 +13,7 @@
 <a-scene>
   <a-sky id="sky" rotation="0 -90 0"></a-sky>
 
-  <!-- الكاميرا مع نص ثابت أمامها -->
+  <!-- الكاميرا مع النص -->
   <a-entity id="cameraRig" camera look-controls position="0 1.6 0">
     <a-cursor
       rayOrigin="mouse"
@@ -30,7 +30,7 @@
              animation__fadein="startEvents: fadein; property: material.opacity; from:1; to:0; dur:500">
     </a-plane>
 
-    <!-- النصوص الثلاثية الأبعاد المثبتة أمام الكاميرا -->
+    <!-- النص الثابت أمام الكاميرا -->
     <a-entity id="roomLabel" position="0 0 -2" text="value: ; align:center; color:white; width:4;"></a-entity>
   </a-entity>
 
@@ -65,7 +65,7 @@ function changeScene(sceneName){
   fadePlane.emit('fadeout');
 
   setTimeout(()=>{
-    // تغيير السماء
+    // تغيير الخلفية
     sky.setAttribute('src', scenes[sceneName].src);
     hotspotContainer.innerHTML='';
 
@@ -78,23 +78,34 @@ function changeScene(sceneName){
       el.setAttribute('color','#87cefa');
       el.setAttribute('material','shader: standard; emissive: #FFD700; emissiveIntensity:0.0');
 
+      // التوهج ككرة أكبر شفافة
+      const glow = document.createElement('a-sphere');
+      glow.setAttribute('radius', 0.18);
+      glow.setAttribute('material', 'color: #FFD700; emissive: #FFD700; emissiveIntensity: 0.5; opacity: 0.3; transparent: true; shader: standard');
+      el.appendChild(glow);
+
+      // حلقة أرضية
       const ring=document.createElement('a-ring');
       ring.setAttribute('position','0 0 0');
       ring.setAttribute('rotation','-90 0 0');
       ring.setAttribute('radius-inner','0.25');
       ring.setAttribute('radius-outer','1');
       ring.setAttribute('material','color:#FFD700; shader:flat; opacity:0.5; transparent:true');
-      ring.setAttribute('scale','1 1 1');
       el.appendChild(ring);
 
+      // حركة عند المرور
       el.setAttribute('animation__hover','property: scale; startEvents: mouseenter; to:1.2 1.2 1.2; dur:200');
       el.setAttribute('animation__hover_emissive','property: material.emissiveIntensity; startEvents: mouseenter; to:1; dur:200');
+      glow.setAttribute('animation__glow_hover','property: material.emissiveIntensity; startEvents: mouseenter; to:1.5; dur:200');
       ring.setAttribute('animation__hover_ring','property: scale; startEvents: mouseenter; to:1.5 1.5 1.5; dur:200');
 
+      // حركة عند الخروج
       el.setAttribute('animation__leave','property: scale; startEvents: mouseleave; to:1 1 1; dur:200');
       el.setAttribute('animation__leave_emissive','property: material.emissiveIntensity; startEvents: mouseleave; to:0; dur:200');
+      glow.setAttribute('animation__glow_leave','property: material.emissiveIntensity; startEvents: mouseleave; to:0.5; dur:200');
       ring.setAttribute('animation__leave_ring','property: scale; startEvents: mouseleave; to:1 1 1; dur:200');
 
+      // عند الضغط
       el.addEventListener('click', ()=>{
         audio.pause();
         audio.currentTime=0;
@@ -107,7 +118,7 @@ function changeScene(sceneName){
 
     fadePlane.emit('fadein');
 
-    // عرض النص بعد التلاشي
+    // عرض اسم الغرفة
     roomLabel.setAttribute('text','value:' + scenes[sceneName].label);
     roomLabel.setAttribute('visible', true);
   },500);
