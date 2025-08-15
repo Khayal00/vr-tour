@@ -8,6 +8,7 @@
     <script src="https://unpkg.com/aframe-animation-component@5.1.2/dist/aframe-animation-component.min.js"></script>
     <script src="https://unpkg.com/aframe-event-set-component@5.0.0/dist/aframe-event-set-component.min.js"></script>
     <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -161,6 +162,8 @@
             z-index: 10;
             text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
             opacity: 0.9;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 10px;
         }
         
         .navigation-info {
@@ -274,6 +277,10 @@
             opacity: 0;
             transition: opacity 0.3s ease;
             text-align: center;
+            position: absolute;
+            transform: translateX(-50%);
+            left: 50%;
+            bottom: -40px;
         }
         
         .hotspot:hover .hotspot-label {
@@ -283,11 +290,22 @@
         /* تأثيرات النقاط الساخنة */
         .hotspot {
             cursor: pointer;
+            position: absolute;
         }
         
         .hotspot-icon {
             animation: pulse 1.5s infinite;
             transition: all 0.3s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 50px;
+            height: 50px;
+            background: radial-gradient(circle, #00c3ff, #0077ff);
+            border-radius: 50%;
+            color: white;
+            font-size: 24px;
+            box-shadow: 0 0 15px rgba(0, 195, 255, 0.7);
         }
         
         .hotspot-icon:hover {
@@ -396,6 +414,9 @@
             color: #00c3ff;
             z-index: 15;
             display: none;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px 30px;
+            border-radius: 10px;
         }
         
         /* تأثيرات تفاعل الهوت سبوت */
@@ -409,6 +430,41 @@
             z-index: 5;
             display: none;
         }
+        
+        /* تأثير النقاط الساخنة عند التحديق */
+        .hotspot-gaze {
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: 2px solid rgba(0, 195, 255, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: hotspotGaze 1.5s infinite;
+        }
+        
+        @keyframes hotspotGaze {
+            0% { transform: scale(0.8); opacity: 0.7; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(0.8); opacity: 0.7; }
+        }
+        
+        .hotspot-gaze::before {
+            content: '';
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 2px solid rgba(0, 195, 255, 0.5);
+            animation: hotspotGazeInner 1.5s infinite;
+        }
+        
+        @keyframes hotspotGazeInner {
+            0% { transform: scale(0.9); opacity: 0.5; }
+            50% { transform: scale(1.3); opacity: 0.2; }
+            100% { transform: scale(0.9); opacity: 0.5; }
+        }
     </style>
 </head>
 <body>
@@ -417,7 +473,7 @@
         <div id="loadingContent">
             <div class="logo-container">
                 <div class="logo">
-                    <i>VR</i>
+                    <i class="fa-solid fa-vr-cardboard"></i>
                 </div>
             </div>
             <h1>تجربة الواقع الافتراضي 360°</h1>
@@ -446,19 +502,16 @@
     </div>
     
     <!-- مشهد A-Frame -->
-    <a-scene id="scene" vr-mode-ui="enabled: false" raycaster="objects: .hotspot">
+    <a-scene id="scene" vr-mode-ui="enabled: false" raycaster="objects: .hotspot; far: 100">
         <!-- الأصول -->
         <a-assets>
-            <!-- الصور الـ 360 (ستحتاج لاستبدالها بصورك) -->
+            <!-- الصور الـ 360 -->
             <img id="scene1" src="assets/Living_Room.jpg">
             <img id="scene2" src="https://cdn.glitch.global/6a11d0d7-1a41-4e96-8b7b-9d6e5b9c4a0c/equirectangular2.jpg">
             <img id="scene3" src="https://cdn.glitch.global/6a11d0d7-1a41-4e96-8b7b-9d6e5b9c4a0c/equirectangular3.jpg">
             <img id="scene4" src="https://cdn.glitch.global/6a11d0d7-1a41-4e96-8b7b-9d6e5b9c4a0c/equirectangular4.jpg">
             <img id="scene5" src="https://cdn.glitch.global/6a11d0d7-1a41-4e96-8b7b-9d6e5b9c4a0c/equirectangular5.jpg">
             <img id="scene6" src="https://cdn.glitch.global/6a11d0d7-1a41-4e96-8b7b-9d6e5b9c4a0c/equirectangular6.jpg">
-            
-            <!-- أيقونات النقاط الساخنة -->
-            <img id="hotspot" src="assets/Kitchen1.png">
         </a-assets>
         
         <!-- المشاهد الـ 360 (سيتم تبديلها) -->
@@ -490,53 +543,42 @@
         
         <!-- النقاط الساخنة المعدلة لتواجه الكاميرا دائماً -->
         <a-entity class="hotspot" position="0 1.5 -3" data-scene="scene2">
-            <!-- استخدام look-at-component لجعل الهوت سبوت تواجه الكاميرا دائماً -->
-            <a-image class="hotspot-icon" src="#hotspot" scale="0.8 0.8 0.8" 
-                     look-at="[camera]"
-                     animation="property: scale; to: 0.9 0.9 0.9; dir: alternate; dur: 1000; loop: true"
-                     event-set__mouseenter="_event: mouseenter; scale: 1.1 1.1 1.1"
-                     event-set__mouseleave="_event: mouseleave; scale: 0.8 0.8 0.8"></a-image>
-            <a-entity position="0 -0.7 0" class="hotspot-label" 
+            <a-entity class="hotspot-icon" look-at="[camera]">
+                <i class="fa-solid fa-mountain"></i>
+            </a-entity>
+            <a-entity class="hotspot-label" 
                       text="value: المشهد الجبلي; align: center; color: white; width: 4"></a-entity>
         </a-entity>
         
         <a-entity class="hotspot" position="3 1.5 0" data-scene="scene3">
-            <a-image class="hotspot-icon" src="#hotspot" scale="0.8 0.8 0.8" 
-                     look-at="[camera]"
-                     animation="property: scale; to: 0.9 0.9 0.9; dir: alternate; dur: 1000; loop: true"
-                     event-set__mouseenter="_event: mouseenter; scale: 1.1 1.1 1.1"
-                     event-set__mouseleave="_event: mouseleave; scale: 0.8 0.8 0.8"></a-image>
-            <a-entity position="0 -0.7 0" class="hotspot-label" 
+            <a-entity class="hotspot-icon" look-at="[camera]">
+                <i class="fa-solid fa-umbrella-beach"></i>
+            </a-entity>
+            <a-entity class="hotspot-label" 
                       text="value: شاطئ البحر; align: center; color: white; width: 4"></a-entity>
         </a-entity>
         
         <a-entity class="hotspot" position="-3 1.5 0" data-scene="scene4">
-            <a-image class="hotspot-icon" src="#hotspot" scale="0.8 0.8 0.8" 
-                     look-at="[camera]"
-                     animation="property: scale; to: 0.9 0.9 0.9; dir: alternate; dur: 1000; loop: true"
-                     event-set__mouseenter="_event: mouseenter; scale: 1.1 1.1 1.1"
-                     event-set__mouseleave="_event: mouseleave; scale: 0.8 0.8 0.8"></a-image>
-            <a-entity position="0 -0.7 0" class="hotspot-label" 
+            <a-entity class="hotspot-icon" look-at="[camera]">
+                <i class="fa-solid fa-tree"></i>
+            </a-entity>
+            <a-entity class="hotspot-label" 
                       text="value: الغابة الخضراء; align: center; color: white; width: 4"></a-entity>
         </a-entity>
         
         <a-entity class="hotspot" position="0 1.5 3" data-scene="scene5">
-            <a-image class="hotspot-icon" src="#hotspot" scale="0.8 0.8 0.8" 
-                     look-at="[camera]"
-                     animation="property: scale; to: 0.9 0.9 0.9; dir: alternate; dur: 1000; loop: true"
-                     event-set__mouseenter="_event: mouseenter; scale: 1.1 1.1 1.1"
-                     event-set__mouseleave="_event: mouseleave; scale: 0.8 0.8 0.8"></a-image>
-            <a-entity position="0 -0.7 0" class="hotspot-label" 
+            <a-entity class="hotspot-icon" look-at="[camera]">
+                <i class="fa-solid fa-sun"></i>
+            </a-entity>
+            <a-entity class="hotspot-label" 
                       text="value: الصحراء الذهبية; align: center; color: white; width: 4"></a-entity>
         </a-entity>
         
         <a-entity class="hotspot" position="0 3 -2" data-scene="scene6">
-            <a-image class="hotspot-icon" src="#hotspot" scale="0.8 0.8 0.8" 
-                     look-at="[camera]"
-                     animation="property: scale; to: 0.9 0.9 0.9; dir: alternate; dur: 1000; loop: true"
-                     event-set__mouseenter="_event: mouseenter; scale: 1.1 1.1 1.1"
-                     event-set__mouseleave="_event: mouseleave; scale: 0.8 0.8 0.8"></a-image>
-            <a-entity position="0 -0.7 0" class="hotspot-label" 
+            <a-entity class="hotspot-icon" look-at="[camera]">
+                <i class="fa-solid fa-city"></i>
+            </a-entity>
+            <a-entity class="hotspot-label" 
                       text="value: المدينة الحديثة; align: center; color: white; width: 4"></a-entity>
         </a-entity>
         
@@ -682,15 +724,12 @@
                 });
                 
                 hotspot.addEventListener('mouseleave', function() {
-                    hotspotIcon.setAttribute('scale', '0.8 0.8 0.8');
+                    hotspotIcon.setAttribute('scale', '1 1 1');
                     hotspotLabel.setAttribute('visible', 'false');
                     
                     // إخفاء تأثير التمييز
                     hotspotHighlight.style.display = 'none';
                 });
-                
-                // تأكيد رؤية الهوت سبوت
-                hotspot.setAttribute('visible', 'true');
             });
             
             // تغيير المشهد مع تأثيرات
@@ -738,9 +777,9 @@
                     // إعادة توجيه النقاط الساخنة بعد تغيير المشهد
                     setTimeout(() => {
                         hotspots.forEach(hotspot => {
-                            const image = hotspot.querySelector('a-image');
-                            if (image) {
-                                image.setAttribute('look-at', '[camera]');
+                            const icon = hotspot.querySelector('.hotspot-icon');
+                            if (icon) {
+                                icon.setAttribute('look-at', '[camera]');
                             }
                         });
                     }, 100);
@@ -777,7 +816,7 @@
                 // إنشاء Raycaster لاكتشاف التقاطعات
                 const raycaster = new THREE.Raycaster();
                 const camera = document.querySelector('[camera]').object3D;
-                const sceneEl = document.querySelector('a-scene');
+                const sceneEl = document.querySelector('a-scene').object3D;
                 
                 // حلقة التصيير
                 function checkIntersections() {
@@ -787,7 +826,7 @@
                     raycaster.setFromCamera(new THREE.Vector2(), camera);
                     
                     // الحصول على كل النقاط الساخنة
-                    const hotspotObjects = Array.from(hotspots).map(h => h.object3D);
+                    const hotspotObjects = Array.from(document.querySelectorAll('.hotspot')).map(h => h.object3D);
                     
                     // الحصول على التقاطعات
                     const intersects = raycaster.intersectObjects(hotspotObjects, true);
@@ -881,13 +920,6 @@
                     showError('فشل تحميل أحد الموارد!');
                 });
             });
-            
-            // تأكيد ظهور النقاط الساخنة بعد تحميل المشهد
-            setTimeout(() => {
-                hotspots.forEach(hotspot => {
-                    hotspot.setAttribute('visible', 'true');
-                });
-            }, 1000);
         });
     </script>
 </body>
