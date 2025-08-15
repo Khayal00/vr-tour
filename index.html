@@ -7,6 +7,7 @@
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <script src="https://unpkg.com/aframe-animation-component@5.1.2/dist/aframe-animation-component.min.js"></script>
     <script src="https://unpkg.com/aframe-event-set-component@5.0.0/dist/aframe-event-set-component.min.js"></script>
+    <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -272,6 +273,7 @@
             pointer-events: none;
             opacity: 0;
             transition: opacity 0.3s ease;
+            text-align: center;
         }
         
         .hotspot:hover .hotspot-label {
@@ -382,6 +384,18 @@
             80% { opacity: 1; }
             100% { opacity: 0; }
         }
+        
+        /* مؤشر التحميل */
+        .loading-indicator {
+            position: absolute;
+            top: 60%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.2rem;
+            color: #00c3ff;
+            z-index: 15;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -424,14 +438,14 @@
         <a-assets>
             <!-- الصور الـ 360 (ستحتاج لاستبدالها بصورك) -->
             <img id="scene1" src="assets/Living_Room.jpg">
-            <img id="scene2" src="assets/Reception.jpg">
+            <img id="scene2" src="https://cdn.glitch.global/6a11d0d7-1a41-4e96-8b7b-9d6e5b9c4a0c/equirectangular2.jpg">
             <img id="scene3" src="https://cdn.glitch.global/6a11d0d7-1a41-4e96-8b7b-9d6e5b9c4a0c/equirectangular3.jpg">
             <img id="scene4" src="https://cdn.glitch.global/6a11d0d7-1a41-4e96-8b7b-9d6e5b9c4a0c/equirectangular4.jpg">
             <img id="scene5" src="https://cdn.glitch.global/6a11d0d7-1a41-4e96-8b7b-9d6e5b9c4a0c/equirectangular5.jpg">
             <img id="scene6" src="https://cdn.glitch.global/6a11d0d7-1a41-4e96-8b7b-9d6e5b9c4a0c/equirectangular6.jpg">
             
             <!-- أيقونات النقاط الساخنة -->
-            <img id="hotspot" src="assets/Kitchen1.png">
+            <img id="hotspot" src="Assets/Kitchen1.png">
         </a-assets>
         
         <!-- المشاهد الـ 360 (سيتم تبديلها) -->
@@ -462,7 +476,7 @@
         
         <!-- النقاط الساخنة المعدلة لتواجه الكاميرا دائماً -->
         <a-entity class="hotspot" position="0 1.5 -3" data-scene="scene2">
-            <!-- استخدام look-at لجعل الهوت سبوت تواجه الكاميرا دائماً -->
+            <!-- استخدام look-at-component لجعل الهوت سبوت تواجه الكاميرا دائماً -->
             <a-image class="hotspot-icon" src="#hotspot" scale="0.8 0.8 0.8" 
                      look-at="[camera]"
                      animation="property: scale; to: 0.9 0.9 0.9; dir: alternate; dur: 1000; loop: true"></a-image>
@@ -531,6 +545,9 @@
             <p>انظر إلى النقاط المضيئة للانتقال بين المشاهد</p>
         </div>
         
+        <!-- مؤشر التحميل -->
+        <div class="loading-indicator" id="loadingIndicator">جاري تحميل المشهد التالي...</div>
+        
         <!-- تأثيرات الانتقال -->
         <a-entity id="transitionOverlay" geometry="primitive: plane; height: 100; width: 100" 
                   material="color: black; opacity: 0" 
@@ -555,6 +572,7 @@
             const sceneDots = document.querySelectorAll('.scene-dot');
             const errorMessage = document.getElementById('errorMessage');
             const userGuide = document.getElementById('userGuide');
+            const loadingIndicator = document.getElementById('loadingIndicator');
             
             // إعداد حلقة النظر والتفاعل
             let currentHotspot = null;
@@ -626,6 +644,9 @@
             
             // تغيير المشهد مع تأثيرات
             function changeScene(targetScene) {
+                // إظهار مؤشر التحميل
+                loadingIndicator.style.display = 'block';
+                
                 // تأثير انتقال
                 transitionOverlay.setAttribute('material', 'opacity', 1);
                 transitionOverlay.setAttribute('animation', {
@@ -640,6 +661,7 @@
                     const sceneEl = document.querySelector(`#${targetScene}`);
                     if (!sceneEl) {
                         showError('لم يتم العثور على المشهد المطلوب!');
+                        loadingIndicator.style.display = 'none';
                         return;
                     }
                     
@@ -651,7 +673,7 @@
                     // تحديث مؤشر المشاهد
                     updateSceneIndicator(targetScene);
                     
-                    // إخفاء تأثير الانتقال
+                    // إخفاء تأثير الانتقال ومؤشر التحميل
                     setTimeout(() => {
                         transitionOverlay.setAttribute('animation', {
                             property: 'material.opacity',
@@ -659,7 +681,18 @@
                             dur: 800,
                             easing: 'easeInOutQuad'
                         });
+                        loadingIndicator.style.display = 'none';
                     }, 500);
+                    
+                    // إعادة توجيه النقاط الساخنة بعد تغيير المشهد
+                    setTimeout(() => {
+                        hotspots.forEach(hotspot => {
+                            const image = hotspot.querySelector('a-image');
+                            if (image) {
+                                image.setAttribute('look-at', '[camera]');
+                            }
+                        });
+                    }, 100);
                 }, 600);
             }
             
