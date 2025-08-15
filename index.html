@@ -540,32 +540,32 @@
             <div class="scene-dot" data-scene="scene6"></div>
         </div>
         
-        <!-- النقاط الساخنة باستخدام صورتك -->
-        <a-entity class="hotspot" position="0 1.5 -3" data-scene="scene2">
+        <!-- النقاط الساخنة للمشهد الأول فقط -->
+        <a-entity class="hotspot scene1-hotspot" position="0 1.5 -3" data-scene="scene2">
             <a-image class="hotspot-icon" src="#hotspot-img" scale="0.8 0.8 0.8" look-at="[camera]"></a-image>
             <a-entity class="hotspot-label" 
                       text="value: المشهد الجبلي; align: center; color: white; width: 4"></a-entity>
         </a-entity>
         
-        <a-entity class="hotspot" position="3 1.5 0" data-scene="scene3">
+        <a-entity class="hotspot scene1-hotspot" position="3 1.5 0" data-scene="scene3">
             <a-image class="hotspot-icon" src="#hotspot-img" scale="0.8 0.8 0.8" look-at="[camera]"></a-image>
             <a-entity class="hotspot-label" 
                       text="value: شاطئ البحر; align: center; color: white; width: 4"></a-entity>
         </a-entity>
         
-        <a-entity class="hotspot" position="-3 1.5 0" data-scene="scene4">
+        <a-entity class="hotspot scene1-hotspot" position="-3 1.5 0" data-scene="scene4">
             <a-image class="hotspot-icon" src="#hotspot-img" scale="0.8 0.8 0.8" look-at="[camera]"></a-image>
             <a-entity class="hotspot-label" 
                       text="value: الغابة الخضراء; align: center; color: white; width: 4"></a-entity>
         </a-entity>
         
-        <a-entity class="hotspot" position="0 1.5 3" data-scene="scene5">
+        <a-entity class="hotspot scene1-hotspot" position="0 1.5 3" data-scene="scene5">
             <a-image class="hotspot-icon" src="#hotspot-img" scale="0.8 0.8 0.8" look-at="[camera]"></a-image>
             <a-entity class="hotspot-label" 
                       text="value: الصحراء الذهبية; align: center; color: white; width: 4"></a-entity>
         </a-entity>
         
-        <a-entity class="hotspot" position="0 3 -2" data-scene="scene6">
+        <a-entity class="hotspot scene1-hotspot" position="0 3 -2" data-scene="scene6">
             <a-image class="hotspot-icon" src="#hotspot-img" scale="0.8 0.8 0.8" look-at="[camera]"></a-image>
             <a-entity class="hotspot-label" 
                       text="value: المدينة الحديثة; align: center; color: white; width: 4"></a-entity>
@@ -752,6 +752,9 @@
                     // تحديث مؤشر المشاهد
                     updateSceneIndicator(targetScene);
                     
+                    // إخفاء جميع النقاط الساخنة (للمشاهد الأخرى)
+                    hideAllHotspots();
+                    
                     // إخفاء تأثير الانتقال ومؤشر التحميل
                     setTimeout(() => {
                         transitionOverlay.setAttribute('animation', {
@@ -773,6 +776,13 @@
                         });
                     }, 100);
                 }, 600);
+            }
+            
+            // إخفاء جميع النقاط الساخنة
+            function hideAllHotspots() {
+                document.querySelectorAll('.hotspot').forEach(hotspot => {
+                    hotspot.setAttribute('visible', 'false');
+                });
             }
             
             // تحديث عنوان المشهد
