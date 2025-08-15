@@ -21,6 +21,8 @@
           geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
           material="color: white; shader: flat">
         </a-cursor>
+            <!-- حاوية للهوت سبوت -->
+      <a-entity id="hotspotContainer"></a-entity>
 
         <!-- طبقة التلاشي -->
         <a-plane id="fadePlane" position="0 0 -0.5" width="2" height="2"
@@ -32,9 +34,6 @@
 
       <!-- السماء -->
       <a-sky id="sky" rotation="0 -90 0"></a-sky>
-
-      <!-- حاوية للهوت سبوت -->
-      <a-entity id="hotspotContainer"></a-entity>
 
       <!-- تحميل الصوت والصور -->
       <a-assets>
