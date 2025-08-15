@@ -80,12 +80,29 @@
             line-height: 1.6;
             color: #b8c1ec;
         }
+        #error-message {
+            color: #ff6b6b;
+            margin-top: 20px;
+            text-align: center;
+            max-width: 500px;
+            display: none;
+        }
+        #retry-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background: #4361ee;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            display: none;
+        }
     </style>
 </head>
 <body>
     <div id="loading">
         <div class="logo">الجولة الافتراضية</div>
-        <div>جاري تحميل المشهد...</div>
+        <div id="status">جاري تحميل المشهد...</div>
         <div id="progress-container">
             <div id="progress-bar"></div>
         </div>
@@ -93,6 +110,8 @@
             يمكنك استخدام الماوس للتحريك في جميع الاتجاهات.<br>
             انقر على النقاط البيضاء للانتقال بين الغرف.
         </div>
+        <div id="error-message"></div>
+        <button id="retry-button">إعادة المحاولة</button>
     </div>
     
     <div id="scene-container">
@@ -118,31 +137,24 @@
 
     <script>
         // ============================================
-        // === هنا تكتب أسماء الصور الخاصة بك ===
+        // === روابط الصور الافتراضية (يمكن استبدالها) ===
         // ============================================
         
-        // روابط صور المشاهد (يجب استبدالها بصورك الخاصة)
+        // روابط صور المشاهد
         const sceneImages = {
             livingRoom: 'assets/Living_Room.jpg',
             kitchen: 'assets/Kitchen.jpg',
-            bedroom: 'assets/Reception.jpg',
-            // يمكنك إضافة المزيد من الصور هنا:
-            // scene4: 'مسار/صورة_المشهد_الرابع.jpg'
+            bedroom: 'assets/Reception.jpg'
         };
 
         // روابط صور نقاط الانتقال
         const hotspotImages = {
-            normal: 'assets/kitchen1.png',
-            hover: 'assets/Living_Room1.png'
-            // يمكنك استبدالها بصورك الخاصة:
-            // normal: 'مسار/صورة_النقطة_العادية.png',
-            // hover: 'مسار/صورة_النقطة_عند_المرور.png'
+            normal: 'assets/Living_Room1.png',
+            hover: 'assets/Kitchen1.png'
         };
 
         // رابط صوت الانتقال
-        const audioFile = 'https://cdn.aframe.io/360-image-gallery-boilerplate/audio/click.ogg';
-        // يمكنك استبداله بصوتك الخاص:
-        // const audioFile = 'مسار/صوت_الانتقال.mp3';
+        const audioFile = 'transition.mp3';
 
         // ============================================
         // === تعريف المشاهد ونقاط الانتقال ===
@@ -172,20 +184,10 @@
                     { target: "livingRoom", position: "0 1.6 -4", label: "غرفة المعيشة" }
                 ]
             }
-            // يمكنك إضافة المزيد من المشاهد هنا:
-            /*
-            bathroom: {
-                name: "الحمام",
-                image: sceneImages.bathroom,
-                hotspots: [
-                    { target: "livingRoom", position: "0 1.6 -4", label: "غرفة المعيشة" }
-                ]
-            }
-            */
         };
 
         // ============================================
-        // === بقية الكود (لا داعي للتعديل هنا عادةً) ===
+        // === نظام التحميل المتطور ===
         // ============================================
         
         // متغيرات التطبيق
@@ -193,55 +195,149 @@
         let audioElement;
         let hotspotImageNormal;
         let hotspotImageHover;
+        let totalAssets;
+        let loadedCount = 0;
+        let assetsErrors = [];
+        
+        // عناصر واجهة المستخدم
+        const loadingElement = document.getElementById('loading');
+        const progressBar = document.getElementById('progress-bar');
+        const statusElement = document.getElementById('status');
+        const errorMessage = document.getElementById('error-message');
+        const retryButton = document.getElementById('retry-button');
         
         // تحميل جميع الأصول
         function loadAssets() {
-            const totalAssets = Object.keys(sceneImages).length + 3; // 3 للصور الإضافية
-            let loadedCount = 0;
+            statusElement.textContent = "جاري تحميل المشهد...";
+            errorMessage.style.display = "none";
+            retryButton.style.display = "none";
+            progressBar.style.width = "0%";
             
-            function updateProgress() {
-                loadedCount++;
-                const progress = Math.round((loadedCount / totalAssets) * 100);
-                document.getElementById('progress-bar').style.width = `${progress}%`;
-                
-                if (loadedCount === totalAssets) {
-                    setTimeout(() => {
-                        document.getElementById('loading').style.opacity = '0';
-                        setTimeout(() => {
-                            document.getElementById('loading').style.display = 'none';
-                        }, 500);
-                        changeScene('livingRoom');
-                    }, 500);
-                }
-            }
+            totalAssets = Object.keys(sceneImages).length + 3; // 3 للصور الإضافية
+            loadedCount = 0;
+            assetsErrors = [];
+            
+            // تحديث شريط التقدم
+            updateProgress();
             
             // تحميل الصوت
             audioElement = new Audio(audioFile);
             audioElement.preload = 'auto';
-            audioElement.addEventListener('canplaythrough', updateProgress);
-            audioElement.addEventListener('error', () => console.log("خطأ في تحميل الصوت"));
+            audioElement.addEventListener('canplaythrough', assetLoaded);
+            audioElement.addEventListener('error', () => handleError('صوت الانتقال', audioFile));
             
             // تحميل صور النقاط
             hotspotImageNormal = new Image();
             hotspotImageNormal.src = hotspotImages.normal;
-            hotspotImageNormal.addEventListener('load', updateProgress);
-            hotspotImageNormal.addEventListener('error', () => console.log("خطأ في تحميل صورة النقطة"));
+            hotspotImageNormal.addEventListener('load', assetLoaded);
+            hotspotImageNormal.addEventListener('error', () => handleError('صورة النقطة العادية', hotspotImages.normal));
             
             hotspotImageHover = new Image();
             hotspotImageHover.src = hotspotImages.hover;
-            hotspotImageHover.addEventListener('load', updateProgress);
-            hotspotImageHover.addEventListener('error', () => console.log("خطأ في تحميل صورة النقطة عند المرور"));
+            hotspotImageHover.addEventListener('load', assetLoaded);
+            hotspotImageHover.addEventListener('error', () => handleError('صورة النقطة عند المرور', hotspotImages.hover));
             
             // تحميل صور المشاهد
             Object.keys(sceneImages).forEach(sceneId => {
                 const img = new Image();
                 img.src = sceneImages[sceneId];
-                img.addEventListener('load', updateProgress);
-                img.addEventListener('error', () => console.log(`خطأ في تحميل مشهد ${sceneId}`));
+                img.addEventListener('load', assetLoaded);
+                img.addEventListener('error', () => handleError(`مشهد ${sceneId}`, sceneImages[sceneId]));
             });
             
+            // بدء مهلة زمنية للتحميل
+            startLoadTimeout();
+        }
+        
+        // دالة تحديث شريط التقدم
+        function updateProgress() {
+            const progress = Math.round((loadedCount / totalAssets) * 100);
+            progressBar.style.width = `${progress}%`;
+            statusElement.textContent = `جاري التحميل: ${progress}%`;
+        }
+        
+        // دالة معالجة الأخطاء
+        function handleError(assetName, assetUrl) {
+            assetsErrors.push({name: assetName, url: assetUrl});
+            loadedCount++;
+            updateProgress();
+            
+            // إذا اكتمل التحميل (بأخطاء)
+            if (loadedCount >= totalAssets) {
+                finishLoadingWithErrors();
+            }
+        }
+        
+        // دالة عند تحميل أصل بنجاح
+        function assetLoaded() {
+            loadedCount++;
+            updateProgress();
+            
+            // إذا اكتمل التحميل بنجاح
+            if (loadedCount === totalAssets && assetsErrors.length === 0) {
+                finishLoadingSuccessfully();
+            }
+            // إذا اكتمل التحميل مع أخطاء
+            else if (loadedCount >= totalAssets) {
+                finishLoadingWithErrors();
+            }
+        }
+        
+        // دالة لبدء مهلة زمنية للتحميل
+        function startLoadTimeout() {
+            // إذا لم يكتمل التحميل خلال 10 ثوانٍ
+            setTimeout(() => {
+                if (loadedCount < totalAssets) {
+                    assetsErrors.push({name: "مهلة زمنية", url: "تجاوزت عملية التحميل الوقت المحدد"});
+                    finishLoadingWithErrors();
+                }
+            }, 10000);
+        }
+        
+        // دالة عند اكتمال التحميل بنجاح
+        function finishLoadingSuccessfully() {
+            statusElement.textContent = "اكتمل التحميل بنجاح!";
+            setTimeout(() => {
+                loadingElement.style.opacity = '0';
+                setTimeout(() => {
+                    loadingElement.style.display = 'none';
+                    changeScene('livingRoom');
+                }, 500);
+            }, 1000);
             assetsLoaded = true;
         }
+        
+        // دالة عند اكتمال التحميل مع أخطاء
+        function finishLoadingWithErrors() {
+            statusElement.textContent = "تم التحميل مع بعض الأخطاء";
+            
+            // بناء رسالة الخطأ
+            let message = `حدث خطأ في تحميل ${assetsErrors.length} أصول:<br>`;
+            assetsErrors.forEach(error => {
+                message += `- ${error.name}: ${error.url}<br>`;
+            });
+            message += "قد تعمل الجولة مع بعض المشاكل.";
+            
+            errorMessage.innerHTML = message;
+            errorMessage.style.display = 'block';
+            retryButton.style.display = 'block';
+            
+            // إذا كان هناك ما يكفي من الأصول للبدء
+            if (loadedCount > 3) {
+                setTimeout(() => {
+                    loadingElement.style.opacity = '0';
+                    setTimeout(() => {
+                        loadingElement.style.display = 'none';
+                        changeScene('livingRoom');
+                    }, 500);
+                }, 3000);
+            }
+        }
+        
+        // دالة إعادة المحاولة
+        retryButton.addEventListener('click', () => {
+            loadAssets();
+        });
 
         // الانتقال بين المشاهد
         function changeScene(sceneId) {
@@ -317,8 +413,10 @@
                 
                 // النقلة عند النقر
                 hotspotEl.addEventListener('click', () => {
-                    audioElement.currentTime = 0;
-                    audioElement.play().catch(e => console.log("تشغيل الصوت:", e));
+                    if (audioElement) {
+                        audioElement.currentTime = 0;
+                        audioElement.play().catch(e => console.log("تشغيل الصوت:", e));
+                    }
                     changeScene(hotspot.target);
                 });
                 
@@ -340,7 +438,7 @@
         
         // حل بديل إذا لم يعمل حدث loaded
         setTimeout(() => {
-            if (document.getElementById('loading').style.display !== 'none') {
+            if (loadingElement.style.display !== 'none') {
                 loadAssets();
             }
         }, 2000);
