@@ -703,6 +703,7 @@
                 const hotspotLabel = hotspot.querySelector('.hotspot-label');
                 
                 hotspot.addEventListener('mouseenter', function() {
+                    // تعديل خاصية scale باستخدام setAttribute
                     hotspotIcon.setAttribute('scale', '1.1 1.1 1.1');
                     hotspotLabel.setAttribute('visible', 'true');
                     
@@ -714,6 +715,7 @@
                 });
                 
                 hotspot.addEventListener('mouseleave', function() {
+                    // تعديل خاصية scale باستخدام setAttribute
                     hotspotIcon.setAttribute('scale', '0.8 0.8 0.8');
                     hotspotLabel.setAttribute('visible', 'false');
                     
@@ -816,14 +818,15 @@
                     raycaster.setFromCamera(new THREE.Vector2(), camera);
                     
                     // الحصول على كل النقاط الساخنة
-                    const hotspotObjects = Array.from(document.querySelectorAll('.hotspot')).map(h => h.object3D);
+                    const hotspotIcons = Array.from(document.querySelectorAll('.hotspot-icon'));
+                    const hotspotObjects = hotspotIcons.map(icon => icon.object3D);
                     
                     // الحصول على التقاطعات
                     const intersects = raycaster.intersectObjects(hotspotObjects, true);
                     
                     if (intersects.length > 0) {
                         // وجدنا نقطة ساخنة
-                        const hotspotEntity = intersects[0].object.el;
+                        const hotspotEntity = intersects[0].object.el.parentElement;
                         
                         if (hotspotEntity !== currentHotspot) {
                             // تغيير النقطة الساخنة الحالية
@@ -868,7 +871,13 @@
                         // اكتمل المؤقت، تنفيذ النقر
                         clearInterval(progressTimer);
                         if (currentHotspot) {
-                            currentHotspot.dispatchEvent(new Event('click'));
+                            // إنشاء حدث النقر وإرساله
+                            const clickEvent = new MouseEvent('click', {
+                                view: window,
+                                bubbles: true,
+                                cancelable: true
+                            });
+                            currentHotspot.dispatchEvent(clickEvent);
                         }
                         progressRing.classList.remove('visible');
                         currentHotspot = null;
@@ -883,6 +892,7 @@
                     progressTimer = null;
                 }
                 progressRing.classList.remove('visible');
+                progressCircle.style.strokeDashoffset = 100;
             }
             
             // إظهار رسالة خطأ
