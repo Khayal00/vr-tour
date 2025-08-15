@@ -22,7 +22,13 @@
         </a-cursor>
       </a-entity>
 
-      <a-sky id="sky" rotation="0 -90 0"></a-sky>
+      <!-- السماء مع تأثير التلاشي -->
+      <a-sky id="sky" rotation="0 -90 0"
+             material="opacity: 1; transparent: true"
+             animation__fadeout="startEvents: fadeout; property: material.opacity; from: 1; to: 0; dur: 300"
+             animation__fadein="startEvents: fadein; property: material.opacity; from: 0; to: 1; dur: 300">
+      </a-sky>
+
       <a-entity id="hotspotContainer"></a-entity>
     </a-scene>
 
@@ -38,7 +44,14 @@
         },
         Kitchen: { src: 'assets/Kitchen.jpg', hotspots: [ { target: 'Living_Room', position: '0 1.6 -2.5' } ] },
         Reception: { src: 'assets/Reception.jpg', hotspots: [ { target: 'Living_Room', position: '0 1.6 -2.5' } ] },
-        Corridor: { src: 'assets/Corridor.jpg', hotspots: [ { target: 'Bathroom', position: '-2 1.6 -2.5' }, { target: 'Bedroom', position: '2 1.6 -2.5' }, { target: 'Living_Room', position: '0 1.6 -2.5' } ] },
+        Corridor: {
+          src: 'assets/Corridor.jpg',
+          hotspots: [
+            { target: 'Bathroom', position: '-2 1.6 -2.5' },
+            { target: 'Bedroom', position: '2 1.6 -2.5' },
+            { target: 'Living_Room', position: '0 1.6 -2.5' }
+          ]
+        },
         Bathroom: { src: 'assets/Bathroom.jpg', hotspots: [ { target: 'Corridor', position: '0 1.6 -2.5' } ] },
         Bedroom: { src: 'assets/Bedroom.jpg', hotspots: [ { target: 'Corridor', position: '0 1.6 -2.5' } ] }
       };
@@ -47,34 +60,48 @@
         const sky = document.querySelector('#sky');
         const hotspotContainer = document.querySelector('#hotspotContainer');
 
-        sky.setAttribute('src', scenes[sceneName].src);
-        hotspotContainer.innerHTML = '';
+        // تفعيل التلاشي للخارج
+        sky.emit('fadeout');
 
-        scenes[sceneName].hotspots.forEach(hs => {
-          const el = document.createElement('a-image');
-          el.setAttribute('class', 'hotspot');
-          el.setAttribute('src', 'assets/Kitchen1.png'); // صورة PNG للهوت سبوت
-          el.setAttribute('position', hs.position);
-          el.setAttribute('scale', '0.5 0.5 0.5');
-          el.setAttribute('transparent', 'true');
-          el.setAttribute('opacity', '0.8');
+        // تحميل الصورة مسبقًا
+        const img = new Image();
+        img.src = scenes[sceneName].src;
+        img.onload = () => {
+          setTimeout(() => {
+            // تغيير الصورة وتفعيل التلاشي للداخل
+            sky.setAttribute('src', scenes[sceneName].src);
+            sky.emit('fadein');
 
-          // تأثير التوهج عند المرور
-          el.addEventListener('mouseenter', () => {
-            el.setAttribute('opacity', '1');
-            el.setAttribute('scale', '0.7 0.7 0.7'); // تكبير بسيط لإظهار التوهج
-          });
-          el.addEventListener('mouseleave', () => {
-            el.setAttribute('opacity', '0.8');
-            el.setAttribute('scale', '0.5 0.5 0.5');
-          });
+            // إزالة الهوت سبوتات القديمة
+            hotspotContainer.innerHTML = '';
 
-          el.addEventListener('click', () => {
-            changeScene(hs.target);
-          });
+            // إضافة الهوت سبوتات الجديدة
+            scenes[sceneName].hotspots.forEach(hs => {
+              const el = document.createElement('a-image');
+              el.setAttribute('class', 'hotspot');
+              el.setAttribute('src', 'assets/Kitchen1.png');
+              el.setAttribute('position', hs.position);
+              el.setAttribute('scale', '0.5 0.5 0.5');
+              el.setAttribute('transparent', 'true');
+              el.setAttribute('opacity', '0.8');
 
-          hotspotContainer.appendChild(el);
-        });
+              el.addEventListener('mouseenter', () => {
+                el.setAttribute('opacity', '1');
+                el.setAttribute('scale', '0.7 0.7 0.7');
+              });
+              el.addEventListener('mouseleave', () => {
+                el.setAttribute('opacity', '0.8');
+                el.setAttribute('scale', '0.5 0.5 0.5');
+              });
+
+              el.addEventListener('click', () => {
+                changeScene(hs.target);
+              });
+
+              hotspotContainer.appendChild(el);
+            });
+          }, 300); // نفس مدة التلاشي
+        };
       }
 
       window.addEventListener('load', () => {
