@@ -364,11 +364,6 @@
             display: none;
         }
         
-        /* طبقة إصلاح التداخل */
-        .hotspot-container {
-            position: relative;
-        }
-        
         /* توجيه المستخدم */
         .user-guide {
             position: absolute;
@@ -451,7 +446,7 @@
     </div>
     
     <!-- مشهد A-Frame -->
-    <a-scene id="scene" vr-mode-ui="enabled: false">
+    <a-scene id="scene" vr-mode-ui="enabled: false" raycaster="objects: .hotspot">
         <!-- الأصول -->
         <a-assets>
             <!-- الصور الـ 360 (ستحتاج لاستبدالها بصورك) -->
@@ -480,7 +475,7 @@
         <!-- الكاميرا -->
         <a-entity id="cameraRig" position="0 1.6 0">
             <a-entity camera look-controls wasd-controls="enabled: false"
-                      cursor="rayOrigin: mouse" raycaster="objects: .hotspot; far: 20; useWorldCoordinates: false"></a-entity>
+                      cursor="rayOrigin: mouse; fuse: false"></a-entity>
         </a-entity>
         
         <!-- مؤشر المشاهد -->
@@ -672,20 +667,23 @@
                 });
                 
                 // أحداث الماوس
+                const hotspotIcon = hotspot.querySelector('.hotspot-icon');
+                const hotspotLabel = hotspot.querySelector('.hotspot-label');
+                
                 hotspot.addEventListener('mouseenter', function() {
-                    this.querySelector('.hotspot-icon').setAttribute('scale', '1.1 1.1 1.1');
-                    this.querySelector('.hotspot-label').setAttribute('visible', 'true');
+                    hotspotIcon.setAttribute('scale', '1.1 1.1 1.1');
+                    hotspotLabel.setAttribute('visible', 'true');
                     
                     // إظهار تأثير التمييز
-                    const rect = this.getBoundingClientRect();
+                    const rect = hotspotIcon.getBoundingClientRect();
                     hotspotHighlight.style.display = 'block';
                     hotspotHighlight.style.left = `${rect.left + rect.width/2}px`;
                     hotspotHighlight.style.top = `${rect.top + rect.height/2}px`;
                 });
                 
                 hotspot.addEventListener('mouseleave', function() {
-                    this.querySelector('.hotspot-icon').setAttribute('scale', '0.8 0.8 0.8');
-                    this.querySelector('.hotspot-label').setAttribute('visible', 'false');
+                    hotspotIcon.setAttribute('scale', '0.8 0.8 0.8');
+                    hotspotLabel.setAttribute('visible', 'false');
                     
                     // إخفاء تأثير التمييز
                     hotspotHighlight.style.display = 'none';
