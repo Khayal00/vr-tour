@@ -1,514 +1,447 @@
 <!DOCTYPE html>
-<html>
+<html lang="ar">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>جولة واقع افتراضي 360° احترافية</title>
-    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>جولة افتراضية متكاملة</title>
+    <script src="https://cdn.jsdelivr.net/npm/aframe@1.4.2/dist/aframe-master.min.js"></script>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-        }
-        
-        body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
-            color: white;
+        }
+        body {
+            width: 100%;
             height: 100vh;
             overflow: hidden;
+            background: #000;
+        }
+        #scene-container {
+            width: 100%;
+            height: 100%;
             position: relative;
         }
-        
-        #header {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            padding: 20px;
-            text-align: center;
-            z-index: 1000;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(10px);
-        }
-        
-        #header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            text-shadow: 0 2px 5px rgba(0,0,0,0.5);
-        }
-        
-        #header p {
-            font-size: 1.2rem;
-            max-width: 800px;
-            margin: 0 auto;
-            line-height: 1.6;
-        }
-        
-        #instructions {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.7);
-            padding: 15px 30px;
-            border-radius: 30px;
-            font-size: 1.1rem;
-            z-index: 1000;
-            backdrop-filter: blur(5px);
-            text-align: center;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        }
-        
-        #loadingScreen {
-            position: absolute;
+        #loading {
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: #fff;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 2000;
-            transition: opacity 1s ease;
+            z-index: 1000;
+            transition: opacity 0.5s;
         }
-        
-        .loader {
-            width: 80px;
-            height: 80px;
-            border: 8px solid rgba(255, 255, 255, 0.1);
-            border-top: 8px solid #4facfe;
-            border-radius: 50%;
-            animation: spin 1.5s linear infinite;
-            margin-bottom: 30px;
+        .logo {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #4cc9f0;
+            text-shadow: 0 0 10px rgba(76, 201, 240, 0.7);
         }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        #progress-container {
+            width: 300px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
         }
-        
-        #loadingText {
+        #progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #4361ee, #4cc9f0);
+            transition: width 0.3s;
+        }
+        #scene-title {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: white;
             font-size: 1.5rem;
+            z-index: 10;
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+        }
+        .instructions {
+            margin-top: 20px;
             text-align: center;
             max-width: 500px;
             line-height: 1.6;
+            color: #b8c1ec;
         }
-        
-        .progress-bar {
-            width: 300px;
-            height: 8px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 4px;
+        #error-message {
+            color: #ff6b6b;
             margin-top: 20px;
-            overflow: hidden;
-        }
-        
-        .progress {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, #4facfe, #00f2fe);
-            transition: width 0.5s ease;
-        }
-        
-        .scene-title {
-            position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.7);
-            padding: 10px 25px;
-            border-radius: 30px;
-            font-size: 1.4rem;
-            z-index: 1000;
-            backdrop-filter: blur(5px);
             text-align: center;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            opacity: 0.9;
-            animation: fadeIn 1s ease;
+            max-width: 500px;
+            display: none;
         }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 0.9; }
-        }
-        
-        .controls {
-            position: absolute;
-            bottom: 100px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 20px;
-            z-index: 1000;
-        }
-        
-        .control-btn {
-            background: rgba(0, 0, 0, 0.7);
+        #retry-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background: #4361ee;
             color: white;
             border: none;
-            padding: 12px 25px;
-            border-radius: 30px;
-            font-size: 1.1rem;
-            cursor: pointer;
-            backdrop-filter: blur(5px);
-            transition: all 0.3s ease;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        }
-        
-        .control-btn:hover {
-            background: rgba(79, 172, 254, 0.8);
-            transform: translateY(-3px);
-        }
-        
-        #sceneUI {
-            position: absolute;
-            bottom: 160px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.7);
-            padding: 15px;
-            border-radius: 15px;
-            z-index: 1000;
-            display: flex;
-            gap: 10px;
-            backdrop-filter: blur(5px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        }
-        
-        .scene-thumb {
-            width: 80px;
-            height: 45px;
             border-radius: 5px;
-            overflow: hidden;
             cursor: pointer;
-            opacity: 0.7;
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
-        }
-        
-        .scene-thumb:hover {
-            opacity: 1;
-            transform: scale(1.05);
-        }
-        
-        .scene-thumb.active {
-            opacity: 1;
-            border: 2px solid #4facfe;
-            transform: scale(1.1);
+            display: none;
         }
     </style>
 </head>
 <body>
-    <div id="header">
-        <h1>جولة واقع افتراضي 360° احترافية</h1>
-        <p>تجول بين 6 مشاهد بدقة 360 درجة باستخدام نقاط الانتقال المتوفرة في كل مشهد</p>
-    </div>
-    
-    <div id="instructions">
-        استخدم الماوس للنظر حولك، وانقر على نقاط الهوت سبوت للانتقال بين المشاهد
-    </div>
-    
-    <div id="loadingScreen">
-        <div class="loader"></div>
-        <div id="loadingText">جاري تحميل جولة الواقع الافتراضي...</div>
-        <div class="progress-bar">
-            <div class="progress" id="progress"></div>
+    <div id="loading">
+        <div class="logo">الجولة الافتراضية</div>
+        <div id="status">جاري تحميل المشهد...</div>
+        <div id="progress-container">
+            <div id="progress-bar"></div>
         </div>
+        <div class="instructions">
+            يمكنك استخدام الماوس للتحريك في جميع الاتجاهات.<br>
+            انقر على النقاط البيضاء للانتقال بين الغرف.
+        </div>
+        <div id="error-message"></div>
+        <button id="retry-button">إعادة المحاولة</button>
     </div>
     
-    <a-scene loading-screen="dotsColor: #4facfe; backgroundColor: #000" vr-mode-ui="enabled: false">
-        <!-- الأصول (الصور) -->
-        <a-assets>
-            <!-- صور 360 بدقة عالية -->
-            <img id="scene1" crossorigin="anonymous" src="assets/Living_Room.jpg">
-            <img id="scene2" crossorigin="anonymous" src="assets/Reception.ipg">
-            <img id="scene3" crossorigin="anonymous" src="https://cdn.glitch.global/1d0a5e1c-2f9f-4c83-8f7d-1d0b0b5a5a5d/bedroom.jpg?v=1693356457894">
-            <img id="scene4" crossorigin="anonymous" src="https://cdn.glitch.global/1d0a5e1c-2f9f-4c83-8f7d-1d0b0b5a5a5d/bathroom.jpg?v=1693356457894">
-            <img id="scene5" crossorigin="anonymous" src="https://cdn.glitch.global/1d0a5e1c-2f9f-4c83-8f7d-1d0b0b5a5a5d/garden.jpg?v=1693356457894">
-            <img id="scene6" crossorigin="anonymous" src="https://cdn.glitch.global/1d0a5e1c-2f9f-4c83-8f7d-1d0b0b5a5a5d/office.jpg?v=1693356457894">
-        </a-assets>
-        
-        <!-- المشاهد -->
-        <a-entity id="sceneContainer"></a-entity>
-        
-        <!-- الكاميرا -->
-        <a-entity id="cameraRig">
+    <div id="scene-container">
+        <a-scene>
+            <!-- الكاميرا -->
             <a-entity id="camera" camera="fov: 80" look-controls="pointerLockEnabled: true" position="0 1.6 0">
-                <a-entity cursor="rayOrigin: mouse; fuse: false;"
-                          raycaster="objects: .hotspot; far: 20"
-                          position="0 0 -1"
-                          geometry="primitive: ring; radiusInner: 0.01; radiusOuter: 0.015"
-                          material="color: #4facfe; shader: flat">
-                </a-entity>
+                <a-cursor
+                    rayOrigin="mouse"
+                    fuse="false"
+                    material="color: white; shader: flat"
+                    geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03">
+                </a-cursor>
             </a-entity>
-        </a-entity>
-    </a-scene>
-    
-    <div class="controls">
-        <button class="control-btn" id="fullscreenBtn">وضع ملء الشاشة</button>
-        <button class="control-btn" id="vrBtn">وضع VR</button>
+
+            <!-- السماء -->
+            <a-sky id="sky"></a-sky>
+
+            <!-- حاوية نقاط الانتقال -->
+            <a-entity id="hotspotContainer"></a-entity>
+        </a-scene>
+        <div id="scene-title">غرفة المعيشة</div>
     </div>
-    
+
     <script>
-        // تعريف المشاهد ونقاط الانتقال
-        const scenes = [
-            {
-                id: "scene1",
-                image: "#scene1",
-                title: "غرفة المعيشة",
-                hotspots: [
-                    { position: "1 -0.5 -3", target: "scene2", label: "إلى المطبخ", rotation: "0 0 0" },
-                    { position: "2 0.5 -4", target: "scene3", label: "إلى غرفة النوم", rotation: "0 -45 0" },
-                    { position: "-1 0.8 -3", target: "scene6", label: "إلى المكتب", rotation: "0 30 0" }
-                ]
-            },
-            {
-                id: "scene2",
-                image: "#scene2",
-                title: "المطبخ",
-                hotspots: [
-                    { position: "-1 0 -4", target: "scene1", label: "إلى غرفة المعيشة", rotation: "0 30 0" },
-                    { position: "0 1 -3", target: "scene4", label: "إلى الحمام", rotation: "0 0 0" },
-                    { position: "1.5 0.5 -2", target: "scene5", label: "إلى الحديقة", rotation: "0 -30 0" }
-                ]
-            },
-            {
-                id: "scene3",
-                image: "#scene3",
-                title: "غرفة النوم",
-                hotspots: [
-                    { position: "0 0 -3", target: "scene1", label: "إلى غرفة المعيشة", rotation: "0 0 0" },
-                    { position: "-1.5 0.5 -2.5", target: "scene4", label: "إلى الحمام", rotation: "0 20 0" }
-                ]
-            },
-            {
-                id: "scene4",
-                image: "#scene4",
-                title: "الحمام",
-                hotspots: [
-                    { position: "0.5 0.2 -2", target: "scene3", label: "إلى غرفة النوم", rotation: "0 -20 0" },
-                    { position: "1.2 0.5 -2.5", target: "scene2", label: "إلى المطبخ", rotation: "0 -30 0" }
-                ]
-            },
-            {
-                id: "scene5",
-                image: "#scene5",
-                title: "الحديقة",
-                hotspots: [
-                    { position: "0 -0.5 -4", target: "scene2", label: "إلى المطبخ", rotation: "0 0 0" },
-                    { position: "-1.5 0.5 -3", target: "scene6", label: "إلى المكتب", rotation: "0 30 0" }
-                ]
-            },
-            {
-                id: "scene6",
-                image: "#scene6",
-                title: "المكتب",
-                hotspots: [
-                    { position: "0 0 -3", target: "scene5", label: "إلى الحديقة", rotation: "0 0 0" },
-                    { position: "1.2 0.5 -2.5", target: "scene1", label: "إلى غرفة المعيشة", rotation: "0 -45 0" }
-                ]
-            }
-        ];
-
-        let currentScene = null;
-        const sceneContainer = document.querySelector("#sceneContainer");
-        const loadingScreen = document.querySelector("#loadingScreen");
-        const progressBar = document.querySelector("#progress");
-        const loadingText = document.querySelector("#loadingText");
-        const sceneUI = document.createElement("div");
-        sceneUI.id = "sceneUI";
-        document.body.appendChild(sceneUI);
-
-        // إنشاء عناوين المشاهد
-        const sceneTitle = document.createElement("div");
-        sceneTitle.className = "scene-title";
-        document.body.appendChild(sceneTitle);
-
-        // تحديث شريط التقدم
-        function updateProgress(percent) {
-            progressBar.style.width = `${percent}%`;
-        }
-
-        // محاكاة تحميل الأصول
-        let loadedAssets = 0;
-        const totalAssets = scenes.length + 1; // صور المشاهد + المشهد الأول
+        // ============================================
+        // === روابط الصور الافتراضية (يمكن استبدالها) ===
+        // ============================================
         
-        function assetLoaded() {
-            loadedAssets++;
-            const percent = Math.floor((loadedAssets / totalAssets) * 100);
-            updateProgress(percent);
+        // روابط صور المشاهد
+        const sceneImages = {
+            livingRoom: 'assets/Living_Room.jpg',
+            kitchen: 'assets/Reception.jpg',
+            bedroom: 'https://cdn.aframe.io/360-image-gallery-boilerplate/img/bedroom.jpg'
+        };
+
+        // روابط صور نقاط الانتقال
+        const hotspotImages = {
+            normal: 'assets/Kitchen1.png',
+            hover: 'assets/Reception1.png'
+        };
+
+        // رابط صوت الانتقال
+        const audioFile = 'https://cdn.aframe.io/360-image-gallery-boilerplate/audio/click.ogg';
+
+        // ============================================
+        // === تعريف المشاهد ونقاط الانتقال ===
+        // ============================================
+        
+        // تعريف المشاهد
+        const scenes = {
+            livingRoom: {
+                name: "غرفة المعيشة",
+                image: sceneImages.livingRoom,
+                hotspots: [
+                    { target: "kitchen", position: "-1 1.6 -3", label: "المطبخ" },
+                    { target: "bedroom", position: "1 1.6 -3", label: "غرفة النوم" }
+                ]
+            },
+            kitchen: {
+                name: "المطبخ",
+                image: sceneImages.kitchen,
+                hotspots: [
+                    { target: "livingRoom", position: "0 1.6 -4", label: "غرفة المعيشة" }
+                ]
+            },
+            bedroom: {
+                name: "غرفة النوم",
+                image: sceneImages.bedroom,
+                hotspots: [
+                    { target: "livingRoom", position: "0 1.6 -4", label: "غرفة المعيشة" }
+                ]
+            }
+        };
+
+        // ============================================
+        // === نظام التحميل المتطور ===
+        // ============================================
+        
+        // متغيرات التطبيق
+        let assetsLoaded = false;
+        let audioElement;
+        let hotspotImageNormal;
+        let hotspotImageHover;
+        let totalAssets;
+        let loadedCount = 0;
+        let assetsErrors = [];
+        
+        // عناصر واجهة المستخدم
+        const loadingElement = document.getElementById('loading');
+        const progressBar = document.getElementById('progress-bar');
+        const statusElement = document.getElementById('status');
+        const errorMessage = document.getElementById('error-message');
+        const retryButton = document.getElementById('retry-button');
+        
+        // تحميل جميع الأصول
+        function loadAssets() {
+            statusElement.textContent = "جاري تحميل المشهد...";
+            errorMessage.style.display = "none";
+            retryButton.style.display = "none";
+            progressBar.style.width = "0%";
             
-            if (loadedAssets >= totalAssets) {
-                setTimeout(() => {
-                    loadingScreen.style.opacity = "0";
-                    setTimeout(() => {
-                        loadingScreen.style.display = "none";
-                        initScene(scenes[0]);
-                    }, 1000);
-                }, 500);
+            totalAssets = Object.keys(sceneImages).length + 3; // 3 للصور الإضافية
+            loadedCount = 0;
+            assetsErrors = [];
+            
+            // تحديث شريط التقدم
+            updateProgress();
+            
+            // تحميل الصوت
+            audioElement = new Audio(audioFile);
+            audioElement.preload = 'auto';
+            audioElement.addEventListener('canplaythrough', assetLoaded);
+            audioElement.addEventListener('error', () => handleError('صوت الانتقال', audioFile));
+            
+            // تحميل صور النقاط
+            hotspotImageNormal = new Image();
+            hotspotImageNormal.src = hotspotImages.normal;
+            hotspotImageNormal.addEventListener('load', assetLoaded);
+            hotspotImageNormal.addEventListener('error', () => handleError('صورة النقطة العادية', hotspotImages.normal));
+            
+            hotspotImageHover = new Image();
+            hotspotImageHover.src = hotspotImages.hover;
+            hotspotImageHover.addEventListener('load', assetLoaded);
+            hotspotImageHover.addEventListener('error', () => handleError('صورة النقطة عند المرور', hotspotImages.hover));
+            
+            // تحميل صور المشاهد
+            Object.keys(sceneImages).forEach(sceneId => {
+                const img = new Image();
+                img.src = sceneImages[sceneId];
+                img.addEventListener('load', assetLoaded);
+                img.addEventListener('error', () => handleError(`مشهد ${sceneId}`, sceneImages[sceneId]));
+            });
+            
+            // بدء مهلة زمنية للتحميل
+            startLoadTimeout();
+        }
+        
+        // دالة تحديث شريط التقدم
+        function updateProgress() {
+            const progress = Math.round((loadedCount / totalAssets) * 100);
+            progressBar.style.width = `${progress}%`;
+            statusElement.textContent = `جاري التحميل: ${progress}%`;
+        }
+        
+        // دالة معالجة الأخطاء
+        function handleError(assetName, assetUrl) {
+            assetsErrors.push({name: assetName, url: assetUrl});
+            loadedCount++;
+            updateProgress();
+            
+            // إذا اكتمل التحميل (بأخطاء)
+            if (loadedCount >= totalAssets) {
+                finishLoadingWithErrors();
             }
         }
+        
+        // دالة عند تحميل أصل بنجاح
+        function assetLoaded() {
+            loadedCount++;
+            updateProgress();
+            
+            // إذا اكتمل التحميل بنجاح
+            if (loadedCount === totalAssets && assetsErrors.length === 0) {
+                finishLoadingSuccessfully();
+            }
+            // إذا اكتمل التحميل مع أخطاء
+            else if (loadedCount >= totalAssets) {
+                finishLoadingWithErrors();
+            }
+        }
+        
+        // دالة لبدء مهلة زمنية للتحميل
+        function startLoadTimeout() {
+            // إذا لم يكتمل التحميل خلال 10 ثوانٍ
+            setTimeout(() => {
+                if (loadedCount < totalAssets) {
+                    assetsErrors.push({name: "مهلة زمنية", url: "تجاوزت عملية التحميل الوقت المحدد"});
+                    finishLoadingWithErrors();
+                }
+            }, 10000);
+        }
+        
+        // دالة عند اكتمال التحميل بنجاح
+        function finishLoadingSuccessfully() {
+            statusElement.textContent = "اكتمل التحميل بنجاح!";
+            setTimeout(() => {
+                loadingElement.style.opacity = '0';
+                setTimeout(() => {
+                    loadingElement.style.display = 'none';
+                    changeScene('livingRoom');
+                }, 500);
+            }, 1000);
+            assetsLoaded = true;
+        }
+        
+        // دالة عند اكتمال التحميل مع أخطاء
+        function finishLoadingWithErrors() {
+            statusElement.textContent = "تم التحميل مع بعض الأخطاء";
+            
+            // بناء رسالة الخطأ
+            let message = `حدث خطأ في تحميل ${assetsErrors.length} أصول:<br>`;
+            assetsErrors.forEach(error => {
+                message += `- ${error.name}: ${error.url}<br>`;
+            });
+            message += "قد تعمل الجولة مع بعض المشاكل.";
+            
+            errorMessage.innerHTML = message;
+            errorMessage.style.display = 'block';
+            retryButton.style.display = 'block';
+            
+            // إذا كان هناك ما يكفي من الأصول للبدء
+            if (loadedCount > 3) {
+                setTimeout(() => {
+                    loadingElement.style.opacity = '0';
+                    setTimeout(() => {
+                        loadingElement.style.display = 'none';
+                        changeScene('livingRoom');
+                    }, 500);
+                }, 3000);
+            }
+        }
+        
+        // دالة إعادة المحاولة
+        retryButton.addEventListener('click', () => {
+            loadAssets();
+        });
 
-        // تهيئة المشهد الأول
-        function initScene(sceneData) {
-            // إزالة المشهد الحالي
-            while (sceneContainer.firstChild) {
-                sceneContainer.removeChild(sceneContainer.firstChild);
+        // الانتقال بين المشاهد
+        function changeScene(sceneId) {
+            if (!scenes[sceneId]) {
+                console.error(`المشهد ${sceneId} غير موجود`);
+                return;
             }
             
-            // إنشاء مشهد جديد
-            const sky = document.createElement("a-sky");
-            sky.setAttribute("src", sceneData.image);
-            sky.setAttribute("id", sceneData.id);
-            sceneContainer.appendChild(sky);
+            const scene = scenes[sceneId];
+            const sky = document.querySelector('#sky');
+            const hotspotContainer = document.querySelector('#hotspotContainer');
+            const sceneTitle = document.getElementById('scene-title');
             
-            // إضافة نقاط الانتقال
-            sceneData.hotspots.forEach(hotspot => {
-                const hotspotEl = document.createElement("a-entity");
-                hotspotEl.setAttribute("class", "hotspot");
-                hotspotEl.setAttribute("position", hotspot.position);
-                hotspotEl.setAttribute("rotation", hotspot.rotation);
-                hotspotEl.setAttribute("data-target", hotspot.target);
-                
-                // أيقونة نقطة الانتقال
-                const icon = document.createElement("a-entity");
-                icon.setAttribute("geometry", "primitive: circle; radius: 0.2");
-                icon.setAttribute("material", "color: #4facfe; shader: flat; opacity: 0.8");
-                icon.setAttribute("animation", "property: scale; dir: alternate; dur: 1500; loop: true; to: 1.2 1.2 1.2");
-                hotspotEl.appendChild(icon);
-                
-                // نص نقطة الانتقال
-                const text = document.createElement("a-entity");
-                text.setAttribute("text", `value: ${hotspot.label}; color: white; align: center; width: 1.5`);
-                text.setAttribute("position", "0 0.5 0");
-                text.setAttribute("rotation", "0 180 0");
-                text.setAttribute("scale", "1.5 1.5 1.5");
-                hotspotEl.appendChild(text);
-                
-                // خط متحرك من النص إلى الأيقونة
-                const line = document.createElement("a-entity");
-                line.setAttribute("line", `start: 0 0.4 0; end: 0 -0.2 0; color: #4facfe`);
-                line.setAttribute("animation", "property: line.end.y; from: -0.2; to: -0.4; dir: alternate; dur: 1500; loop: true");
-                hotspotEl.appendChild(line);
-                
-                hotspotEl.addEventListener("click", changeScene);
-                sceneContainer.appendChild(hotspotEl);
-            });
+            // تحديث السماء
+            sky.setAttribute('material', 'src', scene.image);
             
             // تحديث عنوان المشهد
-            sceneTitle.textContent = sceneData.title;
+            sceneTitle.textContent = scene.name;
             
-            // تحديث واجهة المشاهد
-            updateSceneUI(sceneData.id);
+            // إزالة النقاط القديمة
+            hotspotContainer.innerHTML = '';
             
-            // تحديث المشهد الحالي
-            currentScene = sceneData;
-        }
-
-        // تحديث واجهة المشاهد المصغرة
-        function updateSceneUI(currentSceneId) {
-            sceneUI.innerHTML = "";
-            
-            scenes.forEach(scene => {
-                const thumb = document.createElement("div");
-                thumb.className = `scene-thumb ${scene.id === currentSceneId ? 'active' : ''}`;
-                thumb.style.background = `url(${scene.image.split('#')[1]}) center/cover`;
-                thumb.setAttribute("data-scene", scene.id);
+            // إضافة النقاط الجديدة
+            scene.hotspots.forEach(hotspot => {
+                if (!scenes[hotspot.target]) {
+                    console.error(`المشهد الهدف ${hotspot.target} غير موجود`);
+                    return;
+                }
                 
-                thumb.addEventListener("click", function() {
-                    const targetScene = scenes.find(s => s.id === this.getAttribute("data-scene"));
-                    if (targetScene) {
-                        fadeTransition(targetScene);
+                const hotspotEl = document.createElement('a-entity');
+                hotspotEl.setAttribute('class', 'hotspot');
+                hotspotEl.setAttribute('position', hotspot.position);
+                hotspotEl.setAttribute('look-at', '[camera]');
+                
+                // إنشاء الصورة
+                const image = document.createElement('a-image');
+                image.setAttribute('src', hotspotImageNormal.src);
+                image.setAttribute('width', 0.5);
+                image.setAttribute('height', 0.5);
+                hotspotEl.appendChild(image);
+                
+                // تأثيرات المرور
+                hotspotEl.addEventListener('mouseenter', () => {
+                    image.setAttribute('src', hotspotImageHover.src);
+                    image.setAttribute('width', 0.6);
+                    image.setAttribute('height', 0.6);
+                });
+                
+                hotspotEl.addEventListener('mouseleave', () => {
+                    image.setAttribute('src', hotspotImageNormal.src);
+                    image.setAttribute('width', 0.5);
+                    image.setAttribute('height', 0.5);
+                });
+                
+                // التسمية
+                const label = document.createElement('a-text');
+                label.setAttribute('value', hotspot.label);
+                label.setAttribute('position', '0 0.6 0');
+                label.setAttribute('color', '#FFF');
+                label.setAttribute('align', 'center');
+                label.setAttribute('visible', 'false');
+                label.setAttribute('look-at', '[camera]');
+                hotspotEl.appendChild(label);
+                
+                // إظهار التسمية عند المرور
+                hotspotEl.addEventListener('mouseenter', () => {
+                    label.setAttribute('visible', 'true');
+                });
+                
+                hotspotEl.addEventListener('mouseleave', () => {
+                    label.setAttribute('visible', 'false');
+                });
+                
+                // النقلة عند النقر
+                hotspotEl.addEventListener('click', () => {
+                    if (audioElement) {
+                        audioElement.currentTime = 0;
+                        audioElement.play().catch(e => console.log("تشغيل الصوت:", e));
                     }
+                    changeScene(hotspot.target);
                 });
                 
-                sceneUI.appendChild(thumb);
+                hotspotContainer.appendChild(hotspotEl);
             });
         }
 
-        // تغيير المشهد
-        function changeScene(e) {
-            const targetSceneId = e.currentTarget.getAttribute("data-target");
-            const targetScene = scenes.find(s => s.id === targetSceneId);
-            
-            if (targetScene) {
-                fadeTransition(targetScene);
-            }
-        }
-
-        // انتقال متدرج بين المشاهد
-        function fadeTransition(targetScene) {
-            const fade = document.createElement("a-entity");
-            fade.setAttribute("geometry", "primitive: plane; width: 20; height: 20");
-            fade.setAttribute("material", "color: black; opacity: 0");
-            fade.setAttribute("position", "0 0 -1");
-            
-            fade.setAttribute("animation", {
-                property: "material.opacity",
-                from: 0,
-                to: 1,
-                dur: 800,
-                easing: "easeInOutQuad"
-            });
-            
-            document.querySelector("a-scene").appendChild(fade);
-            
-            setTimeout(() => {
-                initScene(targetScene);
-                fade.setAttribute("animation", {
-                    property: "material.opacity",
-                    from: 1,
-                    to: 0,
-                    dur: 800,
-                    easing: "easeInOutQuad"
-                });
-                
-                setTimeout(() => {
-                    fade.remove();
-                }, 800);
-            }, 800);
-        }
-
-        // تهيئة وضع ملء الشاشة
-        document.getElementById("fullscreenBtn").addEventListener("click", function() {
-            const scene = document.querySelector("a-scene");
-            if (scene) {
-                if (scene.hasAttribute("vr-mode")) {
-                    scene.exitVR();
-                }
-                scene.enterFullscreen();
-            }
+        // بدء التحميل عند تهيئة المشهد
+        document.querySelector('a-scene').addEventListener('loaded', () => {
+            loadAssets();
         });
-
-        // تهيئة وضع VR
-        document.getElementById("vrBtn").addEventListener("click", function() {
-            const scene = document.querySelector("a-scene");
-            if (scene) {
-                if (scene.isFullscreen) {
-                    scene.exitFullscreen();
-                }
-                scene.enterVR();
+        
+        // تفعيل الصوت بعد التفاعل الأول
+        document.body.addEventListener('click', () => {
+            if (assetsLoaded && audioElement) {
+                audioElement.play().catch(e => console.log("التفعيل الأولي للصوت:", e));
             }
-        });
-
-        // بدء التحميل
+        }, { once: true });
+        
+        // حل بديل إذا لم يعمل حدث loaded
         setTimeout(() => {
-            // محاكاة تحميل الأصول
-            const interval = setInterval(() => {
-                if (loadedAssets < totalAssets - 1) {
-                    loadedAssets++;
-                    updateProgress(Math.floor((loadedAssets / totalAssets) * 100));
-                } else {
-                    clearInterval(interval);
-                    assetLoaded();
-                }
-            }, 300);
-        }, 1000);
+            if (loadingElement.style.display !== 'none') {
+                loadAssets();
+            }
+        }, 2000);
     </script>
 </body>
 </html>
