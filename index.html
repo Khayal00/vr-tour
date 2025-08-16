@@ -219,6 +219,19 @@
             display: none;
         }
         
+        .fade-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 20;
+            transition: opacity 0.5s ease;
+        }
+        
         /* تصميم متجاوب */
         @media (max-width: 768px) {
             h1 { font-size: 2.5rem; }
@@ -272,6 +285,7 @@
     
     <!-- مشهد A-Frame -->
     <div id="scene-container">
+        <div class="fade-overlay" id="fade-overlay"></div>
         <div class="current-room" id="current-room">غرفة المعيشة</div>
         <div class="controls-info">
             حرك رأسك للتنقل • انقر على نقاط الانتقال • استخدم الأسهم للحركة
@@ -315,6 +329,7 @@
             const startBtn = document.getElementById('start-btn');
             const currentRoom = document.getElementById('current-room');
             const controlsInfo = document.querySelector('.controls-info');
+            const fadeOverlay = document.getElementById('fade-overlay');
             
             // محاكاة شريط التحميل
             let progress = 0;
@@ -395,47 +410,52 @@
                     const room = rooms[roomName];
                     if (!room) return;
                     
-                    const sky = document.getElementById('scene-sky');
-                    sky.setAttribute('src', room.image);
-                    currentRoom.textContent = getArabicName(roomName);
+                    // تأثير التلاشي الأسود
+                    fadeOverlay.style.opacity = 1;
                     
-                    // إزالة الهوت سبوت القديمة
-                    document.querySelectorAll('.hotspot').forEach(el => el.remove());
-                    
-                    // إضافة الهوت سبوت الجديدة
-                    room.hotspots.forEach(hotspot => {
-                        const hotspotEl = document.createElement('a-entity');
-                        hotspotEl.classList.add('hotspot', 'clickable');
-                        hotspotEl.setAttribute('position', hotspot.position);
-                        hotspotEl.setAttribute('rotation', hotspot.rotation);
-                        hotspotEl.setAttribute('geometry', 'primitive: circle; radius: 0.3');
-                        hotspotEl.setAttribute('material', `src: #hotspot-img; transparent: true; opacity: 0.8`);
-                        hotspotEl.setAttribute('animation__scale', 'property: scale; to: 1.2 1.2 1; dir: alternate; dur: 1000; loop: true; easing: easeInOutSine');
-                        hotspotEl.setAttribute('animation__opacity', 'property: material.opacity; to: 1; dir: alternate; dur: 1000; loop: true; easing: easeInOutSine');
+                    setTimeout(() => {
+                        const sky = document.getElementById('scene-sky');
+                        sky.setAttribute('src', room.image);
+                        currentRoom.textContent = getArabicName(roomName);
                         
-                        // تأثير عند التمرير فوق الهوت سبوت
-                        hotspotEl.setAttribute('event-set__mouseenter', 'scale: 1.3 1.3 1');
-                        hotspotEl.setAttribute('event-set__mouseleave', 'scale: 1 1 1');
+                        // إزالة الهوت سبوت القديمة
+                        document.querySelectorAll('.hotspot').forEach(el => el.remove());
                         
-                        // نص الوصف
-                        const textEl = document.createElement('a-entity');
-                        textEl.setAttribute('text', `value: ${hotspot.label}; color: #64ffda; align: center; width: 2`);
-                        textEl.setAttribute('position', '0 -0.5 0');
-                        textEl.setAttribute('rotation', '0 180 0');
-                        hotspotEl.appendChild(textEl);
-                        
-                        // حدث النقر
-                        hotspotEl.addEventListener('click', () => {
-                            // تأثير تلاشي
-                            sky.setAttribute('material', 'opacity: 0');
-                            setTimeout(() => {
+                        // إضافة الهوت سبوت الجديدة
+                        room.hotspots.forEach(hotspot => {
+                            const hotspotEl = document.createElement('a-entity');
+                            hotspotEl.classList.add('hotspot', 'clickable');
+                            hotspotEl.setAttribute('position', hotspot.position);
+                            hotspotEl.setAttribute('rotation', hotspot.rotation);
+                            hotspotEl.setAttribute('geometry', 'primitive: circle; radius: 0.3');
+                            hotspotEl.setAttribute('material', `src: #hotspot-img; transparent: true; opacity: 0.8`);
+                            hotspotEl.setAttribute('animation__scale', 'property: scale; to: 1.2 1.2 1; dir: alternate; dur: 1000; loop: true; easing: easeInOutSine');
+                            hotspotEl.setAttribute('animation__opacity', 'property: material.opacity; to: 1; dir: alternate; dur: 1000; loop: true; easing: easeInOutSine');
+                            
+                            // تأثير عند التمرير فوق الهوت سبوت
+                            hotspotEl.setAttribute('event-set__mouseenter', 'scale: 1.3 1.3 1');
+                            hotspotEl.setAttribute('event-set__mouseleave', 'scale: 1 1 1');
+                            
+                            // نص الوصف
+                            const textEl = document.createElement('a-entity');
+                            textEl.setAttribute('text', `value: ${hotspot.label}; color: #64ffda; align: center; width: 2`);
+                            textEl.setAttribute('position', '0 -0.5 0');
+                            textEl.setAttribute('rotation', '0 180 0');
+                            hotspotEl.appendChild(textEl);
+                            
+                            // حدث النقر
+                            hotspotEl.addEventListener('click', () => {
                                 changeRoom(hotspot.to);
-                                sky.setAttribute('material', 'opacity: 1');
-                            }, 500);
+                            });
+                            
+                            scene.appendChild(hotspotEl);
                         });
                         
-                        scene.appendChild(hotspotEl);
-                    });
+                        // إزالة تأثير التلاشي
+                        setTimeout(() => {
+                            fadeOverlay.style.opacity = 0;
+                        }, 500);
+                    }, 500);
                 }
                 
                 // بدء الجولة من غرفة المعيشة
