@@ -271,67 +271,20 @@
             }
         }
         
-        /* تحسينات الأرضية */
-        .floor {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            height: 50px;
-            background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
-            z-index: 5;
-            pointer-events: none;
+        .progress-bar {
+            width: 300px;
+            height: 20px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            margin: 20px auto;
+            overflow: hidden;
         }
         
-        .floor-pattern {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            height: 100px;
-            background: 
-                linear-gradient(90deg, transparent 50%, rgba(255,255,255,0.1) 50%),
-                linear-gradient(transparent 50%, rgba(255,255,255,0.1) 50%);
-            background-size: 30px 30px;
-            opacity: 0.3;
-            z-index: 4;
-        }
-        
-        /* تحسينات النقاط التفاعلية */
-        .hotspot-pulse {
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0% { transform: scale(1); opacity: 0.8; }
-            50% { transform: scale(1.2); opacity: 1; }
-            100% { transform: scale(1); opacity: 0.8; }
-        }
-        
-        /* تحسينات الانتقالات */
-        .scene-transition {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
+        .progress-fill {
             height: 100%;
-            background: black;
-            z-index: 100;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.5s ease;
-        }
-        
-        /* حل مشكلة التشويه في الصالة */
-        .sky-fixer {
-            transform: scale(1.1, 1.1);
-        }
-        
-        .sky-rotation-fixer {
-            transform: rotateY(10deg);
-        }
-        
-        /* إصلاح خاص لمشهد الصالة */
-        #Living_Room-sky {
-            transform: scale(1.15, 1.15) rotateY(-5deg);
+            width: 0%;
+            background: linear-gradient(90deg, #00c9ff, #92fe9d);
+            transition: width 0.5s ease;
         }
     </style>
 </head>
@@ -364,20 +317,13 @@
         <button class="control-btn" id="vr-btn">👓</button>
     </div>
     
-    <!-- تأثيرات الأرضية -->
-    <div class="floor"></div>
-    <div class="floor-pattern"></div>
-    
-    <!-- تأثيرات الانتقال -->
-    <div class="scene-transition" id="scene-transition"></div>
-    
     <!-- حاوية المشهد الرئيسي -->
     <div id="scene-container">
         <!-- سيتم إنشاء مشهد A-Frame هنا ديناميكيًا -->
     </div>
 
     <script>
-        // بيانات الجولة الافتراضية مع مسارات الصور المعدلة لمنع التشويه
+        // بيانات الجولة الافتراضية مع مسارات الصور
         const tourData = {
             scenes: {
                 'Reception': {
@@ -385,9 +331,7 @@
                     hotspots: [
                         { target: 'Living_Room', position: { x: 0, y: 0, z: -3 }, rotation: { x: 0, y: 0, z: 0 }, label: 'الصالة' }
                     ],
-                    image: "assets/Reception.jpg",
-                    rotation: "0 -130 0",
-                    scale: "1.05 1.05 1"
+                    image: "assets/Reception.jpg"
                 },
                 'Living_Room': {
                     title: 'الصالة',
@@ -396,19 +340,14 @@
                         { target: 'Kitchen', position: { x: 1.5, y: 0.5, z: -2.5 }, rotation: { x: 0, y: -40, z: 0 }, label: 'المطبخ' },
                         { target: 'Corridor', position: { x: 0, y: 0.5, z: -3 }, rotation: { x: 0, y: 0, z: 0 }, label: 'الممر' }
                     ],
-                    // تم تغيير صورة الصالة لمنع التشويه
-                    image: "assets/Living_Room.jpg",
-                    rotation: "0 -100 0",
-                    scale: "1.15 1.15 1"
+                    image: "assets/Living_Room.jpg"
                 },
                 'Kitchen': {
                     title: 'المطبخ',
                     hotspots: [
                         { target: 'Living_Room', position: { x: 0, y: 0.5, z: -3 }, rotation: { x: 0, y: 0, z: 0 }, label: 'الصالة' }
                     ],
-                    image: "assets/Kitchen.jpg",
-                    rotation: "0 -110 0",
-                    scale: "1.05 1.05 1"
+                    image: "https://images.unsplash.com/photo-1484154218962-a197022b5858?ixlib=rb-1.2.1&auto=format&fit=crop&w=1953&q=80"
                 },
                 'Corridor': {
                     title: 'الممر',
@@ -417,77 +356,45 @@
                         { target: 'Bedroom', position: { x: 1.5, y: 0.5, z: -2.5 }, rotation: { x: 0, y: -40, z: 0 }, label: 'غرفة النوم' },
                         { target: 'Bathroom', position: { x: -1.5, y: 0.5, z: -2.5 }, rotation: { x: 0, y: 40, z: 0 }, label: 'الحمام' }
                     ],
-                    image: "https://images.unsplash.com/photo-1533090368676-1fd25485db88?ixlib=rb-1.2.1&auto=format&fit=crop&w=1949&q=80",
-                    rotation: "0 -100 0",
-                    scale: "1.05 1.05 1"
+                    image: "https://images.unsplash.com/photo-1533090368676-1fd25485db88?ixlib=rb-1.2.1&auto=format&fit=crop&w=1949&q=80"
                 },
                 'Bedroom': {
                     title: 'غرفة النوم',
                     hotspots: [
                         { target: 'Corridor', position: { x: 0, y: 0.5, z: -3 }, rotation: { x: 0, y: 0, z: 0 }, label: 'الممر' }
                     ],
-                    image: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80",
-                    rotation: "0 -120 0",
-                    scale: "1.1 1.1 1"
+                    image: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80"
                 },
                 'Bathroom': {
                     title: 'الحمام',
                     hotspots: [
                         { target: 'Corridor', position: { x: 0, y: 0.5, z: -3 }, rotation: { x: 0, y: 0, z: 0 }, label: 'الممر' }
                     ],
-                    image: "https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?ixlib=rb-1.2.1&auto=format&fit=crop&w=1934&q=80",
-                    rotation: "0 -140 0",
-                    scale: "1.1 1.1 1"
+                    image: "https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?ixlib=rb-1.2.1&auto=format&fit=crop&w=1934&q=80"
                 }
             },
             startScene: 'Reception'
         };
 
-        // متغيرات حالة
-        let sceneLoaded = false;
-        const imagesToLoad = Object.keys(tourData.scenes).length;
-        let imagesLoaded = 0;
-        
         // محاكاة تحميل الأصول
         document.addEventListener('DOMContentLoaded', () => {
             const loadingBar = document.getElementById('loading-bar');
             const startBtn = document.getElementById('start-btn');
             startBtn.style.display = 'none';
             
-            // تحميل الصور الحقيقية
-            preloadImages();
-            
             let progress = 0;
             
             const loadingInterval = setInterval(() => {
-                // حساب التقدم بناءً على الصور المحملة
-                const realProgress = Math.min(100, Math.floor((imagesLoaded / imagesToLoad) * 100));
-                progress = Math.min(progress + 2, realProgress);
-                
-                loadingBar.style.width = `${progress}%`;
-                
+                progress += Math.random() * 10;
                 if (progress >= 100) {
+                    progress = 100;
                     clearInterval(loadingInterval);
                     startBtn.style.display = 'block';
                     startBtn.classList.add('pulse');
                 }
+                loadingBar.style.width = `${progress}%`;
             }, 200);
         });
-        
-        // دالة لتحميل الصور مسبقًا
-        function preloadImages() {
-            Object.keys(tourData.scenes).forEach(sceneName => {
-                const img = new Image();
-                img.src = tourData.scenes[sceneName].image;
-                img.onload = () => {
-                    imagesLoaded++;
-                };
-                img.onerror = () => {
-                    console.error(`فشل تحميل الصورة: ${tourData.scenes[sceneName].image}`);
-                    imagesLoaded++;
-                };
-            });
-        }
 
         // بدء الجولة
         document.getElementById('start-btn').addEventListener('click', () => {
@@ -538,7 +445,6 @@
             // الانتظار حتى يتم تحميل المشهد
             const scene = document.querySelector('a-scene');
             scene.addEventListener('loaded', () => {
-                sceneLoaded = true;
                 loadScene(tourData.startScene);
                 
                 // تهيئة وضع VR
@@ -561,144 +467,138 @@
 
         // تحميل مشهد معين
         function loadScene(sceneName) {
-            if (!sceneLoaded) return;
-            
             const scene = document.querySelector('a-scene');
             const sceneData = tourData.scenes[sceneName];
-            const transition = document.getElementById('scene-transition');
             
-            // بدء تأثير الانتقال
-            transition.style.opacity = '1';
-            transition.style.pointerEvents = 'auto';
+            // تحديث عنوان المشهد
+            document.getElementById('scene-info').textContent = sceneData.title;
+            document.getElementById('current-scene-name').textContent = sceneData.title;
+            
+            // إزالة المشهد السابق إن وجد
+            const oldSky = document.querySelector('a-sky');
+            if (oldSky) oldSky.parentNode.removeChild(oldSky);
+            
+            const oldHotspots = document.querySelectorAll('.hotspot');
+            oldHotspots.forEach(hotspot => hotspot.parentNode.removeChild(hotspot));
+            
+            // إزالة الأرضية السابقة
+            const oldFloor = document.querySelector('a-circle');
+            if (oldFloor) oldFloor.parentNode.removeChild(oldFloor);
+            
+            // إنشاء مشهد السماء الجديد باستخدام الصورة
+            const sky = document.createElement('a-sky');
+            sky.setAttribute('src', `#${sceneName}-texture`);
+            sky.setAttribute('rotation', '0 -130 0');
+            scene.appendChild(sky);
+            
+            // إنشاء مؤشر المشهد
+            const sceneIndicator = document.querySelector('.scene-indicator');
+            sceneIndicator.style.display = 'block';
+            sceneIndicator.style.opacity = '1';
             
             setTimeout(() => {
-                // تحديث عنوان المشهد
-                document.getElementById('scene-info').textContent = sceneData.title;
-                document.getElementById('current-scene-name').textContent = sceneData.title;
-                
-                // إزالة المشهد السابق إن وجد
-                const oldSky = document.querySelector('a-sky');
-                if (oldSky) oldSky.parentNode.removeChild(oldSky);
-                
-                const oldHotspots = document.querySelectorAll('.hotspot');
-                oldHotspots.forEach(hotspot => hotspot.parentNode.removeChild(hotspot));
-                
-                // إنشاء مشهد السماء الجديد باستخدام الصورة مع إصلاح التشويه
-                const sky = document.createElement('a-sky');
-                sky.setAttribute('src', `#${sceneName}-texture`);
-                sky.setAttribute('rotation', sceneData.rotation);
-                sky.setAttribute('scale', sceneData.scale);
-                sky.classList.add('sky-fixer');
-                
-                // إضافة فئة خاصة لمشهد الصالة لحل مشكلة التشويه
-                if (sceneName === 'Living_Room') {
-                    sky.id = "Living_Room-sky";
-                }
-                
-                scene.appendChild(sky);
-                
-                // إنشاء مؤشر المشهد
-                const sceneIndicator = document.querySelector('.scene-indicator');
-                sceneIndicator.style.display = 'block';
-                sceneIndicator.style.opacity = '1';
-                
+                sceneIndicator.style.opacity = '0';
                 setTimeout(() => {
-                    sceneIndicator.style.opacity = '0';
-                    setTimeout(() => {
-                        sceneIndicator.style.display = 'none';
-                    }, 1000);
-                }, 2000);
+                    sceneIndicator.style.display = 'none';
+                }, 1000);
+            }, 2000);
+            
+            // إنشاء نقاط التفاعل
+            sceneData.hotspots.forEach((hotspot, index) => {
+                const hotspotEl = document.createElement('a-entity');
+                hotspotEl.classList.add('hotspot');
+                hotspotEl.setAttribute('position', `${hotspot.position.x} ${hotspot.position.y} ${hotspot.position.z}`);
+                hotspotEl.setAttribute('rotation', `${hotspot.rotation.x} ${hotspot.rotation.y} ${hotspot.rotation.z}`);
+                hotspotEl.setAttribute('look-at', '[camera]');
                 
-                // إنشاء نقاط التفاعل
-                sceneData.hotspots.forEach((hotspot, index) => {
-                    const hotspotEl = document.createElement('a-entity');
-                    hotspotEl.classList.add('hotspot');
-                    hotspotEl.setAttribute('position', `${hotspot.position.x} ${hotspot.position.y} ${hotspot.position.z}`);
-                    hotspotEl.setAttribute('rotation', `${hotspot.rotation.x} ${hotspot.rotation.y} ${hotspot.rotation.z}`);
-                    hotspotEl.setAttribute('look-at', '[camera]');
+                // إنشاء الشكل المرئي لنقطة التفاعل
+                const hotspotVisual = document.createElement('a-ring');
+                hotspotVisual.setAttribute('radius-inner', '0.10');
+                hotspotVisual.setAttribute('radius-outer', '0.20');
+                hotspotVisual.setAttribute('color', '#4CC3D9');
+                hotspotVisual.setAttribute('transparent', 'true');
+                hotspotVisual.setAttribute('opacity', '0.8');
+                hotspotVisual.setAttribute('animation', 'property: scale; from: 1 1 1; to: 1.3 1.3 1.3; dur: 1000; loop: true; dir: alternate; easing: easeInOutSine');
+                
+                // تأثير إضافي
+                const hotspotPulse = document.createElement('a-ring');
+                hotspotPulse.setAttribute('radius-inner', '0.20');
+                hotspotPulse.setAttribute('radius-outer', '0.25');
+                hotspotPulse.setAttribute('color', '#4CC3D9');
+                hotspotPulse.setAttribute('transparent', 'true');
+                hotspotPulse.setAttribute('opacity', '0.4');
+                hotspotPulse.setAttribute('animation', 'property: scale; from: 1 1 1; to: 1.5 1.5 1.5; dur: 2000; loop: true; dir: alternate; easing: easeInOutSine');
+                
+                hotspotEl.appendChild(hotspotVisual);
+                hotspotEl.appendChild(hotspotPulse);
+                
+                // تفاعل النقطة
+                hotspotEl.addEventListener('click', () => {
+                    // تأثير انتقالي
+                    const fade = document.createElement('a-entity');
+                    fade.setAttribute('geometry', 'primitive: plane; width: 10; height: 10');
+                    fade.setAttribute('material', 'color: black; opacity: 0');
+                    fade.setAttribute('position', '0 0 -1');
+                    fade.setAttribute('animation', 'property: material.opacity; to: 1; dur: 500; easing: linear');
+                    scene.appendChild(fade);
                     
-                    // إنشاء الشكل المرئي لنقطة التفاعل
-                    const hotspotVisual = document.createElement('a-ring');
-                    hotspotVisual.setAttribute('radius-inner', '0.10');
-                    hotspotVisual.setAttribute('radius-outer', '0.20');
-                    hotspotVisual.setAttribute('color', '#4CC3D9');
-                    hotspotVisual.setAttribute('transparent', 'true');
-                    hotspotVisual.setAttribute('opacity', '0.8');
-                    hotspotVisual.setAttribute('animation', 'property: scale; from: 1 1 1; to: 1.3 1.3 1.3; dur: 1000; loop: true; dir: alternate; easing: easeInOutSine');
-                    hotspotVisual.classList.add('hotspot-pulse');
-                    
-                    // تأثير إضافي
-                    const hotspotPulse = document.createElement('a-ring');
-                    hotspotPulse.setAttribute('radius-inner', '0.20');
-                    hotspotPulse.setAttribute('radius-outer', '0.25');
-                    hotspotPulse.setAttribute('color', '#4CC3D9');
-                    hotspotPulse.setAttribute('transparent', 'true');
-                    hotspotPulse.setAttribute('opacity', '0.4');
-                    hotspotPulse.setAttribute('animation', 'property: scale; from: 1 1 1; to: 1.5 1.5 1.5; dur: 2000; loop: true; dir: alternate; easing: easeInOutSine');
-                    
-                    hotspotEl.appendChild(hotspotVisual);
-                    hotspotEl.appendChild(hotspotPulse);
-                    
-                    // تفاعل النقطة
-                    hotspotEl.addEventListener('click', () => {
-                        // تأثير انتقالي
-                        const fade = document.createElement('a-entity');
-                        fade.setAttribute('geometry', 'primitive: plane; width: 10; height: 10');
-                        fade.setAttribute('material', 'color: black; opacity: 0');
-                        fade.setAttribute('position', '0 0 -1');
-                        fade.setAttribute('animation', 'property: material.opacity; to: 1; dur: 500; easing: linear');
-                        scene.appendChild(fade);
-                        
+                    setTimeout(() => {
+                        loadScene(hotspot.target);
                         setTimeout(() => {
-                            loadScene(hotspot.target);
-                        }, 500);
-                    });
-                    
-                    // تأثيرات عند التمرير فوق النقطة
-                    hotspotEl.addEventListener('mouseenter', () => {
-                        hotspotVisual.setAttribute('color', '#FFC65D');
-                        hotspotPulse.setAttribute('color', '#FFC65D');
-                        hotspotVisual.setAttribute('scale', '1.2 1.2 1.2');
-                        hotspotVisual.setAttribute('animation', 'property: components.material.material.color; type: color; from: #FFC65D; to: #F16745; dur: 1000; loop: true; dir: alternate');
-                        
-                        // عرض التسمية
-                        const label = document.createElement('div');
-                        label.classList.add('hotspot-label');
-                        label.textContent = hotspot.label;
-                        label.style.left = `${window.innerWidth/2}px`;
-                        label.style.top = `${window.innerHeight/2 - 50}px`;
-                        label.style.opacity = '1';
-                        document.body.appendChild(label);
-                        
-                        hotspotEl.labelElement = label;
-                    });
-                    
-                    hotspotEl.addEventListener('mouseleave', () => {
-                        hotspotVisual.setAttribute('color', '#4CC3D9');
-                        hotspotPulse.setAttribute('color', '#4CC3D9');
-                        hotspotVisual.setAttribute('scale', '1 1 1');
-                        hotspotVisual.removeAttribute('animation');
-                        
-                        // إخفاء التسمية
-                        if (hotspotEl.labelElement) {
-                            hotspotEl.labelElement.style.opacity = '0';
+                            fade.setAttribute('animation', 'property: material.opacity; to: 0; dur: 500; easing: linear');
                             setTimeout(() => {
-                                if (hotspotEl.labelElement && hotspotEl.labelElement.parentNode) {
-                                    hotspotEl.labelElement.parentNode.removeChild(hotspotEl.labelElement);
-                                }
-                            }, 300);
-                        }
-                    });
-                    
-                    scene.appendChild(hotspotEl);
+                                scene.removeChild(fade);
+                            }, 500);
+                        }, 100);
+                    }, 500);
                 });
                 
-                // إنهاء تأثير الانتقال
-                setTimeout(() => {
-                    transition.style.opacity = '0';
-                    transition.style.pointerEvents = 'none';
-                }, 500);
-            }, 500);
+                // تأثيرات عند التمرير فوق النقطة
+                hotspotEl.addEventListener('mouseenter', () => {
+                    hotspotVisual.setAttribute('color', '#FFC65D');
+                    hotspotPulse.setAttribute('color', '#FFC65D');
+                    hotspotVisual.setAttribute('scale', '1.2 1.2 1.2');
+                    hotspotVisual.setAttribute('animation', 'property: components.material.material.color; type: color; from: #FFC65D; to: #F16745; dur: 1000; loop: true; dir: alternate');
+                    
+                    // عرض التسمية
+                    const label = document.createElement('div');
+                    label.classList.add('hotspot-label');
+                    label.textContent = hotspot.label;
+                    label.style.left = `${window.innerWidth/2}px`;
+                    label.style.top = `${window.innerHeight/2 - 50}px`;
+                    label.style.opacity = '1';
+                    document.body.appendChild(label);
+                    
+                    hotspotEl.labelElement = label;
+                });
+                
+                hotspotEl.addEventListener('mouseleave', () => {
+                    hotspotVisual.setAttribute('color', '#4CC3D9');
+                    hotspotPulse.setAttribute('color', '#4CC3D9');
+                    hotspotVisual.setAttribute('scale', '1 1 1');
+                    hotspotVisual.removeAttribute('animation');
+                    
+                    // إخفاء التسمية
+                    if (hotspotEl.labelElement) {
+                        hotspotEl.labelElement.style.opacity = '0';
+                        setTimeout(() => {
+                            if (hotspotEl.labelElement && hotspotEl.labelElement.parentNode) {
+                                hotspotEl.labelElement.parentNode.removeChild(hotspotEl.labelElement);
+                            }
+                        }, 300);
+                    }
+                });
+                
+                scene.appendChild(hotspotEl);
+            });
+            
+            // إنشاء الأرضية
+            const floor = document.createElement('a-circle');
+            floor.setAttribute('position', '0 0 0');
+            floor.setAttribute('rotation', '-90 0 0');
+            floor.setAttribute('radius', '10');
+            floor.setAttribute('color', '#333333');
+            scene.appendChild(floor);
         }
     </script>
 </body>
