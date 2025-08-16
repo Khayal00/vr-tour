@@ -2,7 +2,7 @@
 <html lang="ar">
 <head>
   <meta charset="utf-8" />
-  <title>VR 360 Tour - A-Frame (Crossfade)</title>
+  <title>VR 360 Tour - A-Frame (Crossfade + Orientation)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
   <style>
@@ -25,6 +25,17 @@
     }
     #instructions { font-size:13px; opacity:0.9; margin-top:10px; }
     @media (max-width:600px){ #title{font-size:22px;} #subtitle{font-size:14px;} }
+    #orientationInfo {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 10px;
+      border-radius: 5px;
+      font-size: 14px;
+      z-index: 100;
+    }
   </style>
 </head>
 <body>
@@ -43,6 +54,11 @@
         يمكنك تعديل مواقع الهوتسبوت في الكود ضمن مصفوفة `hotspotsData`.
       </div>
     </div>
+  </div>
+  
+  <!-- Orientation information -->
+  <div id="orientationInfo">
+    إتجاه الكاميرا: <span id="currentOrientation">0°</span>
   </div>
 
   <!-- A-Frame Scene -->
@@ -110,6 +126,16 @@
       { label: "To Corridor", target: "Corridor", lat: 0, lon: -140 }
     ]
   };
+  
+  // New configuration for scene starting orientations
+  const sceneOrientations = {
+    "Reception": { yaw: 0 },
+    "Living_Room": { yaw: 0 },
+    "Kitchen": { yaw: 90 },
+    "Corridor": { yaw: 180 },
+    "Bedroom": { yaw: -90 },
+    "Bathroom": { yaw: 45 }
+  };
 
   const initialScene = "Reception"; // بداية الجولة
 
@@ -160,6 +186,15 @@
     const z = radius * Math.cos(lat) * Math.cos(lon) * -1;
     return { x, y, z };
   }
+  
+  // Function to rotate camera rig to specific orientation
+  function rotateCameraToOrientation(yawDegrees) {
+    const cameraRig = document.getElementById('cameraRig');
+    cameraRig.setAttribute('rotation', `0 ${yawDegrees} 0`);
+    
+    // Update UI
+    document.getElementById('currentOrientation').textContent = `${yawDegrees}°`;
+  }
 
   // ---------- HOTSPOT CREATION & INTERACTIONS ----------
   const sceneEl = document.querySelector('a-scene');
@@ -168,6 +203,7 @@
   let activeSky = skyA;
   let inactiveSky = skyB;
   const hotspotsRoot = document.getElementById('hotspotsRoot');
+  let currentScene = initialScene;
 
   function makeHotspot(h) {
     const hotspot = document.createElement('a-entity');
@@ -199,6 +235,12 @@
       const tgt = hotspot.getAttribute('data-target');
       if (tgt) {
         disableHotspots();
+        
+        // Rotate camera to face the orientation of the next scene
+        if (sceneOrientations[tgt]) {
+          rotateCameraToOrientation(sceneOrientations[tgt].yaw);
+        }
+        
         fadeToScene(tgt);
       }
     });
@@ -266,6 +308,7 @@
 
     // rebuild hotspots for new scene
     buildHotspotsFor(targetName);
+    currentScene = targetName;
 
     // small delay then re-enable
     await new Promise(resolve => setTimeout(resolve, 80));
@@ -284,6 +327,12 @@
     activeSky.setAttribute('material', 'opacity', 1);
     inactiveSky.setAttribute('material', 'opacity', 0);
     buildHotspotsFor(sceneName);
+    currentScene = sceneName;
+    
+    // Set initial orientation
+    if (sceneOrientations[sceneName]) {
+      rotateCameraToOrientation(sceneOrientations[sceneName].yaw);
+    }
 
     const deskCursor = document.getElementById('desktopCursor');
     if (AFRAME.utils.device.isDesktop()) {
@@ -301,6 +350,17 @@
   window.vrTour = { enterScene, fadeToScene, hotspotsData, scenes };
 
   if (overlay.style.display === 'none') enterScene(initialScene);
+  
+  // Update orientation display regularly
+  setInterval(() => {
+    const cameraRig = document.getElementById('cameraRig');
+    if (cameraRig) {
+      const rotation = cameraRig.getAttribute('rotation');
+      if (rotation) {
+        document.getElementById('currentOrientation').textContent = `${Math.round(rotation.y)}°`;
+      }
+    }
+  }, 500);
 </script>
 </body>
 </html>
