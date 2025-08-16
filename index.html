@@ -1,282 +1,542 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>جولة الواقع الافتراضي التفاعلية</title>
-    <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
-    <script src="https://unpkg.com/aframe-event-set-component@5.0.0/dist/aframe-event-set-component.min.js"></script>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>360° Virtual Reality Tour</title>
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <script src="https://unpkg.com/aframe-animation-component@5.1.2/dist/aframe-animation-component.min.js"></script>
     <style>
-        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            overflow: hidden;
+            height: 100vh;
+            background: #000;
+        }
+        
         #welcome-screen {
-            position: fixed;
+            position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.9);
-            color: white;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+            z-index: 100;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
+            color: white;
+            transition: opacity 1s ease;
+        }
+        
+        .welcome-content {
             text-align: center;
-            z-index: 9999;
-            opacity: 1;
-            transition: opacity 1s ease-out;
+            padding: 20px;
+            max-width: 800px;
         }
-        #welcome-screen.hidden {
-            opacity: 0;
-            pointer-events: none; /* يمنع التفاعل مع الشاشة بعد إخفائها */
+        
+        h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            background: linear-gradient(to right, #ff8a00, #da1b60);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
-        #welcome-screen h1 {
-            font-size: 3em;
-            margin-bottom: 20px;
+        
+        .subtitle {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
         }
-        #welcome-screen p {
-            font-size: 1.2em;
-            max-width: 600px;
-            margin-bottom: 30px;
+        
+        .instructions {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 30px 0;
+            text-align: left;
+        }
+        
+        .instructions h3 {
+            margin-bottom: 15px;
+            color: #ff8a00;
+        }
+        
+        .instructions ul {
+            padding-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 10px;
             line-height: 1.6;
         }
-        #start-button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 15px 30px;
+        
+        .loading-container {
+            width: 80%;
+            max-width: 500px;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            margin: 30px 0;
+            overflow: hidden;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .loading-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #ff8a00, #e52e71);
+            border-radius: 15px;
+            transition: width 0.3s ease;
+        }
+        
+        .loading-text {
+            margin-top: 10px;
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .start-button {
+            margin-top: 30px;
+            padding: 15px 50px;
+            font-size: 1.2rem;
+            background: linear-gradient(90deg, #ff8a00, #e52e71);
             border: none;
-            border-radius: 8px;
-            font-size: 1.5em;
+            border-radius: 50px;
+            color: white;
             cursor: pointer;
-            transition: background-color 0.3s ease;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            letter-spacing: 1px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
         }
-        #start-button:hover {
-            background-color: #45a049;
+        
+        .start-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
         }
-        /* تخصيص شريط التحميل الافتراضي لـ A-Frame */
-      .a-loader-title {
-            color: #FFF!important; /* لون النص لشريط التحميل */
-            font-size: 1.5em!important;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        
+        .scene-title {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: white;
+            font-size: 2rem;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-weight: bold;
+            animation: fadeIn 2s ease;
         }
-      .a-loader-dots {
-            color: #FFD700!important; /* لون النقاط لشريط التحميل */
+        
+        .info-panel {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            max-width: 300px;
+            z-index: 10;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        
+        .info-panel h3 {
+            color: #ff8a00;
+            margin-bottom: 10px;
+        }
+        
+        .hotspot-label {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 5;
+        }
+        
+        .fade-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+            opacity: 0;
+            z-index: 50;
+            pointer-events: none;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.8; }
+        }
+        
+        .hotspot {
+            animation: pulse 2s infinite ease-in-out;
+        }
+        
+        .navigation-dots {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 10;
+        }
+        
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .dot.active {
+            background: #ff8a00;
+            transform: scale(1.3);
         }
     </style>
 </head>
 <body>
-
+    <!-- Welcome Screen -->
     <div id="welcome-screen">
-        <h1>مرحباً بكم في الجولة الافتراضية!</h1>
-        <p>استكشف الفضاءات بتقنية 360 درجة. للتنقل، انظر إلى النقاط النابضة أو استخدم الماوس/شاشة اللمس. انقر على النقطة الساخنة للانتقال إلى المشهد التالي.</p>
-        <button id="start-button">بدء الجولة</button>
+        <div class="welcome-content">
+            <h1>VIRTUAL REALITY TOUR</h1>
+            <p class="subtitle">Explore our luxury property in immersive 360°</p>
+            
+            <div class="instructions">
+                <h3>How to Navigate:</h3>
+                <ul>
+                    <li><strong>Desktop:</strong> Click and drag to look around. Click on pulsating hotspots to move between rooms.</li>
+                    <li><strong>Mobile:</strong> Move your device to look around. Tap on hotspots to navigate.</li>
+                    <li><strong>VR Headsets:</strong> For the best experience, use with Meta Quest or similar VR headset.</li>
+                </ul>
+            </div>
+            
+            <div class="loading-container">
+                <div class="loading-bar" id="loading-bar"></div>
+            </div>
+            <div class="loading-text" id="loading-text">Loading assets... 0%</div>
+            
+            <button class="start-button" id="start-button">START EXPERIENCE</button>
+        </div>
     </div>
-
-    <a-scene loading-screen="dotsColor: #FFD700; backgroundColor: #222; enabled: true">
-        <a-assets timeout="10000">
-            <img id="reception-pano" src="assets/reception.jpg" crossorigin="anonymous">
-            <img id="living_room-pano" src="assets/living_room.jpg" crossorigin="anonymous">
-            <img id="kitchen-pano" src="images/kitchen.jpg" crossorigin="anonymous">
-            <img id="corridor-pano" src="images/corridor.jpg" crossorigin="anonymous">
-            <img id="bedroom-pano" src="images/bedroom.jpg" crossorigin="anonymous">
-            <img id="bathroom-pano" src="images/bathroom.jpg" crossorigin="anonymous">
-
-            <img id="hotspot-arrow-png" src="assets/hotspot.png" crossorigin="anonymous">
-        </a-assets>
-
-        <a-sky id="main-panorama" src="#reception-pano"></a-sky>
-
-        <a-plane id="transition-overlay"
-                 position="0 0 -1"
-                 width="100" height="100"
-                 material="color: black; opacity: 0; transparent: true; shader: flat"
-                 visible="false">
-            <a-animation attribute="material.opacity" from="0" to="1" dur="500" begin="fadein" easing="ease-in-quad"></a-animation>
-            <a-animation attribute="material.opacity" from="1" to="0" dur="500" begin="fadeout" easing="ease-out-quad"></a-animation>
-        </a-plane>
-
-        <a-entity camera look-controls>
-            <a-entity cursor="fuse: true; fuseTimeout: 1500; rayOrigin: mouse"
-                      position="0 0 -1"
-                      geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
-                      material="color: #CCC; shader: flat"
-                      animation__fusing="property: scale; from: 1 1 1; to: 0.8 0.8 0.8; startEvents: fusing; dur: 1500; easing: linear;"
-                      animation__click="property: scale; from: 0.8 0.8 0.8; to: 1 1 1; startEvents: click; dur: 100; easing: easeOutQuad;">
+    
+    <!-- Scene Title -->
+    <div class="scene-title" id="scene-title">RECEPTION</div>
+    
+    <!-- Info Panel -->
+    <div class="info-panel">
+        <h3>Property Features</h3>
+        <p>• 5 Bedrooms • 4 Bathrooms • Modern Kitchen</p>
+        <p>• Spacious Living Room • Luxurious Reception</p>
+        <p>• Panoramic Views • Smart Home System</p>
+    </div>
+    
+    <!-- Navigation Dots -->
+    <div class="navigation-dots" id="navigation-dots"></div>
+    
+    <!-- Fade Overlay for Transitions -->
+    <div class="fade-overlay" id="fade-overlay"></div>
+    
+    <!-- A-Frame Scene -->
+    <a-scene vr-mode-ui="enabled: true">
+        <!-- Camera with cursor -->
+        <a-entity id="rig" movement-controls="speed: 0.1" position="0 1.6 0">
+            <a-entity camera look-controls="pointerLockEnabled: true" position="0 0 0">
+                <a-cursor id="cursor"></a-cursor>
             </a-entity>
         </a-entity>
-
-        <a-entity id="hotspot-container"></a-entity>
-
+        
+        <!-- Sky (360 image) -->
+        <a-sky id="scene-sky" src="#reception" rotation="0 -90 0"></a-sky>
+        
+        <!-- Hotspots will be added dynamically -->
     </a-scene>
 
     <script>
-        // بيانات الجولة: مسارات الصور ومواقع النقاط الساخنة
-        const tourScenes = {
+        // Scene data with connections
+        const scenes = {
             "Reception": {
-                image: "#reception-pano",
-                hotspots:
+                connections: ["Living_Room"],
+                hotspotPositions: [{theta: 0, phi: 0}],
+                title: "RECEPTION AREA",
+                description: "Elegant reception with marble floors and modern decor"
             },
             "Living_Room": {
-                image: "#living_room-pano",
-                hotspots:
+                connections: ["Reception", "Kitchen", "Corridor"],
+                hotspotPositions: [
+                    {theta: 180, phi: 0},   // Reception
+                    {theta: 90, phi: 0},    // Kitchen
+                    {theta: -90, phi: 0}     // Corridor
+                ],
+                title: "LIVING ROOM",
+                description: "Spacious living area with panoramic windows"
             },
             "Kitchen": {
-                image: "#kitchen-pano",
-                hotspots:
+                connections: ["Living_Room"],
+                hotspotPositions: [{theta: 180, phi: 0}],
+                title: "MODERN KITCHEN",
+                description: "State-of-the-art kitchen with premium appliances"
             },
             "Corridor": {
-                image: "#corridor-pano",
-                hotspots:
+                connections: ["Living_Room", "Bedroom", "Bathroom"],
+                hotspotPositions: [
+                    {theta: 0, phi: 0},     // Living Room
+                    {theta: 90, phi: 0},    // Bedroom
+                    {theta: -90, phi: 0}     // Bathroom
+                ],
+                title: "MAIN CORRIDOR",
+                description: "Central corridor connecting to private areas"
             },
             "Bedroom": {
-                image: "#bedroom-pano",
-                hotspots: [
-                    { target: "Corridor", position: "0 1.5 3", rotation: "0 180 0", text: "الممر" }
-                ]
+                connections: ["Corridor"],
+                hotspotPositions: [{theta: 180, phi: 0}],
+                title: "MASTER BEDROOM",
+                description: "Luxurious master bedroom with ensuite bathroom"
             },
             "Bathroom": {
-                image: "#bathroom-pano",
-                hotspots: [
-                    { target: "Corridor", position: "0 1.5 3", rotation: "0 180 0", text: "الممر" }
-                ]
+                connections: ["Corridor"],
+                hotspotPositions: [{theta: 0, phi: 0}],
+                title: "LUXURY BATHROOM",
+                description: "Spa-like bathroom with premium finishes"
             }
         };
 
-        let currentSceneId = "Reception"; // المشهد الأولي
-
-        // مكون A-Frame مخصص لإدارة الانتقالات بين المشاهد والنقاط الساخنة
-        AFRAME.registerComponent('scene-transition-manager', {
-            init: function () {
-                this.sky = document.querySelector('#main-panorama');
-                this.transitionOverlay = document.querySelector('#transition-overlay');
-                this.hotspotContainer = document.querySelector('#hotspot-container');
-
-                // الاستماع لحدث النقر على النقطة الساخنة
-                this.el.sceneEl.addEventListener('hotspot-clicked', (evt) => {
-                    const nextSceneId = evt.detail.targetScene;
-                    this.transitionToScene(nextSceneId);
-                });
-
-                // الاستماع لاكتمال رسوم متحركة التلاشي للداخل
-                this.transitionOverlay.addEventListener('animationcomplete__fadein', () => {
-                    // بمجرد أن يصبح التراكب معتمًا بالكامل، قم بتبديل صورة السماء
-                    this.sky.setAttribute('src', tourScenes.image); // تم التصحيح هنا [1]
-                    // ثم ابدأ رسوم متحركة التلاشي للخارج
-                    this.transitionOverlay.emit('fadeout');
-                });
-
-                // الاستماع لاكتمال رسوم متحركة التلاشي للخارج
-                this.transitionOverlay.addEventListener('animationcomplete__fadeout', () => {
-                    this.transitionOverlay.setAttribute('visible', false); // إخفاء التراكب [2]
-                    this.updateHotspots(currentSceneId); // إظهار النقاط الساخنة للمشهد الجديد
-                });
-            },
-
-            // وظيفة للانتقال إلى مشهد جديد
-            transitionToScene: function (sceneId) {
-                if (currentSceneId === sceneId) return; // لا تفعل شيئًا إذا كان نفس المشهد
-
-                currentSceneId = sceneId;
-                this.updateHotspots(null); // إخفاء جميع النقاط الساخنة الحالية
-                this.transitionOverlay.setAttribute('visible', true); // جعل التراكب مرئيًا [2]
-                this.transitionOverlay.emit('fadein'); // تشغيل رسوم متحركة التلاشي للداخل
-            },
-
-            // وظيفة لتحديث النقاط الساخنة بناءً على المشهد الحالي
-            updateHotspots: function (sceneId) {
-                // إزالة جميع النقاط الساخنة الموجودة
-                while (this.hotspotContainer.firstChild) {
-                    this.hotspotContainer.removeChild(this.hotspotContainer.firstChild);
+        // Current scene
+        let currentScene = "Reception";
+        let hotspots = [];
+        
+        // DOM elements
+        const welcomeScreen = document.getElementById('welcome-screen');
+        const loadingBar = document.getElementById('loading-bar');
+        const loadingText = document.getElementById('loading-text');
+        const startButton = document.getElementById('start-button');
+        const sceneTitle = document.getElementById('scene-title');
+        const fadeOverlay = document.getElementById('fade-overlay');
+        const navigationDots = document.getElementById('navigation-dots');
+        const cursor = document.getElementById('cursor');
+        
+        // Image assets (in a real app, these would be actual 360 images)
+        const sceneImages = {
+            "Reception": "assets/Reception.jpg",
+            "Living_Room": "assets/Living_Room.jpg",
+            "Kitchen": "https://cdn.aframe.io/360-image-gallery-boilerplate/img/city.jpg",
+            "Corridor": "https://cdn.aframe.io/360-image-gallery-boilerplate/img/city.jpg",
+            "Bedroom": "https://cdn.aframe.io/360-image-gallery-boilerplate/img/city.jpg",
+            "Bathroom": "https://cdn.aframe.io/360-image-gallery-boilerplate/img/city.jpg"
+        };
+        
+        // Simulate loading progress
+        function simulateLoading() {
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 10;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+                    loadingText.textContent = "Ready to start!";
+                    startButton.disabled = false;
                 }
-
-                if (!sceneId ||!tourScenes[sceneId] ||!tourScenes[sceneId].hotspots) {
-                    return; // لا توجد نقاط ساخنة لعرضها
+                loadingBar.style.width = `${progress}%`;
+                loadingText.textContent = `Loading assets... ${Math.floor(progress)}%`;
+            }, 300);
+        }
+        
+        // Start the experience
+        function startExperience() {
+            // Fade out welcome screen
+            welcomeScreen.style.opacity = "0";
+            
+            setTimeout(() => {
+                welcomeScreen.style.display = "none";
+                // Initialize the first scene
+                loadScene(currentScene);
+            }, 1000);
+        }
+        
+        // Create navigation dots
+        function createNavigationDots() {
+            navigationDots.innerHTML = '';
+            Object.keys(scenes).forEach((scene, index) => {
+                const dot = document.createElement('div');
+                dot.className = `dot ${scene === currentScene ? 'active' : ''}`;
+                dot.dataset.scene = scene;
+                dot.addEventListener('click', () => {
+                    fadeToScene(scene);
+                });
+                navigationDots.appendChild(dot);
+            });
+        }
+        
+        // Convert spherical coordinates to Cartesian
+        function sphericalToCartesian(theta, phi, radius = 5) {
+            const thetaRad = theta * (Math.PI / 180);
+            const phiRad = phi * (Math.PI / 180);
+            
+            return {
+                x: -radius * Math.sin(thetaRad) * Math.cos(phiRad),
+                y: radius * Math.sin(phiRad),
+                z: -radius * Math.cos(thetaRad) * Math.cos(phiRad)
+            };
+        }
+        
+        // Create hotspots for current scene
+        function createHotspots() {
+            // Remove existing hotspots
+            hotspots.forEach(hotspot => {
+                if (hotspot.parentNode) {
+                    hotspot.parentNode.removeChild(hotspot);
                 }
-
-                // إنشاء النقاط الساخنة للمشهد الجديد
-                tourScenes[sceneId].hotspots.forEach(hotspotData => {
-                    const hotspotEl = document.createElement('a-entity');
-                    hotspotEl.setAttribute('class', 'hotspot');
-                    hotspotEl.setAttribute('position', hotspotData.position);
-                    hotspotEl.setAttribute('rotation', hotspotData.rotation);
-                    hotspotEl.setAttribute('hotspot-listener', `targetScene: ${hotspotData.target}`);
-                    hotspotEl.setAttribute('pulsing-hotspot', ''); // لتطبيق تأثير النبض [3, 4, 5]
-
-                    // صورة النقطة الساخنة
-                    const hotspotImage = document.createElement('a-image');
-                    hotspotImage.setAttribute('src', '#hotspot-arrow-png');
-                    hotspotImage.setAttribute('width', '0.8');
-                    hotspotImage.setAttribute('height', '0.8');
-                    hotspotImage.setAttribute('material', 'shader: flat; transparent: true');
-                    hotspotImage.setAttribute('position', '0 0 0'); // الصورة في مركز الكيان الأب
-
-                    // نص النقطة الساخنة (يظهر عند التمرير)
-                    const hotspotText = document.createElement('a-entity');
-                    hotspotText.setAttribute('id', `hotspot-text-${hotspotData.target}`);
-                    hotspotText.setAttribute('text', `value: ${hotspotData.text}; align: center; color: white; width: 2; wrapCount: 15;`); [6]
-                    hotspotText.setAttribute('position', '0 0.6 0'); // فوق الصورة
-                    hotspotText.setAttribute('visible', 'false'); // مخفي في البداية [2, 6]
-
-                    hotspotEl.appendChild(hotspotImage);
-                    hotspotEl.appendChild(hotspotText);
-                    this.hotspotContainer.appendChild(hotspotEl);
-
-                    // إضافة تأثير التكبير وعرض النص عند التمرير [7, 8, 9, 10, 11, 12, 13]
-                    hotspotEl.setAttribute('event-set__mouseenter', `_target: #${hotspotText.id}; visible: true;`); [14, 15]
-                    hotspotEl.setAttribute('event-set__mouseleave', `_target: #${hotspotText.id}; visible: false;`); [14, 15]
-                    hotspotEl.setAttribute('event-set__mouseenter-scale', 'scale: 1.2 1.2 1.2;'); [15]
-                    hotspotEl.setAttribute('event-set__mouseleave-scale', 'scale: 1 1 1;'); [15]
+            });
+            hotspots = [];
+            
+            const sceneData = scenes[currentScene];
+            const scene = document.querySelector('a-scene');
+            
+            sceneData.connections.forEach((targetScene, index) => {
+                const position = sceneData.hotspotPositions[index];
+                const {x, y, z} = sphericalToCartesian(position.theta, position.phi);
+                
+                // Create hotspot entity
+                const hotspot = document.createElement('a-entity');
+                hotspot.setAttribute('class', 'hotspot');
+                hotspot.setAttribute('position', `${x} ${y} ${z}`);
+                hotspot.setAttribute('geometry', 'primitive: circle; radius: 0.3');
+                hotspot.setAttribute('material', 'shader: flat; src: #hotspot-img; transparent: true');
+                hotspot.setAttribute('look-at', '[camera]');
+                hotspot.setAttribute('animation', 'property: scale; to: 1.2 1.2 1.2; dur: 1000; easing: easeInOutSine; loop: true; dir: alternate');
+                
+                // Add click event to switch scene
+                hotspot.addEventListener('click', () => {
+                    fadeToScene(targetScene);
                 });
-            }
-        });
-
-        // مكون A-Frame مخصص لتشغيل رسوم متحركة النبض
-        AFRAME.registerComponent('pulsing-hotspot', {
-            init: function () {
-                this.el.setAttribute('animation__pulse', {
-                    property: 'scale',
-                    from: '1 1 1',
-                    to: '1.1 1.1 1.1',
-                    dur: 1000,
-                    dir: 'alternate',
-                    loop: true,
-                    easing: 'easeInOutQuad'
-                }); [16, 17, 18]
-            }
-        });
-
-        // مكون A-Frame مخصص للاستماع إلى نقرات النقاط الساخنة
-        AFRAME.registerComponent('hotspot-listener', {
-            schema: {
-                targetScene: { type: 'string' }
-            },
-            init: function () {
-                this.el.addEventListener('click', () => {
-                    // إرسال حدث مخصص إلى المشهد الرئيسي [19, 14, 20, 21, 22, 23]
-                    this.el.sceneEl.emit('hotspot-clicked', { targetScene: this.data.targetScene });
+                
+                // Add mouseenter/mouseleave events
+                hotspot.addEventListener('mouseenter', () => {
+                    cursor.setAttribute('material', 'color: #ff8a00');
+                    cursor.setAttribute('scale', '1.5 1.5 1.5');
+                    
+                    // Create label
+                    const label = document.createElement('div');
+                    label.className = 'hotspot-label';
+                    label.textContent = targetScene.replace(/_/g, ' ');
+                    label.style.left = `${event.clientX}px`;
+                    label.style.top = `${event.clientY - 40}px`;
+                    document.body.appendChild(label);
+                    
+                    hotspot.label = label;
+                    setTimeout(() => {
+                        if (label) label.style.opacity = '1';
+                    }, 10);
                 });
-            }
+                
+                hotspot.addEventListener('mouseleave', () => {
+                    cursor.setAttribute('material', 'color: #ffffff');
+                    cursor.setAttribute('scale', '1 1 1');
+                    
+                    if (hotspot.label) {
+                        hotspot.label.style.opacity = '0';
+                        setTimeout(() => {
+                            if (hotspot.label && hotspot.label.parentNode) {
+                                hotspot.label.parentNode.removeChild(hotspot.label);
+                            }
+                        }, 300);
+                    }
+                });
+                
+                scene.appendChild(hotspot);
+                hotspots.push(hotspot);
+            });
+        }
+        
+        // Load a new scene
+        function loadScene(sceneName) {
+            currentScene = sceneName;
+            const sceneData = scenes[sceneName];
+            
+            // Update scene title
+            sceneTitle.textContent = sceneData.title;
+            
+            // Update sky
+            const sky = document.getElementById('scene-sky');
+            sky.setAttribute('src', sceneImages[sceneName]);
+            
+            // Create hotspots
+            createHotspots();
+            
+            // Update navigation dots
+            createNavigationDots();
+        }
+        
+        // Fade to a new scene
+        function fadeToScene(sceneName) {
+            // Start fade out
+            fadeOverlay.style.opacity = '1';
+            fadeOverlay.style.transition = 'opacity 0.8s ease';
+            
+            setTimeout(() => {
+                // Change scene
+                loadScene(sceneName);
+                
+                // Fade in
+                fadeOverlay.style.opacity = '0';
+            }, 800);
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Create a hotspot image asset
+            const hotspotImg = document.createElement('img');
+            hotspotImg.id = 'hotspot-img';
+            hotspotImg.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="%23ff8a00" stroke-width="8" stroke-opacity="0.8"/><circle cx="50" cy="50" r="30" fill="%23ff8a00" fill-opacity="0.6"/></svg>';
+            document.querySelector('a-assets').appendChild(hotspotImg);
+            
+            // Start loading simulation
+            simulateLoading();
+            
+            // Event listeners
+            startButton.addEventListener('click', startExperience);
+            
+            // Create navigation dots
+            createNavigationDots();
         });
-
-        // إخفاء شاشة الترحيب وبدء الجولة عند النقر على الزر
-        document.getElementById('start-button').addEventListener('click', () => {
-            const welcomeScreen = document.getElementById('welcome-screen');
-            welcomeScreen.classList.add('hidden'); // إخفاء الشاشة
-            // تهيئة مدير الانتقال وبدء المشهد الأول
-            document.querySelector('a-scene').setAttribute('scene-transition-manager', ''); // [24]
-            // تأكد من أن المكون قد تم تهيئته قبل محاولة الوصول إليه
-            const sceneManager = document.querySelector('a-scene').components['scene-transition-manager'];
-            if (sceneManager) {
-                sceneManager.updateHotspots(currentSceneId); // [25, 13, 26, 27, 28, 29, 30]
-            }
-        });
-
-        // عند تحميل مشهد A-Frame بالكامل، تأكد من إخفاء شاشة التحميل الافتراضية
-        // وعرض شاشة الترحيب المخصصة
-        document.querySelector('a-scene').addEventListener('loaded', () => { [24, 31]
-            // A-Frame's default loading screen is handled by the loading-screen component. [32]
-            // Our custom welcome screen is initially visible. [33, 34, 35]
-            // The user clicks the button to hide it and start the tour.
+        
+        // Update cursor position for labels
+        document.addEventListener('mousemove', (event) => {
+            const labels = document.querySelectorAll('.hotspot-label');
+            labels.forEach(label => {
+                label.style.left = `${event.clientX}px`;
+                label.style.top = `${event.clientY - 40}px`;
+            });
         });
     </script>
 </body>
