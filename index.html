@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>جولة افتراضية - فضاءات المنزل</title>
-    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <title>تجربة 360° احترافية مع حلقة النظر | Meta Quest</title>
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <script src="https://unpkg.com/aframe-animation-component@5.1.2/dist/aframe-animation-component.min.js"></script>
     <script src="https://unpkg.com/aframe-event-set-component@5.0.0/dist/aframe-event-set-component.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Cairo', sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
         body {
@@ -22,18 +22,19 @@
             color: #fff;
             height: 100vh;
             width: 100vw;
-            perspective: 1000px;
         }
         
-        #scene-container {
-            position: fixed;
+        #scene {
+            position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
+            opacity: 0;
+            transition: opacity 1s ease;
         }
         
-        #welcome-screen {
+        #loadingScreen {
             position: absolute;
             top: 0;
             left: 0;
@@ -45,645 +46,898 @@
             justify-content: center;
             align-items: center;
             z-index: 1000;
-            transition: opacity 1s ease;
+            transition: opacity 1.5s ease;
         }
         
-        #welcome-content {
+        #loadingContent {
             text-align: center;
-            max-width: 800px;
             padding: 20px;
-            transform: translateZ(50px);
-            animation: float 6s ease-in-out infinite;
+            max-width: 800px;
         }
         
-        @keyframes float {
-            0% { transform: translateY(0) translateZ(50px); }
-            50% { transform: translateY(-20px) translateZ(50px); }
-            100% { transform: translateY(0) translateZ(50px); }
-        }
-        
-        #welcome-screen h1 {
-            font-size: 3.5rem;
-            margin-bottom: 20px;
-            color: #fff;
-            text-shadow: 0 0 15px rgba(255,255,255,0.7);
-            animation: glow 2s ease-in-out infinite alternate;
-        }
-        
-        @keyframes glow {
-            from { text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #e60073, 0 0 40px #e60073; }
-            to { text-shadow: 0 0 15px #fff, 0 0 25px #ff4da6, 0 0 35px #ff4da6, 0 0 45px #ff4da6; }
-        }
-        
-        #welcome-screen p {
-            font-size: 1.4rem;
+        .logo-container {
             margin-bottom: 30px;
-            line-height: 1.7;
-            text-shadow: 0 0 5px rgba(0,0,0,0.7);
         }
         
-        .btn {
-            background: linear-gradient(45deg, #ff8a00, #e52e71);
-            color: white;
-            border: none;
-            padding: 15px 40px;
-            font-size: 1.2rem;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin: 10px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.4);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .btn:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.5);
-        }
-        
-        .btn:after {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -60%;
-            width: 20px;
-            height: 200%;
-            background: rgba(255,255,255,0.3);
-            transform: rotate(25deg);
-            transition: all 0.6s;
-        }
-        
-        .btn:hover:after {
-            left: 120%;
-        }
-        
-        #loading-container {
-            width: 80%;
-            max-width: 500px;
-            height: 25px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 15px;
-            margin: 40px 0;
-            overflow: hidden;
-            box-shadow: 0 0 10px rgba(0,0,0,0.3);
-        }
-        
-        #loading-bar {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, #00c9ff, #92fe9d);
-            border-radius: 15px;
-            transition: width 0.5s ease;
-            box-shadow: 0 0 10px rgba(0,201,255,0.5);
-        }
-        
-        #instructions {
-            position: absolute;
-            bottom: 20px;
-            width: 100%;
-            text-align: center;
-            font-size: 1.1rem;
-            padding: 12px;
-            background: rgba(0,0,0,0.7);
-            z-index: 10;
-            backdrop-filter: blur(5px);
-            border-top: 1px solid rgba(255,255,255,0.2);
-        }
-        
-        #controls {
-            position: absolute;
-            bottom: 90px;
-            right: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            z-index: 10;
-        }
-        
-        .control-btn {
-            background: rgba(255,255,255,0.2);
-            color: white;
-            border: none;
-            width: 60px;
-            height: 60px;
+        .logo {
+            width: 120px;
+            height: 120px;
+            background: radial-gradient(circle, #00c3ff, #0077ff);
             border-radius: 50%;
-            font-size: 1.8rem;
-            cursor: pointer;
-            backdrop-filter: blur(5px);
-            transition: all 0.3s ease;
             display: flex;
             justify-content: center;
             align-items: center;
-            box-shadow: 0 0 15px rgba(0,0,0,0.3);
+            margin: 0 auto 20px;
+            animation: pulse 2s infinite;
         }
         
-        .control-btn:hover {
-            background: rgba(255,255,255,0.3);
-            transform: scale(1.1) rotate(10deg);
+        .logo i {
+            font-size: 60px;
+            color: white;
         }
         
-        #scene-info {
+        h1 {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            background: linear-gradient(to right, #00c3ff, #ffff1c);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 2px 10px rgba(0, 195, 255, 0.3);
+        }
+        
+        h2 {
+            font-size: 1.8rem;
+            margin-bottom: 30px;
+            color: #e0e0e0;
+        }
+        
+        .progress-container {
+            width: 80%;
+            max-width: 500px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            margin: 30px auto;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+        
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #00c3ff, #0077ff);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+        
+        #startButton {
+            margin-top: 30px;
+            padding: 15px 50px;
+            font-size: 1.5rem;
+            background: linear-gradient(to right, #00c3ff, #0077ff);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+            box-shadow: 0 5px 15px rgba(0, 119, 255, 0.4);
+        }
+        
+        #startButton:hover {
+            background: linear-gradient(to right, #0077ff, #00c3ff);
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 119, 255, 0.6);
+        }
+        
+        .instructions {
+            margin-top: 30px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 15px;
+            max-width: 600px;
+        }
+        
+        .instructions h3 {
+            color: #00c3ff;
+            margin-bottom: 15px;
+        }
+        
+        .instructions p {
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+        
+        .scene-title {
             position: absolute;
             top: 20px;
-            left: 20px;
-            background: rgba(0,0,0,0.6);
-            padding: 15px 25px;
-            border-radius: 30px;
-            font-size: 1.3rem;
-            z-index: 10;
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(255,255,255,0.2);
-            box-shadow: 0 0 20px rgba(0,0,0,0.4);
-        }
-        
-        .hotspot-label {
-            position: absolute;
-            background: rgba(0,0,0,0.8);
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 2rem;
             color: white;
-            padding: 10px 20px;
-            border-radius: 25px;
-            font-size: 1.1rem;
-            white-space: nowrap;
-            transform: translate(-50%, -50%);
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(255,255,255,0.2);
-            z-index: 20;
-            font-weight: bold;
+            z-index: 10;
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+            opacity: 0.9;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 10px;
         }
         
-        .scene-indicator {
+        .navigation-info {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.7);
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .scene-info {
+            position: absolute;
+            bottom: 80px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            border-radius: 10px;
+            max-width: 500px;
+            margin: 0 auto;
+            font-size: 1.1rem;
+        }
+        
+        /* حلقة النظر (Reticle) */
+        .reticle {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 2rem;
-            color: white;
-            text-shadow: 0 0 10px rgba(0,0,0,0.8);
-            z-index: 5;
-            text-align: center;
-            width: 100%;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(0, 195, 255, 0.8);
+            border-radius: 50%;
+            z-index: 9999;
             pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .reticle.visible {
             opacity: 1;
-            transition: opacity 1s ease;
         }
         
-        .scene-indicator h2 {
-            font-size: 3rem;
-            margin-bottom: 10px;
-            text-shadow: 0 0 15px rgba(255,255,255,0.7);
-        }
-        
-        @media (max-width: 768px) {
-            #welcome-screen h1 {
-                font-size: 2.5rem;
-            }
-            
-            #welcome-screen p {
-                font-size: 1.1rem;
-            }
-            
-            .btn {
-                padding: 12px 30px;
-                font-size: 1rem;
-            }
-            
-            #scene-info {
-                font-size: 1rem;
-                padding: 10px 20px;
-            }
-            
-            #controls {
-                bottom: 70px;
-            }
-            
-            .control-btn {
-                width: 50px;
-                height: 50px;
-                font-size: 1.5rem;
-            }
-            
-            .scene-indicator h2 {
-                font-size: 2.2rem;
-            }
-        }
-        
-        /* تحسينات الأرضية */
-        .floor {
+        .reticle::before {
+            content: '';
             position: absolute;
-            bottom: 0;
-            width: 100%;
-            height: 50px;
-            background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
-            z-index: 5;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 10px;
+            height: 10px;
+            background: rgba(0, 195, 255, 0.5);
+            border-radius: 50%;
+        }
+        
+        .progress-ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-90deg);
+            width: 30px;
+            height: 30px;
+            z-index: 10000;
             pointer-events: none;
+            opacity: 0;
         }
         
-        .floor-pattern {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            height: 100px;
-            background: 
-                linear-gradient(90deg, transparent 50%, rgba(255,255,255,0.1) 50%),
-                linear-gradient(transparent 50%, rgba(255,255,255,0.1) 50%);
-            background-size: 30px 30px;
-            opacity: 0.3;
-            z-index: 4;
+        .progress-ring.visible {
+            opacity: 1;
         }
         
-        /* تحسينات النقاط التفاعلية */
-        .hotspot-pulse {
-            animation: pulse 2s infinite;
+        .progress-ring-circle {
+            stroke: rgba(0, 195, 255, 0.8);
+            stroke-width: 2;
+            fill: none;
+            stroke-dasharray: 100;
+            stroke-dashoffset: 100;
+            transition: stroke-dashoffset 0.05s linear;
         }
         
         @keyframes pulse {
-            0% { transform: scale(1); opacity: 0.8; }
-            50% { transform: scale(1.2); opacity: 1; }
-            100% { transform: scale(1); opacity: 0.8; }
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 195, 255, 0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(0, 195, 255, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 195, 255, 0); }
         }
         
-        /* تحسينات الانتقالات */
-        .scene-transition {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: black;
-            z-index: 100;
-            opacity: 0;
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        .hotspot-label {
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            white-space: nowrap;
             pointer-events: none;
-            transition: opacity 0.5s ease;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            text-align: center;
+            position: absolute;
+            transform: translateX(-50%);
+            left: 50%;
+            bottom: -40px;
         }
         
-        /* حل مشكلة التشويه */
-        .sky-fixer {
-            transform: scale(1.1, 1.1);
+        .hotspot:hover .hotspot-label {
+            opacity: 1;
+        }
+        
+        /* تأثيرات النقاط الساخنة */
+        .hotspot {
+            cursor: pointer;
+            position: absolute;
+        }
+        
+        .hotspot-icon {
+            animation: pulse 1.5s infinite;
+            transition: all 0.3s ease;
+            display: block;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-size: cover;
+            background-position: center;
+            box-shadow: 0 0 15px rgba(0, 195, 255, 0.7);
+        }
+        
+        .hotspot-icon:hover {
+            transform: scale(1.2);
+            filter: brightness(1.5);
+        }
+        
+        /* إرشادات التحكم */
+        .controls-guide {
+            position: absolute;
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            z-index: 10;
+            opacity: 0.8;
+        }
+        
+        .control-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px 15px;
+            border-radius: 10px;
+        }
+        
+        .control-icon {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+            color: #00c3ff;
+        }
+        
+        .control-text {
+            font-size: 0.9rem;
+        }
+        
+        /* مؤشر المشاهد */
+        .scene-indicator {
+            position: absolute;
+            top: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 10;
+        }
+        
+        .scene-dot {
+            width: 12px;
+            height: 12px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+        
+        .scene-dot.active {
+            background: #00c3ff;
+            transform: scale(1.3);
+        }
+        
+        /* رسالة الخطأ */
+        .error-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 0, 0, 0.7);
+            padding: 15px 30px;
+            border-radius: 10px;
+            text-align: center;
+            z-index: 2000;
+            display: none;
+        }
+        
+        /* توجيه المستخدم */
+        .user-guide {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 15;
+            max-width: 600px;
+            animation: fadeInOut 5s forwards;
+        }
+        
+        @keyframes fadeInOut {
+            0% { opacity: 0; }
+            20% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+        
+        /* مؤشر التحميل */
+        .loading-indicator {
+            position: absolute;
+            top: 60%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.2rem;
+            color: #00c3ff;
+            z-index: 15;
+            display: none;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px 30px;
+            border-radius: 10px;
+        }
+        
+        /* تأثيرات تفاعل الهوت سبوت */
+        .hotspot-highlight {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0,195,255,0.5) 0%, rgba(0,195,255,0) 70%);
+            pointer-events: none;
+            z-index: 5;
+            display: none;
+        }
+        
+        /* تأثير النقاط الساخنة عند التحديق */
+        .hotspot-gaze {
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: 2px solid rgba(0, 195, 255, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: hotspotGaze 1.5s infinite;
+        }
+        
+        @keyframes hotspotGaze {
+            0% { transform: scale(0.8); opacity: 0.7; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(0.8); opacity: 0.7; }
+        }
+        
+        .hotspot-gaze::before {
+            content: '';
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 2px solid rgba(0, 195, 255, 0.5);
+            animation: hotspotGazeInner 1.5s infinite;
+        }
+        
+        @keyframes hotspotGazeInner {
+            0% { transform: scale(0.9); opacity: 0.5; }
+            50% { transform: scale(1.3); opacity: 0.2; }
+            100% { transform: scale(0.9); opacity: 0.5; }
         }
     </style>
 </head>
 <body>
-    <!-- شاشة الترحيب وشريط التحميل -->
-    <div id="welcome-screen">
-        <div id="welcome-content">
-            <h1>مرحبًا بكم في الجولة الافتراضية</h1>
-            <p>استكشف منزلاً افتراضيًا بتقنية 360 درجة. حرك صورتك بالنظر حولك، وانقر على نقاط التفاعل للانتقال بين الغرف. استمتع بتجربة غامرة تعمل على جميع الأجهزة!</p>
+    <!-- شاشة التحميل والبدء -->
+    <div id="loadingScreen">
+        <div id="loadingContent">
+            <div class="logo-container">
+                <div class="logo">
+                    <i>VR</i>
+                </div>
+            </div>
+            <h1>تجربة الواقع الافتراضي 360°</h1>
+            <h2>مع حلقة النظر التفاعلية</h2>
             
-            <div id="loading-container">
-                <div id="loading-bar"></div>
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar"></div>
             </div>
             
-            <button id="start-btn" class="btn">بدء الجولة</button>
+            <button id="startButton">بدء الرحلة</button>
+            
+            <div class="instructions">
+                <h3>كيفية الاستخدام:</h3>
+                <p>• استخدم حلقة النظر في المركز للتحكم</p>
+                <p>• انظر إلى النقاط الساخنة لتفعيلها</p>
+                <p>• استمر في النظر للنقطة الساخنة للانتقال</p>
+                <p>• حرك رأسك لتستكشف المشهد من جميع الزوايا</p>
+            </div>
         </div>
     </div>
     
-    <!-- تعليمات للمستخدم -->
-    <div id="instructions">
-        استخدم الماوس/الشاشة للتحريك في الاتجاهات. انقر على نقاط التفاعل للانتقال بين الغرف
+    <!-- رسالة خطأ -->
+    <div class="error-message" id="errorMessage">
+        <h3>حدث خطأ في تحميل المشهد!</h3>
+        <p>الرجاء التحقق من اتصال الإنترنت والمحاولة مرة أخرى.</p>
     </div>
     
-    <!-- معلومات المشهد الحالي -->
-    <div id="scene-info">الاستقبال</div>
-    
-    <!-- عناصر التحكم -->
-    <div id="controls">
-        <button class="control-btn" id="fullscreen-btn">⛶</button>
-        <button class="control-btn" id="vr-btn">👓</button>
-    </div>
-    
-    <!-- تأثيرات الأرضية -->
-    <div class="floor"></div>
-    <div class="floor-pattern"></div>
-    
-    <!-- تأثيرات الانتقال -->
-    <div class="scene-transition" id="scene-transition"></div>
-    
-    <!-- حاوية المشهد الرئيسي -->
-    <div id="scene-container">
-        <!-- سيتم إنشاء مشهد A-Frame هنا ديناميكيًا -->
-    </div>
+    <!-- مشهد A-Frame -->
+    <a-scene id="scene" vr-mode-ui="enabled: false" raycaster="objects: .hotspot; far: 100">
+        <!-- الأصول -->
+        <a-assets>
+            <!-- الصور الـ 360 -->
+            <img id="scene1" src="assets/Living_Room.jpg">
+            <img id="scene2" src="assets/Reception.jpg">
+            <img id="scene3" src="https://cdn.glitch.global/6a11d0d7-1a41-4e96-8b7b-9d6e5b9c4a0c/equirectangular3.jpg">
+            <img id="scene4" src="https://cdn.glitch.global/6a11d0d7-1a41-4e96-8b7b-9d6e5b9c4a0c/equirectangular4.jpg">
+            <img id="scene5" src="https://cdn.glitch.global/6a11d0d7-1a41-4e96-8b7b-9d6e5b9c4a0c/equirectangular5.jpg">
+            <img id="scene6" src="https://cdn.glitch.global/6a11d0d7-1a41-4e96-8b7b-9d6e5b9c4a0c/equirectangular6.jpg">
+            
+            <!-- صورة النقطة الساخنة -->
+            <img id="hotspot-img" src="assets/hotspot.png">
+        </a-assets>
+        
+        <!-- المشاهد الـ 360 (سيتم تبديلها) -->
+        <a-sky id="currentScene" src="#scene1" rotation="0 -90 0"></a-sky>
+        
+        <!-- حلقة النظر -->
+        <div class="reticle" id="reticle"></div>
+        <div class="progress-ring" id="progressRing">
+            <svg width="30" height="30" viewBox="0 0 30 30">
+                <circle class="progress-ring-circle" r="12" cx="15" cy="15"></circle>
+            </svg>
+        </div>
+        
+        <!-- الكاميرا -->
+        <a-entity id="cameraRig" position="0 1.6 0">
+            <a-entity camera look-controls wasd-controls="enabled: false"
+                      cursor="rayOrigin: mouse; fuse: false"></a-entity>
+        </a-entity>
+        
+        <!-- مؤشر المشاهد -->
+        <div class="scene-indicator">
+            <div class="scene-dot active" data-scene="scene1"></div>
+            <div class="scene-dot" data-scene="scene2"></div>
+            <div class="scene-dot" data-scene="scene3"></div>
+            <div class="scene-dot" data-scene="scene4"></div>
+            <div class="scene-dot" data-scene="scene5"></div>
+            <div class="scene-dot" data-scene="scene6"></div>
+        </div>
+        
+        <!-- النقاط الساخنة للمشهد الأول فقط -->
+        <a-entity class="hotspot scene1-hotspot" position="0 1.5 -3" data-scene="scene2">
+            <a-image class="hotspot-icon" src="#hotspot-img" scale="0.8 0.8 0.8" look-at="[camera]"></a-image>
+            <a-entity class="hotspot-label" 
+                      text="value: المشهد الجبلي; align: center; color: white; width: 4"></a-entity>
+        </a-entity>
+        
+        <a-entity class="hotspot scene1-hotspot" position="3 1.5 0" data-scene="scene3">
+            <a-image class="hotspot-icon" src="#hotspot-img" scale="0.8 0.8 0.8" look-at="[camera]"></a-image>
+            <a-entity class="hotspot-label" 
+                      text="value: شاطئ البحر; align: center; color: white; width: 4"></a-entity>
+        </a-entity>
+        
+        <a-entity class="hotspot scene1-hotspot" position="-3 1.5 0" data-scene="scene4">
+            <a-image class="hotspot-icon" src="#hotspot-img" scale="0.8 0.8 0.8" look-at="[camera]"></a-image>
+            <a-entity class="hotspot-label" 
+                      text="value: الغابة الخضراء; align: center; color: white; width: 4"></a-entity>
+        </a-entity>
+        
+        <a-entity class="hotspot scene1-hotspot" position="0 1.5 3" data-scene="scene5">
+            <a-image class="hotspot-icon" src="#hotspot-img" scale="0.8 0.8 0.8" look-at="[camera]"></a-image>
+            <a-entity class="hotspot-label" 
+                      text="value: الصحراء الذهبية; align: center; color: white; width: 4"></a-entity>
+        </a-entity>
+        
+        <a-entity class="hotspot scene1-hotspot" position="0 3 -2" data-scene="scene6">
+            <a-image class="hotspot-icon" src="#hotspot-img" scale="0.8 0.8 0.8" look-at="[camera]"></a-image>
+            <a-entity class="hotspot-label" 
+                      text="value: المدينة الحديثة; align: center; color: white; width: 4"></a-entity>
+        </a-entity>
+        
+        <!-- تأثيرات تفاعل الهوت سبوت -->
+        <div class="hotspot-highlight" id="hotspotHighlight"></div>
+        
+        <!-- معلومات المشهد -->
+        <a-entity class="scene-title" text="value: المشهد الأول: الوادي السحري; align: center; color: white; width: 8"></a-entity>
+        
+        <a-entity class="scene-info" text="value: حرك رأسك لتستكشف المشهد. انظر إلى النقاط المضيئة للانتقال.; align: center; color: #aaffff; width: 8"></a-entity>
+        
+        <a-entity class="navigation-info" text="value: يمكنك استخدام حلقة النظر للتحكم في النقاط الساخنة; align: center; color: #aaffaa; width: 8"></a-entity>
+        
+        <!-- إرشادات التحكم -->
+        <div class="controls-guide">
+            <div class="control-item">
+                <div class="control-icon">👁️</div>
+                <div class="control-text">انظر للتحكم</div>
+            </div>
+            <div class="control-item">
+                <div class="control-icon">🖱️</div>
+                <div class="control-text">حرك الماوس</div>
+            </div>
+            <div class="control-item">
+                <div class="control-icon">⏱️</div>
+                <div class="control-text">استمر في النظر</div>
+            </div>
+        </div>
+        
+        <!-- توجيه المستخدم -->
+        <div class="user-guide" id="userGuide">
+            <h3>حرك رأسك أو الماوس لتستكشف المشهد</h3>
+            <p>مرر مؤشر الماوس فوق النقاط المضيئة للتفاعل معها</p>
+        </div>
+        
+        <!-- مؤشر التحميل -->
+        <div class="loading-indicator" id="loadingIndicator">جاري تحميل المشهد التالي...</div>
+        
+        <!-- تأثيرات الانتقال -->
+        <a-entity id="transitionOverlay" geometry="primitive: plane; height: 100; width: 100" 
+                  material="color: black; opacity: 0" 
+                  position="0 0 -1"
+                  scale="20 20 1"></a-entity>
+    </a-scene>
 
     <script>
-        // بيانات الجولة الافتراضية مع مسارات الصور المعدلة لمنع التشويه
-        const tourData = {
-            scenes: {
-                'Reception': {
-                    title: 'الاستقبال',
-                    hotspots: [
-                        { target: 'Living_Room', position: { x: 0, y: 0, z: -3 }, rotation: { x: 0, y: 0, z: 0 }, label: 'الصالة' }
-                    ],
-                    image: "assets/Reception.jpg",
-                    rotation: "0 -130 0",
-                    scale: "1 1 1"
-                },
-                'Living_Room': {
-                    title: 'الصالة',
-                    hotspots: [
-                        { target: 'Reception', position: { x: -1.5, y: 0.5, z: -2.5 }, rotation: { x: 0, y: 40, z: 0 }, label: 'الاستقبال' },
-                        { target: 'Kitchen', position: { x: 1.5, y: 0.5, z: -2.5 }, rotation: { x: 0, y: -40, z: 0 }, label: 'المطبخ' },
-                        { target: 'Corridor', position: { x: 0, y: 0.5, z: -3 }, rotation: { x: 0, y: 0, z: 0 }, label: 'الممر' }
-                    ],
-                    image: "assets/Living_Room.jpg",
-                    rotation: "0 -90 0",
-                    scale: "1 1 1"
-                },
-                'Kitchen': {
-                    title: 'المطبخ',
-                    hotspots: [
-                        { target: 'Living_Room', position: { x: 0, y: 0.5, z: -3 }, rotation: { x: 0, y: 0, z: 0 }, label: 'الصالة' }
-                    ],
-                    image: "https://images.unsplash.com/photo-1484154218962-a197022b5858?ixlib=rb-1.2.1&auto=format&fit=crop&w=1953&q=80",
-                    rotation: "0 -110 0",
-                    scale: "1.05 1.05 1"
-                },
-                'Corridor': {
-                    title: 'الممر',
-                    hotspots: [
-                        { target: 'Living_Room', position: { x: 0, y: 0.5, z: -3 }, rotation: { x: 0, y: 0, z: 0 }, label: 'الصالة' },
-                        { target: 'Bedroom', position: { x: 1.5, y: 0.5, z: -2.5 }, rotation: { x: 0, y: -40, z: 0 }, label: 'غرفة النوم' },
-                        { target: 'Bathroom', position: { x: -1.5, y: 0.5, z: -2.5 }, rotation: { x: 0, y: 40, z: 0 }, label: 'الحمام' }
-                    ],
-                    image: "https://images.unsplash.com/photo-1533090368676-1fd25485db88?ixlib=rb-1.2.1&auto=format&fit=crop&w=1949&q=80",
-                    rotation: "0 -100 0",
-                    scale: "1.05 1.05 1"
-                },
-                'Bedroom': {
-                    title: 'غرفة النوم',
-                    hotspots: [
-                        { target: 'Corridor', position: { x: 0, y: 0.5, z: -3 }, rotation: { x: 0, y: 0, z: 0 }, label: 'الممر' }
-                    ],
-                    image: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80",
-                    rotation: "0 -120 0",
-                    scale: "1.1 1.1 1"
-                },
-                'Bathroom': {
-                    title: 'الحمام',
-                    hotspots: [
-                        { target: 'Corridor', position: { x: 0, y: 0.5, z: -3 }, rotation: { x: 0, y: 0, z: 0 }, label: 'الممر' }
-                    ],
-                    image: "https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?ixlib=rb-1.2.1&auto=format&fit=crop&w=1934&q=80",
-                    rotation: "0 -140 0",
-                    scale: "1.1 1.1 1"
-                }
-            },
-            startScene: 'Reception'
-        };
-
-        // متغيرات حالة
-        let sceneLoaded = false;
-        const imagesToLoad = Object.keys(tourData.scenes).length;
-        let imagesLoaded = 0;
-        
-        // محاكاة تحميل الأصول
-        document.addEventListener('DOMContentLoaded', () => {
-            const loadingBar = document.getElementById('loading-bar');
-            const startBtn = document.getElementById('start-btn');
-            startBtn.style.display = 'none';
+        document.addEventListener('DOMContentLoaded', function() {
+            const loadingScreen = document.getElementById('loadingScreen');
+            const progressBar = document.getElementById('progressBar');
+            const startButton = document.getElementById('startButton');
+            const scene = document.getElementById('scene');
+            const currentScene = document.getElementById('currentScene');
+            const hotspots = document.querySelectorAll('.hotspot');
+            const transitionOverlay = document.getElementById('transitionOverlay');
+            const sceneTitle = document.querySelector('.scene-title');
+            const sceneInfo = document.querySelector('.scene-info');
+            const reticle = document.getElementById('reticle');
+            const progressRing = document.getElementById('progressRing');
+            const progressCircle = progressRing.querySelector('.progress-ring-circle');
+            const sceneDots = document.querySelectorAll('.scene-dot');
+            const errorMessage = document.getElementById('errorMessage');
+            const userGuide = document.getElementById('userGuide');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const hotspotHighlight = document.getElementById('hotspotHighlight');
             
-            // تحميل الصور الحقيقية
-            preloadImages();
-            
+            // إعداد حلقة النظر والتفاعل
+            let currentHotspot = null;
+            let progressTimer = null;
+            const LOOK_DURATION = 2000; // 2 ثانية للنظر للانتقال
             let progress = 0;
             
-            const loadingInterval = setInterval(() => {
-                // حساب التقدم بناءً على الصور المحملة
-                const realProgress = Math.min(100, Math.floor((imagesLoaded / imagesToLoad) * 100));
-                progress = Math.min(progress + 2, realProgress);
-                
-                loadingBar.style.width = `${progress}%`;
-                
-                if (progress >= 100) {
-                    clearInterval(loadingInterval);
-                    startBtn.style.display = 'block';
-                    startBtn.classList.add('pulse');
+            // محاكاة شريط التقدم
+            let loadProgress = 0;
+            const interval = setInterval(() => {
+                loadProgress += Math.random() * 10;
+                if (loadProgress >= 100) {
+                    loadProgress = 100;
+                    clearInterval(interval);
+                    
+                    // إظهار زر البدء مع تأثير
+                    setTimeout(() => {
+                        startButton.style.opacity = '1';
+                        startButton.style.transform = 'translateY(0)';
+                    }, 500);
                 }
+                progressBar.style.width = `${loadProgress}%`;
             }, 200);
-        });
-        
-        // دالة لتحميل الصور مسبقًا
-        function preloadImages() {
-            Object.keys(tourData.scenes).forEach(sceneName => {
-                const img = new Image();
-                img.src = tourData.scenes[sceneName].image;
-                img.onload = () => {
-                    imagesLoaded++;
-                };
-                img.onerror = () => {
-                    console.error(`فشل تحميل الصورة: ${tourData.scenes[sceneName].image}`);
-                    imagesLoaded++;
-                };
-            });
-        }
-
-        // بدء الجولة
-        document.getElementById('start-btn').addEventListener('click', () => {
-            const welcomeScreen = document.getElementById('welcome-screen');
-            welcomeScreen.style.opacity = '0';
             
-            setTimeout(() => {
-                welcomeScreen.style.display = 'none';
-                initVirtualTour();
-            }, 1000);
-        });
-
-        // تهيئة الجولة الافتراضية
-        function initVirtualTour() {
-            // إنشاء مشهد A-Frame
-            const sceneContainer = document.getElementById('scene-container');
-            sceneContainer.innerHTML = `
-                <a-scene loading-screen="enabled: false" vr-mode-ui="enabled: true" cursor="rayOrigin: mouse">
-                    <!-- أصول الصور -->
-                    <a-assets>
-                        <img id="Reception-texture" src="${tourData.scenes['Reception'].image}">
-                        <img id="Living_Room-texture" src="${tourData.scenes['Living_Room'].image}">
-                        <img id="Kitchen-texture" src="${tourData.scenes['Kitchen'].image}">
-                        <img id="Corridor-texture" src="${tourData.scenes['Corridor'].image}">
-                        <img id="Bedroom-texture" src="${tourData.scenes['Bedroom'].image}">
-                        <img id="Bathroom-texture" src="${tourData.scenes['Bathroom'].image}">
-                    </a-assets>
-                    
-                    <!-- الكاميرا -->
-                    <a-entity id="camera" position="0 1.6 0">
-                        <a-camera>
-                            <a-cursor></a-cursor>
-                        </a-camera>
-                    </a-entity>
-                    
-                    <!-- إضاءة -->
-                    <a-entity light="type: ambient; intensity: 0.6"></a-entity>
-                    <a-entity light="type: directional; intensity: 0.8; position: -1 2 1"></a-entity>
-                    
-                    <!-- مؤشر المشهد -->
-                    <div class="scene-indicator">
-                        <h2 id="current-scene-name">الاستقبال</h2>
-                        <p>بدء الجولة الافتراضية</p>
-                    </div>
-                </a-scene>
-            `;
-            
-            // الانتظار حتى يتم تحميل المشهد
-            const scene = document.querySelector('a-scene');
-            scene.addEventListener('loaded', () => {
-                sceneLoaded = true;
-                loadScene(tourData.startScene);
+            // بدء التجربة
+            startButton.addEventListener('click', function() {
+                // تأثير اختفاء شاشة التحميل
+                loadingScreen.style.opacity = '0';
                 
-                // تهيئة وضع VR
-                document.getElementById('vr-btn').addEventListener('click', () => {
-                    scene.enterVR();
+                setTimeout(() => {
+                    loadingScreen.style.display = 'none';
+                    scene.style.opacity = '1';
+                    
+                    // تفعيل حلقة النظر
+                    reticle.classList.add('visible');
+                    
+                    // تفعيل عناصر التحكم بعد بدء التجربة
+                    const cameraRig = document.getElementById('cameraRig');
+                    cameraRig.setAttribute('wasd-controls', 'enabled: true');
+                    
+                    // بدء اكتشاف النقاط الساخنة
+                    setupHotspotDetection();
+                    
+                    // إظهار النقاط الساخنة بعد التأخير
+                    setTimeout(() => {
+                        document.querySelectorAll('.hotspot').forEach(hotspot => {
+                            hotspot.setAttribute('visible', 'true');
+                        });
+                    }, 500);
+                    
+                    // إخفاء توجيه المستخدم بعد 5 ثوان
+                    setTimeout(() => {
+                        userGuide.style.display = 'none';
+                    }, 5000);
+                }, 1500);
+            });
+            
+            // معالجة النقاط الساخنة
+            hotspots.forEach(hotspot => {
+                // إضافة حدث النقر بشكل صحيح
+                hotspot.addEventListener('click', function() {
+                    const targetScene = this.getAttribute('data-scene');
+                    changeScene(targetScene);
                 });
                 
-                // تهيئة وضع ملء الشاشة
-                document.getElementById('fullscreen-btn').addEventListener('click', () => {
-                    if (!document.fullscreenElement) {
-                        document.documentElement.requestFullscreen();
+                // أحداث الماوس
+                const hotspotIcon = hotspot.querySelector('.hotspot-icon');
+                const hotspotLabel = hotspot.querySelector('.hotspot-label');
+                
+                hotspot.addEventListener('mouseenter', function() {
+                    hotspotIcon.setAttribute('scale', '1.1 1.1 1.1');
+                    hotspotLabel.setAttribute('visible', 'true');
+                    
+                    // إظهار تأثير التمييز
+                    const rect = hotspotIcon.getBoundingClientRect();
+                    hotspotHighlight.style.display = 'block';
+                    hotspotHighlight.style.left = `${rect.left + rect.width/2}px`;
+                    hotspotHighlight.style.top = `${rect.top + rect.height/2}px`;
+                });
+                
+                hotspot.addEventListener('mouseleave', function() {
+                    hotspotIcon.setAttribute('scale', '0.8 0.8 0.8');
+                    hotspotLabel.setAttribute('visible', 'false');
+                    
+                    // إخفاء تأثير التمييز
+                    hotspotHighlight.style.display = 'none';
+                });
+            });
+            
+            // تغيير المشهد مع تأثيرات
+            function changeScene(targetScene) {
+                // إظهار مؤشر التحميل
+                loadingIndicator.style.display = 'block';
+                
+                // تأثير انتقال
+                transitionOverlay.setAttribute('material', 'opacity', 1);
+                transitionOverlay.setAttribute('animation', {
+                    property: 'material.opacity',
+                    to: 1,
+                    dur: 500,
+                    easing: 'easeInOutQuad'
+                });
+                
+                setTimeout(() => {
+                    // تغيير المشهد
+                    const sceneEl = document.querySelector(`#${targetScene}`);
+                    if (!sceneEl) {
+                        showError('لم يتم العثور على المشهد المطلوب!');
+                        loadingIndicator.style.display = 'none';
+                        return;
+                    }
+                    
+                    currentScene.setAttribute('src', `#${targetScene}`);
+                    
+                    // تحديث عنوان المشهد
+                    updateSceneTitle(targetScene);
+                    
+                    // تحديث مؤشر المشاهد
+                    updateSceneIndicator(targetScene);
+                    
+                    // إخفاء جميع النقاط الساخنة (للمشاهد الأخرى)
+                    hideAllHotspots();
+                    
+                    // إخفاء تأثير الانتقال ومؤشر التحميل
+                    setTimeout(() => {
+                        transitionOverlay.setAttribute('animation', {
+                            property: 'material.opacity',
+                            to: 0,
+                            dur: 800,
+                            easing: 'easeInOutQuad'
+                        });
+                        loadingIndicator.style.display = 'none';
+                    }, 500);
+                    
+                    // إعادة توجيه النقاط الساخنة بعد تغيير المشهد
+                    setTimeout(() => {
+                        hotspots.forEach(hotspot => {
+                            const icon = hotspot.querySelector('.hotspot-icon');
+                            if (icon) {
+                                icon.setAttribute('look-at', '[camera]');
+                            }
+                        });
+                    }, 100);
+                }, 600);
+            }
+            
+            // إخفاء جميع النقاط الساخنة
+            function hideAllHotspots() {
+                document.querySelectorAll('.hotspot').forEach(hotspot => {
+                    hotspot.setAttribute('visible', 'false');
+                });
+            }
+            
+            // تحديث عنوان المشهد
+            function updateSceneTitle(sceneId) {
+                const sceneNames = {
+                    'scene1': 'المشهد الأول: الوادي السحري',
+                    'scene2': 'المشهد الثاني: القمم الجبلية',
+                    'scene3': 'المشهد الثالث: شاطئ الأحلام',
+                    'scene4': 'المشهد الرابع: الغابة الخضراء',
+                    'scene5': 'المشهد الخامس: الصحراء الذهبية',
+                    'scene6': 'المشهد السادس: المدينة الحديثة'
+                };
+                
+                sceneTitle.setAttribute('text', 'value', sceneNames[sceneId] || 'مشهد 360°');
+            }
+            
+            // تحديث مؤشر المشاهد
+            function updateSceneIndicator(sceneId) {
+                sceneDots.forEach(dot => {
+                    if (dot.getAttribute('data-scene') === sceneId) {
+                        dot.classList.add('active');
                     } else {
-                        if (document.exitFullscreen) {
-                            document.exitFullscreen();
-                        }
+                        dot.classList.remove('active');
                     }
                 });
-            });
-        }
-
-        // تحميل مشهد معين
-        function loadScene(sceneName) {
-            if (!sceneLoaded) return;
+            }
             
-            const scene = document.querySelector('a-scene');
-            const sceneData = tourData.scenes[sceneName];
-            const transition = document.getElementById('scene-transition');
-            
-            // بدء تأثير الانتقال
-            transition.style.opacity = '1';
-            transition.style.pointerEvents = 'auto';
-            
-            setTimeout(() => {
-                // تحديث عنوان المشهد
-                document.getElementById('scene-info').textContent = sceneData.title;
-                document.getElementById('current-scene-name').textContent = sceneData.title;
+            // إعداد كشف النقاط الساخنة باستخدام حلقة النظر
+            function setupHotspotDetection() {
+                // إنشاء Raycaster لاكتشاف التقاطعات
+                const raycaster = new THREE.Raycaster();
+                const camera = document.querySelector('[camera]').object3D;
+                const sceneEl = document.querySelector('a-scene').object3D;
                 
-                // إزالة المشهد السابق إن وجد
-                const oldSky = document.querySelector('a-sky');
-                if (oldSky) oldSky.parentNode.removeChild(oldSky);
-                
-                const oldHotspots = document.querySelectorAll('.hotspot');
-                oldHotspots.forEach(hotspot => hotspot.parentNode.removeChild(hotspot));
-                
-                // إنشاء مشهد السماء الجديد باستخدام الصورة مع إصلاح التشويه
-                const sky = document.createElement('a-sky');
-                sky.setAttribute('src', `#${sceneName}-texture`);
-                sky.setAttribute('rotation', sceneData.rotation);
-                sky.setAttribute('scale', sceneData.scale);
-                sky.classList.add('sky-fixer');
-                scene.appendChild(sky);
-                
-                // إنشاء مؤشر المشهد
-                const sceneIndicator = document.querySelector('.scene-indicator');
-                sceneIndicator.style.display = 'block';
-                sceneIndicator.style.opacity = '1';
-                
-                setTimeout(() => {
-                    sceneIndicator.style.opacity = '0';
-                    setTimeout(() => {
-                        sceneIndicator.style.display = 'none';
-                    }, 1000);
-                }, 2000);
-                
-                // إنشاء نقاط التفاعل
-                sceneData.hotspots.forEach((hotspot, index) => {
-                    const hotspotEl = document.createElement('a-entity');
-                    hotspotEl.classList.add('hotspot');
-                    hotspotEl.setAttribute('position', `${hotspot.position.x} ${hotspot.position.y} ${hotspot.position.z}`);
-                    hotspotEl.setAttribute('rotation', `${hotspot.rotation.x} ${hotspot.rotation.y} ${hotspot.rotation.z}`);
-                    hotspotEl.setAttribute('look-at', '[camera]');
+                // حلقة التصيير
+                function checkIntersections() {
+                    if (!camera) return;
                     
-                    // إنشاء الشكل المرئي لنقطة التفاعل
-                    const hotspotVisual = document.createElement('a-ring');
-                    hotspotVisual.setAttribute('radius-inner', '0.10');
-                    hotspotVisual.setAttribute('radius-outer', '0.20');
-                    hotspotVisual.setAttribute('color', '#4CC3D9');
-                    hotspotVisual.setAttribute('transparent', 'true');
-                    hotspotVisual.setAttribute('opacity', '0.8');
-                    hotspotVisual.setAttribute('animation', 'property: scale; from: 1 1 1; to: 1.3 1.3 1.3; dur: 1000; loop: true; dir: alternate; easing: easeInOutSine');
-                    hotspotVisual.classList.add('hotspot-pulse');
+                    // تحديث Raycaster باتجاه الكاميرا
+                    raycaster.setFromCamera(new THREE.Vector2(), camera);
                     
-                    // تأثير إضافي
-                    const hotspotPulse = document.createElement('a-ring');
-                    hotspotPulse.setAttribute('radius-inner', '0.20');
-                    hotspotPulse.setAttribute('radius-outer', '0.25');
-                    hotspotPulse.setAttribute('color', '#4CC3D9');
-                    hotspotPulse.setAttribute('transparent', 'true');
-                    hotspotPulse.setAttribute('opacity', '0.4');
-                    hotspotPulse.setAttribute('animation', 'property: scale; from: 1 1 1; to: 1.5 1.5 1.5; dur: 2000; loop: true; dir: alternate; easing: easeInOutSine');
+                    // الحصول على أيقونات النقاط الساخنة
+                    const hotspotIcons = Array.from(document.querySelectorAll('.hotspot-icon'));
+                    const hotspotObjects = hotspotIcons.map(icon => icon.object3D);
                     
-                    hotspotEl.appendChild(hotspotVisual);
-                    hotspotEl.appendChild(hotspotPulse);
+                    // الحصول على التقاطعات
+                    const intersects = raycaster.intersectObjects(hotspotObjects, true);
                     
-                    // تفاعل النقطة
-                    hotspotEl.addEventListener('click', () => {
-                        // تأثير انتقالي
-                        const fade = document.createElement('a-entity');
-                        fade.setAttribute('geometry', 'primitive: plane; width: 10; height: 10');
-                        fade.setAttribute('material', 'color: black; opacity: 0');
-                        fade.setAttribute('position', '0 0 -1');
-                        fade.setAttribute('animation', 'property: material.opacity; to: 1; dur: 500; easing: linear');
-                        scene.appendChild(fade);
+                    if (intersects.length > 0) {
+                        // وجدنا نقطة ساخنة
+                        const hotspotIcon = intersects[0].object.el;
+                        const hotspotEntity = hotspotIcon.parentElement;
                         
-                        setTimeout(() => {
-                            loadScene(hotspot.target);
-                        }, 500);
-                    });
-                    
-                    // تأثيرات عند التمرير فوق النقطة
-                    hotspotEl.addEventListener('mouseenter', () => {
-                        hotspotVisual.setAttribute('color', '#FFC65D');
-                        hotspotPulse.setAttribute('color', '#FFC65D');
-                        hotspotVisual.setAttribute('scale', '1.2 1.2 1.2');
-                        hotspotVisual.setAttribute('animation', 'property: components.material.material.color; type: color; from: #FFC65D; to: #F16745; dur: 1000; loop: true; dir: alternate');
-                        
-                        // عرض التسمية
-                        const label = document.createElement('div');
-                        label.classList.add('hotspot-label');
-                        label.textContent = hotspot.label;
-                        label.style.left = `${window.innerWidth/2}px`;
-                        label.style.top = `${window.innerHeight/2 - 50}px`;
-                        label.style.opacity = '1';
-                        document.body.appendChild(label);
-                        
-                        hotspotEl.labelElement = label;
-                    });
-                    
-                    hotspotEl.addEventListener('mouseleave', () => {
-                        hotspotVisual.setAttribute('color', '#4CC3D9');
-                        hotspotPulse.setAttribute('color', '#4CC3D9');
-                        hotspotVisual.setAttribute('scale', '1 1 1');
-                        hotspotVisual.removeAttribute('animation');
-                        
-                        // إخفاء التسمية
-                        if (hotspotEl.labelElement) {
-                            hotspotEl.labelElement.style.opacity = '0';
-                            setTimeout(() => {
-                                if (hotspotEl.labelElement && hotspotEl.labelElement.parentNode) {
-                                    hotspotEl.labelElement.parentNode.removeChild(hotspotEl.labelElement);
-                                }
-                            }, 300);
+                        if (hotspotEntity !== currentHotspot) {
+                            // تغيير النقطة الساخنة الحالية
+                            currentHotspot = hotspotEntity;
+                            
+                            // بدء المؤقت
+                            startLookTimer();
                         }
-                    });
+                    } else {
+                        // لا توجد نقاط ساخنة
+                        if (currentHotspot) {
+                            // إلغاء المؤقت إذا كان نشطًا
+                            stopLookTimer();
+                            currentHotspot = null;
+                        }
+                    }
                     
-                    scene.appendChild(hotspotEl);
-                });
+                    // الطلب التالي للتصيير
+                    requestAnimationFrame(checkIntersections);
+                }
                 
-                // إنهاء تأثير الانتقال
+                // بدء الفحص
+                checkIntersections();
+            }
+            
+            // بدء مؤتمر النظر
+            function startLookTimer() {
+                // إظهار حلقة التقدم
+                progressRing.classList.add('visible');
+                progress = 0;
+                progressCircle.style.strokeDashoffset = 100;
+                
+                // إعادة تعيين المؤقت إذا كان موجودًا
+                if (progressTimer) clearInterval(progressTimer);
+                
+                // بدء المؤقت
+                progressTimer = setInterval(() => {
+                    progress += 10;
+                    progressCircle.style.strokeDashoffset = 100 - progress;
+                    
+                    if (progress >= 100) {
+                        // اكتمل المؤقت، تنفيذ النقر
+                        clearInterval(progressTimer);
+                        if (currentHotspot) {
+                            // إنشاء حدث النقر وإرساله
+                            const clickEvent = new MouseEvent('click', {
+                                view: window,
+                                bubbles: true,
+                                cancelable: true
+                            });
+                            currentHotspot.dispatchEvent(clickEvent);
+                        }
+                        progressRing.classList.remove('visible');
+                        currentHotspot = null;
+                    }
+                }, LOOK_DURATION / 10);
+            }
+            
+            // إيقاف مؤقت النظر
+            function stopLookTimer() {
+                if (progressTimer) {
+                    clearInterval(progressTimer);
+                    progressTimer = null;
+                }
+                progressRing.classList.remove('visible');
+                progressCircle.style.strokeDashoffset = 100;
+            }
+            
+            // إظهار رسالة خطأ
+            function showError(message) {
+                errorMessage.innerHTML = `<h3>${message}</h3>`;
+                errorMessage.style.display = 'block';
+                
                 setTimeout(() => {
-                    transition.style.opacity = '0';
-                    transition.style.pointerEvents = 'none';
-                }, 500);
-            }, 500);
-        }
+                    errorMessage.style.display = 'none';
+                }, 5000);
+            }
+            
+            // كشف الحركة لأجهزة VR
+            if (navigator.getVRDisplays) {
+                navigator.getVRDisplays().then(displays => {
+                    if (displays.length > 0) {
+                        sceneInfo.setAttribute('text', 'value', 'تم الكشف عن نظارة Meta Quest. استمتع بالتجربة!');
+                    }
+                });
+            }
+            
+            // إضافة حدث لمعالجة أخطاء تحميل الصور
+            document.querySelectorAll('img').forEach(img => {
+                img.addEventListener('error', function() {
+                    showError('فشل تحميل أحد الموارد!');
+                });
+            });
+            
+            // إصلاح خاص لبعض المتصفحات
+            window.addEventListener('load', function() {
+                setTimeout(function() {
+                    document.querySelectorAll('.hotspot').forEach(hotspot => {
+                        hotspot.setAttribute('visible', 'true');
+                    });
+                }, 2000);
+            });
+        });
     </script>
 </body>
 </html>
