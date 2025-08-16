@@ -1,4 +1,12 @@
-<!doctype html>
+const pos = latLonToCartesian(h.lat || 0, h.lon || 0, 3.5);
+      // small outward tweak (values slightly >1 push hotspot a bit away from sphere to reduce distortion)
+      const tweak = 1.02; // try 1.02 or 0.98 depending on distortion
+      const adjX = pos.x * tweak;
+      const adjY = pos.y * tweak;
+      const adjZ = pos.z * tweak;
+      ent.setAttribute('position', `${adjX.toFixed(3)} ${adjY.toFixed(3)} ${adjZ.toFixed(3)}`);
+      ent.setAttribute('data-target', h.target);
+      ent.setAttrib<!doctype html>
 <html lang="ar">
 <head>
   <meta charset="utf-8" />
@@ -166,50 +174,80 @@
 
   // ---------- HOTSPOT CREATION & INTERACTIONS ----------
   const sceneEl = document.querySelector('a-scene');
-  const sky = document.getElementById('sky');
   const hotspotsRoot = document.getElementById('hotspotsRoot');
   const camera = document.getElementById('camera');
   const blackFade = document.getElementById('blackFade');
 
+  // Component to keep hotspot elements visually constant size regardless of distance
+  AFRAME.registerComponent('constant-size', {
+    schema: { base: { type: 'number', default: 0.9 } },
+    init: function() {
+      this.camEl = document.querySelector('#camera');
+      this.vecCam = new THREE.Vector3();
+      this.vecObj = new THREE.Vector3();
+    },
+    tick: function() {
+      if (!this.el.object3D || !this.camEl) return;
+      this.camEl.object3D.getWorldPosition(this.vecCam);
+      this.el.object3D.getWorldPosition(this.vecObj);
+      const dist = this.vecCam.distanceTo(this.vecObj);
+      // scale factor: tweak 0.18 so that at radius ~3.5 size is reasonable; multiply by base
+      const scale = Math.max(0.2, dist * 0.18) * (this.data.base);
+      this.el.object3D.scale.set(scale, scale, scale);
+    }
+  });
+
+
   function makeHotspot(h) {
-    // Root wrapper for the hotspot (so we can animate children independently)
     const hotspotRoot = document.createElement('a-entity');
     hotspotRoot.setAttribute('look-at', '#camera');
+    hotspotRoot.setAttribute('constant-size', 'base: 1');
 
-    // Outer pulsing layer (continues to pulse even when cursor is far)
+    // Outer pulsing layer: use a slightly larger quad but with low opacity
     const pulse = document.createElement('a-entity');
-    pulse.setAttribute('geometry', 'primitive: plane; height: 0.9; width: 0.9');
-    pulse.setAttribute('material', `src: url(assets/hotspot.png); transparent: true; shader: flat; opacity: 0.45; side: double`);
-    pulse.classList.add('clickable'); // make it hittable by raycaster if needed
-    // continuous pulse animation on the outer layer
+    pulse.setAttribute('geometry', 'primitive: plane; height: 1; width: 1');
+    pulse.setAttribute('material',
+      `src: url(assets/hotspot.png);
+       shader: flat;
+       transparent: true;
+       alphaTest: 0.05;
+       depthTest: false;
+       depthWrite: false;
+       side: double;
+       opacity: 0.45`);
     pulse.setAttribute('animation__pulse', 'property: scale; dir: alternate; dur: 1100; easing: easeInOutSine; loop: true; to: 1.45 1.45 1.45; from: 1 1 1');
 
-    // Inner icon (the clickable part) - hover scale only affects this child so outer pulse keeps running
+    // Inner icon (click target)
     const icon = document.createElement('a-entity');
-    icon.setAttribute('geometry', 'primitive: plane; height: 0.6; width: 0.6');
-    icon.setAttribute('material', `src: url(assets/hotspot.png); transparent: true; shader: flat; side: double; alphaTest: 0.01`);
-    icon.setAttribute('shadow', 'receive: false;cast:false');
-    icon.classList.add('clickable'); // IMPORTANT: make the actual click target hittable by raycasters
+    icon.setAttribute('geometry', 'primitive: plane; height: 0.7; width: 0.7');
+    icon.setAttribute('material',
+      `src: url(assets/hotspot.png);
+       shader: flat;
+       transparent: true;
+       alphaTest: 0.05;
+       depthTest: false;
+       depthWrite: false;
+       side: double`);
+    icon.classList.add('clickable');
 
-    // label (text) above hotspot
+    // label
     const label = document.createElement('a-entity');
     label.setAttribute('text', `value: ${h.label}; align: center; wrapCount: 20; width: 2`);
     label.setAttribute('position', `0 0.55 0`);
     label.setAttribute('visible', false);
 
-    // Hover interactions are attached to the inner icon so they don't stop the outer pulse
+    // Hover interactions
     icon.addEventListener('mouseenter', () => {
-      icon.setAttribute('animation__hover', 'property: scale; to: 1.4 1.4 1.4; dur: 200; easing: easeOutQuad');
+      icon.setAttribute('animation__hover', 'property: scale; to: 1.15 1.15 1.15; dur: 150; easing: easeOutQuad');
       label.setAttribute('visible', true);
     });
     icon.addEventListener('mouseleave', () => {
-      icon.setAttribute('animation__hover', 'property: scale; to: 1 1 1; dur: 150; easing: easeOutQuad');
+      icon.setAttribute('animation__hover', 'property: scale; to: 1 1 1; dur: 120; easing: easeOutQuad');
       label.setAttribute('visible', false);
     });
 
-    // click on icon triggers transition
+    // Click
     icon.addEventListener('click', (evt) => {
-      // stop propagation to avoid double triggers
       evt.stopPropagation && evt.stopPropagation();
       const tgt = hotspotRoot.getAttribute('data-target');
       if (tgt) {
@@ -218,7 +256,6 @@
       }
     });
 
-    // assemble
     hotspotRoot.appendChild(pulse);
     hotspotRoot.appendChild(icon);
     hotspotRoot.appendChild(label);
