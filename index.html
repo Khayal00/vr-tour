@@ -1,309 +1,487 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="utf-8" />
-  <title>VR Tour — A-Frame</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-  <style>
-    body, html { margin:0; height:100%; font-family: sans-serif; background:#000; color:#fff }
-    /* Preloader overlay */
-    #welcome {
-      position: absolute; inset:0; display:flex; align-items:center; justify-content:center;
-      background: linear-gradient(0deg, rgba(0,0,0,0.75), rgba(0,0,0,0.85));
-      z-index: 9999; flex-direction: column; gap:16px; padding:20px; text-align:center;
-    }
-    #panel { max-width:720px; width:90%; background:rgba(255,255,255,0.03); border-radius:10px; padding:18px }
-    #progressBar { width:100%; height:12px; background: rgba(255,255,255,0.08); border-radius:8px; overflow:hidden }
-    #progressFill { height:100%; width:0%; background: linear-gradient(90deg, rgba(255,255,255,0.12), rgba(255,255,255,0.25)); transition:width 300ms ease }
-    button.start {
-      margin-top:12px; padding:10px 16px; border-radius:8px; border: none; background:#2196F3; color:white; font-weight:600; cursor:pointer;
-    }
-    .small { font-size:0.9rem; color:#ddd }
-    /* tiny instruction box bottom-left */
-    #hint {
-      position: absolute; left:12px; bottom:12px; background: rgba(0,0,0,0.4); padding:8px 12px; border-radius:8px; z-index:2000;
-      font-size:0.9rem;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>جولة واقع افتراضي بتقنية 360 درجة</title>
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://unpkg.com/aframe-animation-component@5.1.2/dist/aframe-animation-component.min.js"></script>
+    <script src="https://unpkg.com/aframe-event-set-component@5.0.1/dist/aframe-event-set-component.min.js"></script>
+    <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            overflow: hidden;
+            background: #000;
+        }
+        
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 1s ease;
+        }
+        
+        .loading-content {
+            text-align: center;
+            max-width: 800px;
+            padding: 20px;
+        }
+        
+        h1 {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(255,255,255,0.5);
+        }
+        
+        .instructions {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 25px 0;
+            font-size: 1.2rem;
+            line-height: 1.8;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        
+        .progress-container {
+            width: 80%;
+            max-width: 500px;
+            height: 30px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 15px;
+            margin-top: 30px;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #00c9ff, #92fe9d);
+            border-radius: 15px;
+            transition: width 0.5s ease;
+        }
+        
+        .loading-text {
+            margin-top: 20px;
+            font-size: 1.3rem;
+            color: #ddd;
+        }
+        
+        #enter-vr {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: 2px solid white;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+        
+        #enter-vr:hover {
+            background: rgba(255, 255, 255, 0.9);
+            color: #1a2a6c;
+            transform: translateX(-50%) scale(1.05);
+        }
+        
+        #scene-title {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: white;
+            font-size: 2rem;
+            text-shadow: 0 0 10px black;
+            z-index: 10;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+        }
+        
+        .hotspot-label {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 1.1rem;
+            white-space: nowrap;
+            transform: translate(-50%, -100%);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .controls-info {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            max-width: 300px;
+            opacity: 0.8;
+            z-index: 10;
+        }
+        
+        /* تصميم متجاوب */
+        @media (max-width: 768px) {
+            h1 { font-size: 2.5rem; }
+            .instructions { font-size: 1rem; padding: 15px; }
+            #enter-vr { padding: 12px 25px; font-size: 1.1rem; }
+            #scene-title { font-size: 1.5rem; }
+        }
+        
+        @media (max-width: 480px) {
+            h1 { font-size: 2rem; }
+            .instructions { font-size: 0.9rem; }
+            #enter-vr { padding: 10px 20px; font-size: 1rem; }
+            .controls-info { font-size: 0.8rem; bottom: 10px; left: 10px; }
+        }
+    </style>
 </head>
 <body>
-
-  <!-- WELCOME + LOADER -->
-  <div id="welcome" aria-hidden="false">
-    <div id="panel">
-      <h2>مرحباً بكم في الجولة الافتراضية</h2>
-      <p class="small">ضع نظارتك أو استخدم الفأرة / اللمس للتنقل. عند وضع المؤشر على أي نقطة هوت سبوت ستنبض وتكبر، اضغط أو انتظر (gaze) للانتقال.</p>
-      <div style="height:12px"></div>
-      <div id="progressBar"><div id="progressFill"></div></div>
-      <div style="height:8px"></div>
-      <div id="progressText" class="small">تحميل الأصول: 0%</div>
-      <button id="startBtn" class="start" disabled>ابدأ الجولة</button>
-      <div style="height:6px"></div>
-      <div class="small">مطلوب HTTPS لعرض الجولة على نظارات VR (Meta Quest).</div>
+    <div id="loading-screen">
+        <div class="loading-content">
+            <h1>جولة الواقع الافتراضي</h1>
+            <div class="instructions">
+                <p>مرحباً بكم في جولتنا الافتراضية بتقنية 360 درجة! ستأخذك هذه التجربة في رحلة تفاعلية عبر مساحات مختلفة.</p>
+                <p>ستبدأ الجولة في غرفة الاستقبال، حيث يمكنك استخدام النقاط التفاعلية للانتقال بين الغرف المختلفة. كل نقطة تفاعلية ستنقلك إلى مشهد جديد.</p>
+                <p>لتحريك المشهد: اسحب بفأرة الحاسوب أو حرك جهازك المحمول/النظارة. انقر على نقاط الهوت سبوت للانتقال إلى المشاهد الأخرى.</p>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+            <div class="loading-text" id="loading-text">جاري تحميل الأصول... 0%</div>
+        </div>
     </div>
-  </div>
+    
+    <button id="enter-vr">ابدأ الجولة</button>
+    <div id="scene-title"></div>
+    
+    <div class="controls-info">
+        <p>استخدم الماوس/لمس الشاشة للتحريك. انقر على نقاط الهوت سبوت للانتقال</p>
+    </div>
 
-  <div id="hint">اضغط على أيقونة الهوت سبوت أو استخدم gaze للانتقال</div>
+    <a-scene vr-mode-ui="enabled: false" loading-screen="enabled: false">
+        <!-- الكاميرا والتحكم -->
+        <a-entity id="camera" position="0 1.6 0">
+            <a-entity camera="fov: 80" look-controls="pointerLockEnabled: false" wasd-controls="enabled: false"></a-entity>
+            <a-entity cursor="rayOrigin: mouse" raycaster="objects: .hotspot"></a-entity>
+        </a-entity>
+        
+        <!-- السماء (سيتم تغييرها ديناميكياً) -->
+        <a-sky id="sky" color="#000"></a-sky>
+        
+        <!-- نقاط الهوت سبوت (ستضاف ديناميكياً) -->
+        
+        <!-- إضاءة -->
+        <a-entity light="type: ambient; intensity: 0.5"></a-entity>
+        <a-entity light="type: point; intensity: 0.8; distance: 10" position="0 3 0"></a-entity>
+        
+        <!-- تأثيرات الانتقال -->
+        <a-entity id="fade-effect" 
+                  geometry="primitive: plane; width: 100; height: 100"
+                  material="color: black; opacity: 0"
+                  position="0 0 -1"
+                  scale="1 1 1">
+        </a-entity>
+    </a-scene>
 
-  <!-- A-Frame Scene -->
-  <a-scene embedded renderer="precision: low" vr-mode-ui="enabled: true" background="color: #000">
-    <!-- Assets -->
-    <a-assets id="assets">
-      <!-- 6 Panorama images -->
-      <img id="reception" src="assets/reception.jpg" crossorigin="anonymous" />
-      <img id="living_room" src="assets/living_room.jpg" crossorigin="anonymous" />
-      <img id="kitchen" src="assets/kitchen.jpg" crossorigin="anonymous" />
-      <img id="corridor" src="assets/corridor.jpg" crossorigin="anonymous" />
-      <img id="bedroom" src="assets/bedroom.jpg" crossorigin="anonymous" />
-      <img id="bathroom" src="assets/bathroom.jpg" crossorigin="anonymous" />
+    <script>
+        // إدارة حالة التطبيق
+        const appState = {
+            currentScene: null,
+            scenes: {
+                'Reception': {
+                    hotspots: [
+                        { position: "0 1.5 -5", target: "Living_Room", label: "غرفة المعيشة" }
+                    ]
+                },
+                'Living_Room': {
+                    hotspots: [
+                        { position: "-3 1.5 -3", target: "Reception", label: "الاستقبال" },
+                        { position: "3 1.5 -3", target: "Kitchen", label: "المطبخ" },
+                        { position: "0 1.5 3", target: "Corridor", label: "الممر" }
+                    ]
+                },
+                'Kitchen': {
+                    hotspots: [
+                        { position: "0 1.5 -5", target: "Living_Room", label: "غرفة المعيشة" }
+                    ]
+                },
+                'Corridor': {
+                    hotspots: [
+                        { position: "-2 1.5 -3", target: "Bedroom", label: "غرفة النوم" },
+                        { position: "2 1.5 -3", target: "Bathroom", label: "الحمام" },
+                        { position: "0 1.5 3", target: "Living_Room", label: "غرفة المعيشة" }
+                    ]
+                },
+                'Bedroom': {
+                    hotspots: [
+                        { position: "0 1.5 -5", target: "Corridor", label: "الممر" }
+                    ]
+                },
+                'Bathroom': {
+                    hotspots: [
+                        { position: "0 1.5 -5", target: "Corridor", label: "الممر" }
+                    ]
+                }
+            }
+        };
 
-      <!-- hotspot icon -->
-      <img id="hotspotIcon" src="assets/hotspot.png" crossorigin="anonymous" />
+        // عناصر DOM
+        const loadingScreen = document.getElementById('loading-screen');
+        const progressBar = document.getElementById('progress-bar');
+        const loadingText = document.getElementById('loading-text');
+        const enterVrButton = document.getElementById('enter-vr');
+        const sceneTitle = document.getElementById('scene-title');
+        const sky = document.getElementById('sky');
+        const fadeEffect = document.getElementById('fade-effect');
+        const scene = document.querySelector('a-scene');
 
-      <!-- a tiny transparent placeholder for sky fallback -->
-      <img id="blank" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" />
-    </a-assets>
+        // صور المشاهد (تمثيلية - في تطبيق حقيقي يتم استبدالها بروابط الصور الفعلية)
+        const sceneImages = {
+            'Reception': 'assets/Reception.jpg',
+            'Living_Room': 'assets/Living_Room.jpg',
+            'Kitchen': 'https://cdn.glitch.global/1a8e1e86-3d4f-4d48-8c6f-1b3a1f4b4a9d/kitchen.jpg?v=1700000000000',
+            'Corridor': 'https://cdn.glitch.global/1a8e1e86-3d4f-4d48-8c6f-1b3a1f4b4a9d/corridor.jpg?v=1700000000000',
+            'Bedroom': 'https://cdn.glitch.global/1a8e1e86-3d4f-4d48-8c6f-1b3a1f4b4a9d/bedroom.jpg?v=1700000000000',
+            'Bathroom': 'https://cdn.glitch.global/1a8e1e86-3d4f-4d48-8c6f-1b3a1f4b4a9d/bathroom.jpg?v=1700000000000'
+        };
 
-    <!-- Sky / Panorama -->
-    <a-sky id="sky" radius="5000" src="#reception" rotation="0 -90 0"></a-sky>
+        // متغيرات التحميل
+        let assetsLoaded = 0;
+        const totalAssets = 6; // عدد المشاهد
 
-    <!-- Camera rig (works for desktop, mobile, and Quest controllers) -->
-    <a-entity id="cameraRig" position="0 1.6 0">
-      <a-entity id="camera" camera look-controls wasd-controls>
-        <!-- black fade plane attached to camera for transitions -->
-        <a-entity id="fadePlane" geometry="primitive: plane; height:1; width:1" position="0 0 -0.6"
-                  material="color: black; shader: flat; transparent: true; opacity: 1"></a-entity>
-      </a-entity>
-
-      <!-- cursor for desktop/mobile (fuse for gaze) -->
-      <a-entity id="cursorEntity" cursor="fuse: true; fuseTimeout: 700" raycaster="objects: .clickable"
-                position="0 0 0" ></a-entity>
-
-      <!-- controllers for VR (laser + raycast) -->
-      <a-entity laser-controls="hand: left" raycaster="objects: .clickable"></a-entity>
-      <a-entity laser-controls="hand: right" raycaster="objects: .clickable"></a-entity>
-    </a-entity>
-
-    <!-- container for hotspots (we'll populate with JS) -->
-    <a-entity id="hotspotsRoot"></a-entity>
-
-    <!-- Grid ground far away so mobile doesn't feel empty (optional) -->
-    <a-entity position="0 -5 0">
-      <a-plane rotation="-90 0 0" width="200" height="200" material="color: #111; opacity: 0.2"></a-plane>
-    </a-entity>
-
-    <!-- small help text in the scene (hidden by default) -->
-    <a-entity id="sceneInstructions" position="0 2 -1" visible="false">
-      <a-plane width="1.8" height="0.4" color="#000" material="opacity:0.5"></a-plane>
-      <a-text value="ضع المؤشر على أي نقطة و اضغط للانتقال" align="center" position="0 0 0.01" color="#fff" wrap-count="24"></a-text>
-    </a-entity>
-
-  </a-scene>
-
-  <script>
-    // ---------- Configuration ----------
-    const scenes = {
-      "Reception": "#reception",
-      "Living_Room": "#living_room",
-      "Kitchen": "#kitchen",
-      "Corridor": "#corridor",
-      "Bedroom": "#bedroom",
-      "Bathroom": "#bathroom"
-    };
-
-    // Hotspot positions (x,y,z) — اضبط هذه الإحداثيات حسب حاجتك
-    // For each source scene we list hotspot(s) that link to target scenes (as per user's mapping)
-    const hotspotsData = {
-      "Reception": [
-        { id: 'h_rec_lr', position: {x: 0, y: 1.6, z: -3}, target: 'Living_Room', label: 'Living Room' }
-      ],
-      "Kitchen": [
-        { id: 'h_kit_lr', position: {x: -1.5, y: 1.4, z: -2.2}, target: 'Living_Room', label: 'Living Room' }
-      ],
-      "Corridor": [
-        { id: 'h_cor_lr', position: {x: 0, y: 1.5, z: -3.2}, target: 'Living_Room', label: 'Living Room' },
-        { id: 'h_cor_bed', position: {x: 1.2, y: 1.4, z: -2.1}, target: 'Bedroom', label: 'Bedroom' },
-        { id: 'h_cor_bath', position: {x: -1.1, y: 1.4, z: -2.1}, target: 'Bathroom', label: 'Bathroom' }
-      ],
-      "Living_Room": [
-        { id: 'h_lr_rec', position: {x: 0, y: 1.6, z: -3}, target: 'Reception', label: 'Reception' },
-        { id: 'h_lr_kit', position: {x: -1.8, y: 1.5, z: -2.3}, target: 'Kitchen', label: 'Kitchen' },
-        { id: 'h_lr_cor', position: {x: 1.6, y: 1.5, z: -2.5}, target: 'Corridor', label: 'Corridor' }
-      ],
-      "Bedroom": [
-        { id: 'h_bed_cor', position: {x: 0.6, y: 1.5, z: -2.1}, target: 'Corridor', label: 'Corridor' }
-      ],
-      "Bathroom": [
-        { id: 'h_bath_cor', position: {x: -0.6, y: 1.5, z: -2.1}, target: 'Corridor', label: 'Corridor' }
-      ]
-    };
-
-    // ---------- Helpers & Scene Setup ----------
-    const sky = document.getElementById('sky');
-    const hotspotsRoot = document.getElementById('hotspotsRoot');
-    const fadePlane = document.getElementById('fadePlane');
-    const welcome = document.getElementById('welcome');
-    const progressFill = document.getElementById('progressFill');
-    const progressText = document.getElementById('progressText');
-    const startBtn = document.getElementById('startBtn');
-
-    let currentScene = 'Reception';
-    let isTransitioning = false;
-
-    // Preloader: track asset loads
-    (function initPreloader(){
-      const assets = document.querySelectorAll('#assets img');
-      const total = assets.length;
-      let loaded = 0;
-
-      assets.forEach(img => {
-        // if already complete
-        if (img.complete && img.naturalWidth !== 0) {
-          loaded++;
-          updateProgress(loaded, total);
-        } else {
-          img.addEventListener('load', () => {
-            loaded++;
-            updateProgress(loaded, total);
-          });
-          img.addEventListener('error', () => {
-            loaded++; updateProgress(loaded, total);
-            console.warn('Failed to load asset', img.src);
-          });
+        // محاكاة تحميل الأصول
+        function simulateAssetLoading() {
+            if (assetsLoaded < totalAssets) {
+                assetsLoaded++;
+                const progress = Math.round((assetsLoaded / totalAssets) * 100);
+                progressBar.style.width = `${progress}%`;
+                loadingText.textContent = `جاري تحميل الأصول... ${progress}%`;
+                
+                setTimeout(simulateAssetLoading, 300 + Math.random() * 300);
+            } else {
+                loadingText.textContent = "جاهز! انقر على الزر لبدء الجولة";
+                enterVrButton.style.display = 'block';
+            }
         }
-      });
 
-      function updateProgress(loaded, total) {
-        const pct = Math.round((loaded / total) * 100);
-        progressFill.style.width = pct + '%';
-        progressText.textContent = `تحميل الأصول: ${pct}%`;
-        if (loaded >= total) {
-          progressFill.style.width = '100%';
-          progressText.textContent = `جاهز! اضغط ابدأ للولوج إلى الجولة`;
-          startBtn.disabled = false;
+        // بدء التحميل
+        setTimeout(simulateAssetLoading, 1000);
+
+        // بدء الجولة
+        enterVrButton.addEventListener('click', function() {
+            loadingScreen.style.opacity = '0';
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
+                enterVrButton.style.display = 'none';
+                changeScene('Reception');
+            }, 1000);
+        });
+
+        // تغيير المشهد
+        function changeScene(sceneName) {
+            // تأثير التلاشي
+            fadeEffect.setAttribute('material', 'opacity', 1);
+            
+            setTimeout(() => {
+                // تحديث المشهد
+                appState.currentScene = sceneName;
+                sceneTitle.textContent = sceneName === 'Reception' ? 'الاستقبال' : 
+                                          sceneName === 'Living_Room' ? 'غرفة المعيشة' : 
+                                          sceneName === 'Kitchen' ? 'المطبخ' : 
+                                          sceneName === 'Corridor' ? 'الممر' : 
+                                          sceneName === 'Bedroom' ? 'غرفة النوم' : 'الحمام';
+                
+                // إظهار العنوان
+                sceneTitle.style.opacity = '1';
+                
+                // إعداد السماء
+                sky.setAttribute('src', sceneImages[sceneName]);
+                
+                // إزالة الهوت سبوتات القديمة
+                document.querySelectorAll('.hotspot').forEach(hotspot => hotspot.remove());
+                
+                // إضافة الهوت سبوتات الجديدة
+                const hotspots = appState.scenes[sceneName].hotspots;
+                hotspots.forEach((hotspot, index) => {
+                    const hotspotEl = document.createElement('a-entity');
+                    hotspotEl.classList.add('hotspot');
+                    hotspotEl.setAttribute('position', hotspot.position);
+                    hotspotEl.setAttribute('look-at', '[camera]');
+                    hotspotEl.setAttribute('data-target', hotspot.target);
+                    
+                    // إنشاء الهوت سبوت كدائرة متحركة
+                    hotspotEl.setAttribute('geometry', 'primitive: circle; radius: 0.2');
+                    hotspotEl.setAttribute('material', 'shader: flat; src: #hotspot-texture; transparent: true; opacity: 0.8');
+                    
+                    // إضافة تأثير النبض
+                    hotspotEl.setAttribute('animation', 'property: scale; from: 1 1 1; to: 1.2 1.2 1; dur: 1000; loop: true; dir: alternate; easing: easeInOutSine');
+                    
+                    // إضافة نص التسمية
+                    const label = document.createElement('div');
+                    label.classList.add('hotspot-label');
+                    label.textContent = hotspot.label;
+                    label.style.top = '0';
+                    label.style.left = '0';
+                    document.body.appendChild(label);
+                    
+                    // أحداث المؤشر
+                    hotspotEl.addEventListener('mouseenter', function() {
+                        this.setAttribute('scale', '1.3 1.3 1');
+                        label.style.opacity = '1';
+                    });
+                    
+                    hotspotEl.addEventListener('mouseleave', function() {
+                        this.setAttribute('scale', '1 1 1');
+                        label.style.opacity = '0';
+                    });
+                    
+                    hotspotEl.addEventListener('click', function() {
+                        const targetScene = this.getAttribute('data-target');
+                        changeScene(targetScene);
+                    });
+                    
+                    // تحديث موقع التسمية
+                    hotspotEl.addEventListener('componentchanged', function(e) {
+                        if (e.detail.name === 'position') {
+                            const pos = this.getAttribute('position');
+                            const cameraPos = document.querySelector('[camera]').getAttribute('position');
+                            const screenPos = worldToScreen(pos, cameraPos);
+                            
+                            if (screenPos) {
+                                label.style.left = `${screenPos.x}px`;
+                                label.style.top = `${screenPos.y}px`;
+                            }
+                        }
+                    });
+                    
+                    scene.appendChild(hotspotEl);
+                });
+                
+                // إخفاء تأثير التلاشي
+                fadeEffect.setAttribute('material', 'opacity', 0);
+            }, 500);
         }
-      }
 
-      startBtn.addEventListener('click', () => {
-        welcome.style.display = 'none';
-        document.getElementById('sceneInstructions').setAttribute('visible', true);
-        // fade in from black
-        fadeTo(0, 500);
-        createHotspotsForScene(currentScene);
-      });
-    })();
+        // تحويل الإحداثيات العالمية إلى إحداثيات الشاشة
+        function worldToScreen(worldPos, cameraPos) {
+            // حساب متجه الرؤية
+            const vector = new THREE.Vector3(
+                worldPos.x - cameraPos.x,
+                worldPos.y - cameraPos.y,
+                worldPos.z - cameraPos.z
+            );
+            
+            // تسوية المتجه
+            vector.normalize();
+            
+            // افتراض أن الكاميرا تنظر في اتجاه المحور Z السلبي
+            // حساب الزوايا
+            const phi = Math.atan2(vector.z, vector.x); // زاوية أفقية
+            const theta = Math.acos(vector.y); // زاوية رأسية
+            
+            // تحويل الزوايا إلى إحداثيات شاشة
+            const x = (phi / (Math.PI * 2) + 0.5) * window.innerWidth;
+            const y = (theta / Math.PI) * window.innerHeight;
+            
+            return { x, y };
+        }
 
-    // Create hotspots for a given scene (clears previous)
-    function createHotspotsForScene(sceneName) {
-      // clear
-      while (hotspotsRoot.firstChild) hotspotsRoot.removeChild(hotspotsRoot.firstChild);
+        // إنشاء نسيج الهوت سبوت البرمجي
+        function createHotspotTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 128;
+            canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+            
+            // خلفية دائرية متدرجة
+            const gradient = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+            gradient.addColorStop(0.5, 'rgba(0, 150, 255, 0.8)');
+            gradient.addColorStop(1, 'rgba(0, 50, 150, 0)');
+            
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(64, 64, 60, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // حدود متحركة
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.lineWidth = 6;
+            ctx.beginPath();
+            ctx.arc(64, 64, 55, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            return canvas;
+        }
 
-      const list = hotspotsData[sceneName] || [];
-      list.forEach(h => {
-        const el = document.createElement('a-entity');
-        el.setAttribute('class', 'clickable hotspot-entity');
-        el.setAttribute('id', h.id);
-        el.setAttribute('position', `${h.position.x} ${h.position.y} ${h.position.z}`);
-
-        // the image icon (a-image)
-        const img = document.createElement('a-image');
-        img.setAttribute('src', '#hotspotIcon');
-        img.setAttribute('width', '0.6');
-        img.setAttribute('height', '0.6');
-        img.setAttribute('look-at', '#camera'); // always face camera
-        img.setAttribute('class', 'clickable');
-        img.setAttribute('scale', '1 1 1');
-        img.setAttribute('material', 'shader: flat; transparent: true;');
-
-        // pulse animation (infinite)
-        img.setAttribute('animation__pulse', 'property: scale; dir: alternate; dur: 900; easing: easeInOutSine; loop: true; to: 1.15 1.15 1.15');
-
-        // label above hotspot (hidden by default)
-        const label = document.createElement('a-entity');
-        label.setAttribute('geometry', 'primitive: plane; height: 0.18; width: 0.9');
-        label.setAttribute('material', 'color: #000; opacity: 0.6; shader: flat');
-        label.setAttribute('position', '0 0.55 0');
-        label.setAttribute('visible', 'false');
-
-        const text = document.createElement('a-text');
-        text.setAttribute('value', h.label);
-        text.setAttribute('align', 'center');
-        text.setAttribute('width', '1.6');
-        text.setAttribute('position', '0 0 0.01');
-        text.setAttribute('color', '#fff');
-        text.setAttribute('wrap-count', '18');
-
-        label.appendChild(text);
-
-        // interaction behavior
-        // show label and scale up on enter; revert on leave
-        img.addEventListener('mouseenter', () => {
-          label.setAttribute('visible', 'true');
-          img.setAttribute('animation__hover', 'property: scale; to: 1.35 1.35 1.35; dur: 200; easing: easeOutQuad');
-        });
-        img.addEventListener('mouseleave', () => {
-          label.setAttribute('visible', 'false');
-          img.setAttribute('animation__hover', 'property: scale; to: 1 1 1; dur: 150; easing: easeOutQuad');
-        });
-
-        // click or gaze-based click: transition to target scene
-        img.addEventListener('click', (ev) => {
-          if (isTransitioning) return;
-          goToScene(h.target);
+        // إضافة نسيج الهوت سبوت إلى المشهد
+        scene.addEventListener('loaded', function() {
+            const hotspotCanvas = createHotspotTexture();
+            const hotspotTexture = new THREE.CanvasTexture(hotspotCanvas);
+            scene.object3D.map = hotspotTexture;
+            
+            // تخزين النسيج للاستخدام في A-Frame
+            scene.systems.material.schema.materials['hotspot-texture'] = {
+                schema: {
+                    shader: 'flat',
+                    src: hotspotTexture
+                }
+            };
         });
 
-        // also support controller's raycast events
-        el.appendChild(img);
-        el.appendChild(label);
-        hotspotsRoot.appendChild(el);
-      });
-    }
-
-    // Smooth transition: fade to black, swap sky, fade back
-    function goToScene(targetName) {
-      if (!scenes[targetName]) {
-        console.warn('Unknown target scene', targetName); return;
-      }
-      isTransitioning = true;
-      fadeTo(1, 350).then(() => {
-        // change sky src
-        sky.setAttribute('src', scenes[targetName]);
-        currentScene = targetName;
-        // small delay to ensure texture updated
-        setTimeout(() => {
-          createHotspotsForScene(currentScene);
-          fadeTo(0, 400).then(()=> { isTransitioning = false; });
-        }, 200);
-      });
-    }
-
-    // fade utility: animate fadePlane opacity
-    function fadeTo(targetOpacity, duration=400) {
-      return new Promise(resolve => {
-        const plane = fadePlane;
-        plane.setAttribute('animation__fade', `property: material.opacity; to: ${targetOpacity}; dur: ${duration}; easing: easeInOutQuad`);
-        // wait duration
-        setTimeout(resolve, duration + 20);
-      });
-    }
-
-    // On scene load: set fade fully opaque then show welcome (handled by preloader)
-    // Set initial fade to 1 (black) so welcome overlay shows; already in HTML set to opacity:1
-
-    // Small helper: enable keyboard arrows to jump scenes (for desktop testing)
-    window.addEventListener('keydown', (e) => {
-      if (e.key === '1') goToScene('Reception');
-      if (e.key === '2') goToScene('Living_Room');
-      if (e.key === '3') goToScene('Kitchen');
-      if (e.key === '4') goToScene('Corridor');
-      if (e.key === '5') goToScene('Bedroom');
-      if (e.key === '6') goToScene('Bathroom');
-    });
-
-    // Make sure components like look-at work (A-Frame built-in is fine). If label becomes mirrored on some devices adjust look-at.
-    // End of script
-  </script>
-
+        // تمكين وضع VR عند توفر النظارة
+        if (navigator.xr) {
+            navigator.xr.isSessionSupported('immersive-vr').then((supported) => {
+                if (supported) {
+                    const vrButton = document.createElement('button');
+                    vrButton.textContent = 'ابدأ الواقع الافتراضي';
+                    vrButton.style.position = 'absolute';
+                    vrButton.style.bottom = '20px';
+                    vrButton.style.right = '20px';
+                    vrButton.style.zIndex = '10';
+                    vrButton.style.padding = '10px 20px';
+                    vrButton.style.background = 'rgba(0, 0, 0, 0.7)';
+                    vrButton.style.color = 'white';
+                    vrButton.style.border = '2px solid white';
+                    vrButton.style.borderRadius = '30px';
+                    vrButton.style.cursor = 'pointer';
+                    vrButton.addEventListener('click', () => {
+                        scene.enterVR();
+                    });
+                    document.body.appendChild(vrButton);
+                }
+            });
+        }
+    </script>
 </body>
 </html>
