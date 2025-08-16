@@ -2,486 +2,278 @@
 <html lang="ar">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>جولة واقع افتراضي بتقنية 360 درجة</title>
-    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-    <script src="https://unpkg.com/aframe-animation-component@5.1.2/dist/aframe-animation-component.min.js"></script>
-    <script src="https://unpkg.com/aframe-event-set-component@5.0.1/dist/aframe-event-set-component.min.js"></script>
-    <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>جولة الواقع الافتراضي التفاعلية</title>
+    <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
+    <script src="https://unpkg.com/aframe-event-set-component@5.0.0/dist/aframe-event-set-component.min.js"></script>
+
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        body {
-            overflow: hidden;
-            background: #000;
-        }
-        
-        #loading-screen {
+        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        #welcome-screen {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+            background-color: rgba(0, 0, 0, 0.9);
             color: white;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 1000;
-            transition: opacity 1s ease;
-        }
-        
-        .loading-content {
             text-align: center;
-            max-width: 800px;
-            padding: 20px;
+            z-index: 9999;
+            opacity: 1;
+            transition: opacity 1s ease-out;
         }
-        
-        h1 {
-            font-size: 3.5rem;
+        #welcome-screen.hidden {
+            opacity: 0;
+            pointer-events: none; /* يمنع التفاعل مع الشاشة بعد إخفائها */
+        }
+        #welcome-screen h1 {
+            font-size: 3em;
             margin-bottom: 20px;
-            text-shadow: 0 0 10px rgba(255,255,255,0.5);
         }
-        
-        .instructions {
-            background: rgba(0, 0, 0, 0.6);
-            padding: 25px;
-            border-radius: 15px;
-            margin: 25px 0;
-            font-size: 1.2rem;
-            line-height: 1.8;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        #welcome-screen p {
+            font-size: 1.2em;
+            max-width: 600px;
+            margin-bottom: 30px;
+            line-height: 1.6;
         }
-        
-        .progress-container {
-            width: 80%;
-            max-width: 500px;
-            height: 30px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 15px;
-            margin-top: 30px;
-            overflow: hidden;
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
-        }
-        
-        .progress-bar {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, #00c9ff, #92fe9d);
-            border-radius: 15px;
-            transition: width 0.5s ease;
-        }
-        
-        .loading-text {
-            margin-top: 20px;
-            font-size: 1.3rem;
-            color: #ddd;
-        }
-        
-        #enter-vr {
-            position: absolute;
-            bottom: 40px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.7);
+        #start-button {
+            background-color: #4CAF50;
             color: white;
-            border: 2px solid white;
             padding: 15px 30px;
-            font-size: 1.2rem;
-            border-radius: 50px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.5em;
             cursor: pointer;
-            transition: all 0.3s ease;
-            z-index: 10;
+            transition: background-color 0.3s ease;
         }
-        
-        #enter-vr:hover {
-            background: rgba(255, 255, 255, 0.9);
-            color: #1a2a6c;
-            transform: translateX(-50%) scale(1.05);
+        #start-button:hover {
+            background-color: #45a049;
         }
-        
-        #scene-title {
-            position: absolute;
-            top: 20px;
-            left: 0;
-            width: 100%;
-            text-align: center;
-            color: white;
-            font-size: 2rem;
-            text-shadow: 0 0 10px black;
-            z-index: 10;
-            opacity: 0;
-            transition: opacity 0.5s ease;
-            pointer-events: none;
+        /* تخصيص شريط التحميل الافتراضي لـ A-Frame */
+       .a-loader-title {
+            color: #FFF!important; /* لون النص لشريط التحميل */
+            font-size: 1.5em!important;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
         }
-        
-        .hotspot-label {
-            position: absolute;
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 1.1rem;
-            white-space: nowrap;
-            transform: translate(-50%, -100%);
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        
-        .controls-info {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 10px 15px;
-            border-radius: 10px;
-            font-size: 0.9rem;
-            max-width: 300px;
-            opacity: 0.8;
-            z-index: 10;
-        }
-        
-        /* تصميم متجاوب */
-        @media (max-width: 768px) {
-            h1 { font-size: 2.5rem; }
-            .instructions { font-size: 1rem; padding: 15px; }
-            #enter-vr { padding: 12px 25px; font-size: 1.1rem; }
-            #scene-title { font-size: 1.5rem; }
-        }
-        
-        @media (max-width: 480px) {
-            h1 { font-size: 2rem; }
-            .instructions { font-size: 0.9rem; }
-            #enter-vr { padding: 10px 20px; font-size: 1rem; }
-            .controls-info { font-size: 0.8rem; bottom: 10px; left: 10px; }
+       .a-loader-dots {
+            color: #FFD700!important; /* لون النقاط لشريط التحميل */
         }
     </style>
 </head>
 <body>
-    <div id="loading-screen">
-        <div class="loading-content">
-            <h1>جولة الواقع الافتراضي</h1>
-            <div class="instructions">
-                <p>مرحباً بكم في جولتنا الافتراضية بتقنية 360 درجة! ستأخذك هذه التجربة في رحلة تفاعلية عبر مساحات مختلفة.</p>
-                <p>ستبدأ الجولة في غرفة الاستقبال، حيث يمكنك استخدام النقاط التفاعلية للانتقال بين الغرف المختلفة. كل نقطة تفاعلية ستنقلك إلى مشهد جديد.</p>
-                <p>لتحريك المشهد: اسحب بفأرة الحاسوب أو حرك جهازك المحمول/النظارة. انقر على نقاط الهوت سبوت للانتقال إلى المشاهد الأخرى.</p>
-            </div>
-            <div class="progress-container">
-                <div class="progress-bar" id="progress-bar"></div>
-            </div>
-            <div class="loading-text" id="loading-text">جاري تحميل الأصول... 0%</div>
-        </div>
-    </div>
-    
-    <button id="enter-vr">ابدأ الجولة</button>
-    <div id="scene-title"></div>
-    
-    <div class="controls-info">
-        <p>استخدم الماوس/لمس الشاشة للتحريك. انقر على نقاط الهوت سبوت للانتقال</p>
+
+    <div id="welcome-screen">
+        <h1>مرحباً بكم في الجولة الافتراضية!</h1>
+        <p>استكشف الفضاءات بتقنية 360 درجة. للتنقل، انظر إلى النقاط النابضة أو استخدم الماوس/شاشة اللمس. انقر على النقطة الساخنة للانتقال إلى المشهد التالي.</p>
+        <button id="start-button">بدء الجولة</button>
     </div>
 
-    <a-scene vr-mode-ui="enabled: false" loading-screen="enabled: false">
-        <!-- الكاميرا والتحكم -->
-        <a-entity id="camera" position="0 1.6 0">
-            <a-entity camera="fov: 80" look-controls="pointerLockEnabled: false" wasd-controls="enabled: false"></a-entity>
-            <a-entity cursor="rayOrigin: mouse" raycaster="objects: .hotspot"></a-entity>
+    <a-scene loading-screen="dotsColor: #FFD700; backgroundColor: #222; enabled: true">
+        <a-assets timeout="10000">
+            <img id="reception-pano" src="assets/reception.jpg" crossorigin="anonymous">
+            <img id="living_room-pano" src="assets/living_room.jpg" crossorigin="anonymous">
+            <img id="kitchen-pano" src="assets/kitchen.jpg" crossorigin="anonymous">
+            <img id="corridor-pano" src="images/corridor.jpg" crossorigin="anonymous">
+            <img id="bedroom-pano" src="images/bedroom.jpg" crossorigin="anonymous">
+            <img id="bathroom-pano" src="images/bathroom.jpg" crossorigin="anonymous">
+
+            <img id="hotspot-arrow-png" src="assets/hotspot.png" crossorigin="anonymous">
+        </a-assets>
+
+        <a-sky id="main-panorama" src="#reception-pano"></a-sky>
+
+        <a-plane id="transition-overlay"
+                 position="0 0 -1"
+                 width="100" height="100"
+                 material="color: black; opacity: 0; transparent: true; shader: flat"
+                 visible="false">
+            <a-animation attribute="material.opacity" from="0" to="1" dur="500" begin="fadein" easing="ease-in-quad"></a-animation>
+            <a-animation attribute="material.opacity" from="1" to="0" dur="500" begin="fadeout" easing="ease-out-quad"></a-animation>
+        </a-plane>
+
+        <a-entity camera look-controls>
+            <a-entity cursor="fuse: true; fuseTimeout: 1500; rayOrigin: mouse"
+                      position="0 0 -1"
+                      geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
+                      material="color: #CCC; shader: flat"
+                      animation__fusing="property: scale; from: 1 1 1; to: 0.8 0.8 0.8; startEvents: fusing; dur: 1500; easing: linear;"
+                      animation__click="property: scale; from: 0.8 0.8 0.8; to: 1 1 1; startEvents: click; dur: 100; easing: easeOutQuad;">
+            </a-entity>
         </a-entity>
-        
-        <!-- السماء (سيتم تغييرها ديناميكياً) -->
-        <a-sky id="sky" color="#000"></a-sky>
-        
-        <!-- نقاط الهوت سبوت (ستضاف ديناميكياً) -->
-        
-        <!-- إضاءة -->
-        <a-entity light="type: ambient; intensity: 0.5"></a-entity>
-        <a-entity light="type: point; intensity: 0.8; distance: 10" position="0 3 0"></a-entity>
-        
-        <!-- تأثيرات الانتقال -->
-        <a-entity id="fade-effect" 
-                  geometry="primitive: plane; width: 100; height: 100"
-                  material="color: black; opacity: 0"
-                  position="0 0 -1"
-                  scale="1 1 1">
-        </a-entity>
+
+        <a-entity id="hotspot-container"></a-entity>
+
     </a-scene>
 
     <script>
-        // إدارة حالة التطبيق
-        const appState = {
-            currentScene: null,
-            scenes: {
-                'Reception': {
-                    hotspots: [
-                        { position: "0 1.5 -5", target: "Living_Room", label: "غرفة المعيشة" }
-                    ]
-                },
-                'Living_Room': {
-                    hotspots: [
-                        { position: "-3 1.5 -3", target: "Reception", label: "الاستقبال" },
-                        { position: "3 1.5 -3", target: "Kitchen", label: "المطبخ" },
-                        { position: "0 1.5 3", target: "Corridor", label: "الممر" }
-                    ]
-                },
-                'Kitchen': {
-                    hotspots: [
-                        { position: "0 1.5 -5", target: "Living_Room", label: "غرفة المعيشة" }
-                    ]
-                },
-                'Corridor': {
-                    hotspots: [
-                        { position: "-2 1.5 -3", target: "Bedroom", label: "غرفة النوم" },
-                        { position: "2 1.5 -3", target: "Bathroom", label: "الحمام" },
-                        { position: "0 1.5 3", target: "Living_Room", label: "غرفة المعيشة" }
-                    ]
-                },
-                'Bedroom': {
-                    hotspots: [
-                        { position: "0 1.5 -5", target: "Corridor", label: "الممر" }
-                    ]
-                },
-                'Bathroom': {
-                    hotspots: [
-                        { position: "0 1.5 -5", target: "Corridor", label: "الممر" }
-                    ]
-                }
+        // بيانات الجولة: مسارات الصور ومواقع النقاط الساخنة
+        const tourScenes = {
+            "Reception": {
+                image: "#reception-pano",
+                hotspots:
+            },
+            "Living_Room": {
+                image: "#living_room-pano",
+                hotspots:
+            },
+            "Kitchen": {
+                image: "#kitchen-pano",
+                hotspots:
+            },
+            "Corridor": {
+                image: "#corridor-pano",
+                hotspots:
+            },
+            "Bedroom": {
+                image: "#bedroom-pano",
+                hotspots: [
+                    { target: "Corridor", position: "0 1.5 3", rotation: "0 180 0", text: "الممر" }
+                ]
+            },
+            "Bathroom": {
+                image: "#bathroom-pano",
+                hotspots: [
+                    { target: "Corridor", position: "0 1.5 3", rotation: "0 180 0", text: "الممر" }
+                ]
             }
         };
 
-        // عناصر DOM
-        const loadingScreen = document.getElementById('loading-screen');
-        const progressBar = document.getElementById('progress-bar');
-        const loadingText = document.getElementById('loading-text');
-        const enterVrButton = document.getElementById('enter-vr');
-        const sceneTitle = document.getElementById('scene-title');
-        const sky = document.getElementById('sky');
-        const fadeEffect = document.getElementById('fade-effect');
-        const scene = document.querySelector('a-scene');
+        let currentSceneId = "Reception"; // المشهد الأولي
 
-        // صور المشاهد (تمثيلية - في تطبيق حقيقي يتم استبدالها بروابط الصور الفعلية)
-        const sceneImages = {
-            'Reception': 'assets/Reception.jpg',
-            'Living_Room': 'assets/Living_Room.jpg',
-            'Kitchen': 'https://cdn.glitch.global/1a8e1e86-3d4f-4d48-8c6f-1b3a1f4b4a9d/kitchen.jpg?v=1700000000000',
-            'Corridor': 'https://cdn.glitch.global/1a8e1e86-3d4f-4d48-8c6f-1b3a1f4b4a9d/corridor.jpg?v=1700000000000',
-            'Bedroom': 'https://cdn.glitch.global/1a8e1e86-3d4f-4d48-8c6f-1b3a1f4b4a9d/bedroom.jpg?v=1700000000000',
-            'Bathroom': 'https://cdn.glitch.global/1a8e1e86-3d4f-4d48-8c6f-1b3a1f4b4a9d/bathroom.jpg?v=1700000000000'
-        };
+        // مكون A-Frame مخصص لإدارة الانتقالات بين المشاهد والنقاط الساخنة
+        AFRAME.registerComponent('scene-transition-manager', {
+            init: function () {
+                this.sky = document.querySelector('#main-panorama');
+                this.transitionOverlay = document.querySelector('#transition-overlay');
+                this.hotspotContainer = document.querySelector('#hotspot-container');
 
-        // متغيرات التحميل
-        let assetsLoaded = 0;
-        const totalAssets = 6; // عدد المشاهد
-
-        // محاكاة تحميل الأصول
-        function simulateAssetLoading() {
-            if (assetsLoaded < totalAssets) {
-                assetsLoaded++;
-                const progress = Math.round((assetsLoaded / totalAssets) * 100);
-                progressBar.style.width = `${progress}%`;
-                loadingText.textContent = `جاري تحميل الأصول... ${progress}%`;
-                
-                setTimeout(simulateAssetLoading, 300 + Math.random() * 300);
-            } else {
-                loadingText.textContent = "جاهز! انقر على الزر لبدء الجولة";
-                enterVrButton.style.display = 'block';
-            }
-        }
-
-        // بدء التحميل
-        setTimeout(simulateAssetLoading, 1000);
-
-        // بدء الجولة
-        enterVrButton.addEventListener('click', function() {
-            loadingScreen.style.opacity = '0';
-            setTimeout(() => {
-                loadingScreen.style.display = 'none';
-                enterVrButton.style.display = 'none';
-                changeScene('Reception');
-            }, 1000);
-        });
-
-        // تغيير المشهد
-        function changeScene(sceneName) {
-            // تأثير التلاشي
-            fadeEffect.setAttribute('material', 'opacity', 1);
-            
-            setTimeout(() => {
-                // تحديث المشهد
-                appState.currentScene = sceneName;
-                sceneTitle.textContent = sceneName === 'Reception' ? 'الاستقبال' : 
-                                          sceneName === 'Living_Room' ? 'غرفة المعيشة' : 
-                                          sceneName === 'Kitchen' ? 'المطبخ' : 
-                                          sceneName === 'Corridor' ? 'الممر' : 
-                                          sceneName === 'Bedroom' ? 'غرفة النوم' : 'الحمام';
-                
-                // إظهار العنوان
-                sceneTitle.style.opacity = '1';
-                
-                // إعداد السماء
-                sky.setAttribute('src', sceneImages[sceneName]);
-                
-                // إزالة الهوت سبوتات القديمة
-                document.querySelectorAll('.hotspot').forEach(hotspot => hotspot.remove());
-                
-                // إضافة الهوت سبوتات الجديدة
-                const hotspots = appState.scenes[sceneName].hotspots;
-                hotspots.forEach((hotspot, index) => {
-                    const hotspotEl = document.createElement('a-entity');
-                    hotspotEl.classList.add('hotspot');
-                    hotspotEl.setAttribute('position', hotspot.position);
-                    hotspotEl.setAttribute('look-at', '[camera]');
-                    hotspotEl.setAttribute('data-target', hotspot.target);
-                    
-                    // إنشاء الهوت سبوت كدائرة متحركة
-                    hotspotEl.setAttribute('geometry', 'primitive: circle; radius: 0.2');
-                    hotspotEl.setAttribute('material', 'shader: flat; src: #hotspot-texture; transparent: true; opacity: 0.8');
-                    
-                    // إضافة تأثير النبض
-                    hotspotEl.setAttribute('animation', 'property: scale; from: 1 1 1; to: 1.2 1.2 1; dur: 1000; loop: true; dir: alternate; easing: easeInOutSine');
-                    
-                    // إضافة نص التسمية
-                    const label = document.createElement('div');
-                    label.classList.add('hotspot-label');
-                    label.textContent = hotspot.label;
-                    label.style.top = '0';
-                    label.style.left = '0';
-                    document.body.appendChild(label);
-                    
-                    // أحداث المؤشر
-                    hotspotEl.addEventListener('mouseenter', function() {
-                        this.setAttribute('scale', '1.3 1.3 1');
-                        label.style.opacity = '1';
-                    });
-                    
-                    hotspotEl.addEventListener('mouseleave', function() {
-                        this.setAttribute('scale', '1 1 1');
-                        label.style.opacity = '0';
-                    });
-                    
-                    hotspotEl.addEventListener('click', function() {
-                        const targetScene = this.getAttribute('data-target');
-                        changeScene(targetScene);
-                    });
-                    
-                    // تحديث موقع التسمية
-                    hotspotEl.addEventListener('componentchanged', function(e) {
-                        if (e.detail.name === 'position') {
-                            const pos = this.getAttribute('position');
-                            const cameraPos = document.querySelector('[camera]').getAttribute('position');
-                            const screenPos = worldToScreen(pos, cameraPos);
-                            
-                            if (screenPos) {
-                                label.style.left = `${screenPos.x}px`;
-                                label.style.top = `${screenPos.y}px`;
-                            }
-                        }
-                    });
-                    
-                    scene.appendChild(hotspotEl);
+                // الاستماع لحدث النقر على النقطة الساخنة
+                this.el.sceneEl.addEventListener('hotspot-clicked', (evt) => {
+                    const nextSceneId = evt.detail.targetScene;
+                    this.transitionToScene(nextSceneId);
                 });
-                
-                // إخفاء تأثير التلاشي
-                fadeEffect.setAttribute('material', 'opacity', 0);
-            }, 500);
-        }
 
-        // تحويل الإحداثيات العالمية إلى إحداثيات الشاشة
-        function worldToScreen(worldPos, cameraPos) {
-            // حساب متجه الرؤية
-            const vector = new THREE.Vector3(
-                worldPos.x - cameraPos.x,
-                worldPos.y - cameraPos.y,
-                worldPos.z - cameraPos.z
-            );
-            
-            // تسوية المتجه
-            vector.normalize();
-            
-            // افتراض أن الكاميرا تنظر في اتجاه المحور Z السلبي
-            // حساب الزوايا
-            const phi = Math.atan2(vector.z, vector.x); // زاوية أفقية
-            const theta = Math.acos(vector.y); // زاوية رأسية
-            
-            // تحويل الزوايا إلى إحداثيات شاشة
-            const x = (phi / (Math.PI * 2) + 0.5) * window.innerWidth;
-            const y = (theta / Math.PI) * window.innerHeight;
-            
-            return { x, y };
-        }
+                // الاستماع لاكتمال رسوم متحركة التلاشي للداخل
+                this.transitionOverlay.addEventListener('animationcomplete__fadein', () => {
+                    // بمجرد أن يصبح التراكب معتمًا بالكامل، قم بتبديل صورة السماء
+                    this.sky.setAttribute('src', tourScenes.image);
+                    // ثم ابدأ رسوم متحركة التلاشي للخارج
+                    this.transitionOverlay.emit('fadeout');
+                });
 
-        // إنشاء نسيج الهوت سبوت البرمجي
-        function createHotspotTexture() {
-            const canvas = document.createElement('canvas');
-            canvas.width = 128;
-            canvas.height = 128;
-            const ctx = canvas.getContext('2d');
-            
-            // خلفية دائرية متدرجة
-            const gradient = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
-            gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
-            gradient.addColorStop(0.5, 'rgba(0, 150, 255, 0.8)');
-            gradient.addColorStop(1, 'rgba(0, 50, 150, 0)');
-            
-            ctx.fillStyle = gradient;
-            ctx.beginPath();
-            ctx.arc(64, 64, 60, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // حدود متحركة
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-            ctx.lineWidth = 6;
-            ctx.beginPath();
-            ctx.arc(64, 64, 55, 0, Math.PI * 2);
-            ctx.stroke();
-            
-            return canvas;
-        }
+                // الاستماع لاكتمال رسوم متحركة التلاشي للخارج
+                this.transitionOverlay.addEventListener('animationcomplete__fadeout', () => {
+                    this.transitionOverlay.setAttribute('visible', false); // إخفاء التراكب
+                    this.updateHotspots(currentSceneId); // إظهار النقاط الساخنة للمشهد الجديد
+                });
+            },
 
-        // إضافة نسيج الهوت سبوت إلى المشهد
-        scene.addEventListener('loaded', function() {
-            const hotspotCanvas = createHotspotTexture();
-            const hotspotTexture = new THREE.CanvasTexture(hotspotCanvas);
-            scene.object3D.map = hotspotTexture;
-            
-            // تخزين النسيج للاستخدام في A-Frame
-            scene.systems.material.schema.materials['hotspot-texture'] = {
-                schema: {
-                    shader: 'flat',
-                    src: hotspotTexture
+            // وظيفة للانتقال إلى مشهد جديد
+            transitionToScene: function (sceneId) {
+                if (currentSceneId === sceneId) return; // لا تفعل شيئًا إذا كان نفس المشهد
+
+                currentSceneId = sceneId;
+                this.updateHotspots(null); // إخفاء جميع النقاط الساخنة الحالية
+                this.transitionOverlay.setAttribute('visible', true); // جعل التراكب مرئيًا
+                this.transitionOverlay.emit('fadein'); // تشغيل رسوم متحركة التلاشي للداخل
+            },
+
+            // وظيفة لتحديث النقاط الساخنة بناءً على المشهد الحالي
+            updateHotspots: function (sceneId) {
+                // إزالة جميع النقاط الساخنة الموجودة
+                while (this.hotspotContainer.firstChild) {
+                    this.hotspotContainer.removeChild(this.hotspotContainer.firstChild);
                 }
-            };
+
+                if (!sceneId ||!tourScenes[sceneId] ||!tourScenes[sceneId].hotspots) {
+                    return; // لا توجد نقاط ساخنة لعرضها
+                }
+
+                // إنشاء النقاط الساخنة للمشهد الجديد
+                tourScenes[sceneId].hotspots.forEach(hotspotData => {
+                    const hotspotEl = document.createElement('a-entity');
+                    hotspotEl.setAttribute('class', 'hotspot');
+                    hotspotEl.setAttribute('position', hotspotData.position);
+                    hotspotEl.setAttribute('rotation', hotspotData.rotation);
+                    hotspotEl.setAttribute('hotspot-listener', `targetScene: ${hotspotData.target}`);
+                    hotspotEl.setAttribute('pulsing-hotspot', ''); // لتطبيق تأثير النبض
+
+                    // صورة النقطة الساخنة
+                    const hotspotImage = document.createElement('a-image');
+                    hotspotImage.setAttribute('src', '#hotspot-arrow-png');
+                    hotspotImage.setAttribute('width', '0.8');
+                    hotspotImage.setAttribute('height', '0.8');
+                    hotspotImage.setAttribute('material', 'shader: flat; transparent: true');
+                    hotspotImage.setAttribute('position', '0 0 0'); // الصورة في مركز الكيان الأب
+
+                    // نص النقطة الساخنة (يظهر عند التمرير)
+                    const hotspotText = document.createElement('a-entity');
+                    hotspotText.setAttribute('id', `hotspot-text-${hotspotData.target}`);
+                    hotspotText.setAttribute('text', `value: ${hotspotData.text}; align: center; color: white; width: 2; wrapCount: 15;`);
+                    hotspotText.setAttribute('position', '0 0.6 0'); // فوق الصورة
+                    hotspotText.setAttribute('visible', 'false'); // مخفي في البداية
+
+                    hotspotEl.appendChild(hotspotImage);
+                    hotspotEl.appendChild(hotspotText);
+                    this.hotspotContainer.appendChild(hotspotEl);
+
+                    // إضافة تأثير التكبير وعرض النص عند التمرير
+                    hotspotEl.setAttribute('event-set__mouseenter', `_target: ${hotspotText.id}; visible: true;`);
+                    hotspotEl.setAttribute('event-set__mouseleave', `_target: ${hotspotText.id}; visible: false;`);
+                    hotspotEl.setAttribute('event-set__mouseenter-scale', 'scale: 1.2 1.2 1.2;');
+                    hotspotEl.setAttribute('event-set__mouseleave-scale', 'scale: 1 1 1;');
+                });
+            }
         });
 
-        // تمكين وضع VR عند توفر النظارة
-        if (navigator.xr) {
-            navigator.xr.isSessionSupported('immersive-vr').then((supported) => {
-                if (supported) {
-                    const vrButton = document.createElement('button');
-                    vrButton.textContent = 'ابدأ الواقع الافتراضي';
-                    vrButton.style.position = 'absolute';
-                    vrButton.style.bottom = '20px';
-                    vrButton.style.right = '20px';
-                    vrButton.style.zIndex = '10';
-                    vrButton.style.padding = '10px 20px';
-                    vrButton.style.background = 'rgba(0, 0, 0, 0.7)';
-                    vrButton.style.color = 'white';
-                    vrButton.style.border = '2px solid white';
-                    vrButton.style.borderRadius = '30px';
-                    vrButton.style.cursor = 'pointer';
-                    vrButton.addEventListener('click', () => {
-                        scene.enterVR();
-                    });
-                    document.body.appendChild(vrButton);
-                }
-            });
-        }
+        // مكون A-Frame مخصص لتشغيل رسوم متحركة النبض
+        AFRAME.registerComponent('pulsing-hotspot', {
+            init: function () {
+                this.el.setAttribute('animation__pulse', {
+                    property: 'scale',
+                    from: '1 1 1',
+                    to: '1.1 1.1 1.1',
+                    dur: 1000,
+                    dir: 'alternate',
+                    loop: true,
+                    easing: 'easeInOutQuad'
+                });
+            }
+        });
+
+        // مكون A-Frame مخصص للاستماع إلى نقرات النقاط الساخنة
+        AFRAME.registerComponent('hotspot-listener', {
+            schema: {
+                targetScene: { type: 'string' }
+            },
+            init: function () {
+                this.el.addEventListener('click', () => {
+                    // إرسال حدث مخصص إلى المشهد الرئيسي
+                    this.el.sceneEl.emit('hotspot-clicked', { targetScene: this.data.targetScene });
+                });
+            }
+        });
+
+        // إخفاء شاشة الترحيب وبدء الجولة عند النقر على الزر
+        document.getElementById('start-button').addEventListener('click', () => {
+            const welcomeScreen = document.getElementById('welcome-screen');
+            welcomeScreen.classList.add('hidden'); // إخفاء الشاشة
+            // تهيئة مدير الانتقال وبدء المشهد الأول
+            document.querySelector('a-scene').setAttribute('scene-transition-manager', '');
+            document.querySelector('a-scene').components['scene-transition-manager'].updateHotspots(currentSceneId);
+        });
+
+        // عند تحميل مشهد A-Frame بالكامل، تأكد من إخفاء شاشة التحميل الافتراضية
+        // وعرض شاشة الترحيب المخصصة
+        document.querySelector('a-scene').addEventListener('loaded', () => {
+            // A-Frame's default loading screen is handled by the loading-screen component.
+            // Our custom welcome screen is initially visible.
+            // The user clicks the button to hide it and start the tour.
+        });
     </script>
 </body>
 </html>
