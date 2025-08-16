@@ -1,17 +1,8 @@
-const pos = latLonToCartesian(h.lat || 0, h.lon || 0, 3.5);
-      // small outward tweak (values slightly >1 push hotspot a bit away from sphere to reduce distortion)
-      const tweak = 1.02; // try 1.02 or 0.98 depending on distortion
-      const adjX = pos.x * tweak;
-      const adjY = pos.y * tweak;
-      const adjZ = pos.z * tweak;
-      ent.setAttribute('position', `${adjX.toFixed(3)} ${adjY.toFixed(3)} ${adjZ.toFixed(3)}`);
-      ent.setAttribute('data-target', h.target);
-      ent.setAttribute('look-at', '#camera');
-      hotspotsRoot.appendChild(ent);<!doctype html>
+<!doctype html>
 <html lang="ar">
 <head>
   <meta charset="utf-8" />
-  <title>VR 360 Tour - A-Frame (Black Fade Transition)</title>
+  <title>VR 360 Tour - A-Frame</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
   <style>
@@ -33,7 +24,13 @@ const pos = latLonToCartesian(h.lat || 0, h.lon || 0, 3.5);
       font-size:16px;
     }
     #instructions { font-size:13px; opacity:0.9; margin-top:10px; }
+    /* small helper for mobile */
     @media (max-width:600px){ #title{font-size:22px;} #subtitle{font-size:14px;} }
+
+    /* Floating label bubble (CSS only for overlay) */
+    .label-bubble { background: rgba(0,0,0,0.6); color:#fff; padding:6px 10px; border-radius:10px; font-size:14px; }
+
+    /* Hotspot pulsing uses A-Frame animation; still add a fallback cursor pointer when overlaying HTML (not used) */
   </style>
 </head>
 <body>
@@ -59,16 +56,13 @@ const pos = latLonToCartesian(h.lat || 0, h.lon || 0, 3.5);
     <!-- Camera + cursor (supports gaze & mouse) -->
     <a-entity id="cameraRig">
       <a-entity id="camera" camera look-controls position="0 1.6 0">
-        <!-- Gaze cursor -->
+        <!-- Cursor for gaze (fuse) -->
         <a-entity id="gazeCursor"
           cursor="fuse: true; fuseTimeout: 1000"
           position="0 0 -1"
           geometry="primitive: ring; radiusInner: 0.01; radiusOuter: 0.02"
           material="color: white; shader: flat; opacity:0.9">
         </a-entity>
-
-        <!-- Black fade plane attached to camera so it always covers view -->
-        <a-plane id="blackFade" position="0 0 -0.6" width="4" height="4" material="color: black; opacity: 0; transparent: true" visible="false"></a-plane>
       </a-entity>
 
       <!-- Laser + controller support for Quest -->
@@ -76,14 +70,22 @@ const pos = latLonToCartesian(h.lat || 0, h.lon || 0, 3.5);
       <a-entity laser-controls="hand: left" raycaster="objects: .clickable" line="opacity: 0.75"></a-entity>
     </a-entity>
 
-    <!-- Single sky (we'll swap textures while black covers view) -->
-    <a-sky id="sky" radius="5000" position="0 0 0" material="shader: flat; transparent: false; opacity:1"></a-sky>
+    <!-- Sky (panorama) -->
+    <a-sky id="sky" radius="5000" position="0 0 0" material="shader:flat; transparent:true; opacity:1"></a-sky>
 
     <!-- Container for hotspots -->
     <a-entity id="hotspotsRoot"></a-entity>
 
     <!-- small reticle for desktop when using mouse (optional) -->
     <a-entity id="desktopCursor" cursor="rayOrigin: mouse" raycaster="objects:.clickable" visible="false"></a-entity>
+
+    <!-- fade plane (for nicer fade effect) -->
+    <a-plane id="fadePlane" position="0 1.6 -0.5" rotation="0 0 0" width="2" height="2" material="color: black; opacity: 0; transparent: true" visible="false"></a-plane>
+
+    <!-- optional floor / help text in world -->
+    <a-entity id="floatingHint" position="0 0.8 -1.2" visible="false">
+      <a-entity text="value: اضغط أو انظر لنقطة للانتقال; align: center; width: 2"></a-entity>
+    </a-entity>
 
   </a-scene>
 
@@ -98,6 +100,9 @@ const pos = latLonToCartesian(h.lat || 0, h.lon || 0, 3.5);
     "Bathroom": "assets/Bathroom.jpg"
   };
 
+  // Hotspots data: per scene, array of hotspots with label, target scene name, and lat/lon (degrees).
+  // lat: -90 (down) .. +90 (up), lon: -180..+180 (left/right)
+  // ملاحظة: يمكنك تعديل lat/lon لتغيير موضع كل هوتسبوت
   const hotspotsData = {
     "Reception": [
       { label: "To Living Room", target: "Living_Room", lat: 0, lon: 60 }
@@ -156,6 +161,7 @@ const pos = latLonToCartesian(h.lat || 0, h.lon || 0, 3.5);
     enterScene(initialScene);
   });
 
+  // If user clicks overlay text or presses space/enter start too
   document.addEventListener('keydown', e => {
     if((e.key === 'Enter' || e.key === ' ') && !startBtn.disabled){
       overlay.style.display = 'none';
@@ -167,128 +173,87 @@ const pos = latLonToCartesian(h.lat || 0, h.lon || 0, 3.5);
   function latLonToCartesian(latDeg, lonDeg, radius){
     const lat = latDeg * Math.PI/180;
     const lon = lonDeg * Math.PI/180;
+    // Spherical to Cartesian (A-Frame coordinate system)
     const x = radius * Math.cos(lat) * Math.sin(lon);
     const y = radius * Math.sin(lat);
-    const z = radius * Math.cos(lat) * Math.cos(lon) * -1;
+    const z = radius * Math.cos(lat) * Math.cos(lon) * -1; // negate z so lon=0 faces -Z (front)
     return { x, y, z };
   }
 
   // ---------- HOTSPOT CREATION & INTERACTIONS ----------
   const sceneEl = document.querySelector('a-scene');
+  const sky = document.getElementById('sky');
   const hotspotsRoot = document.getElementById('hotspotsRoot');
   const camera = document.getElementById('camera');
-  const blackFade = document.getElementById('blackFade');
 
-  // Component to keep hotspot elements visually constant size regardless of distance
-  AFRAME.registerComponent('constant-size', {
-    schema: { base: { type: 'number', default: 0.9 } },
-    init: function() {
-      this.camEl = document.querySelector('#camera');
-      this.vecCam = new THREE.Vector3();
-      this.vecObj = new THREE.Vector3();
-    },
-    tick: function() {
-      if (!this.el.object3D || !this.camEl) return;
-      this.camEl.object3D.getWorldPosition(this.vecCam);
-      this.el.object3D.getWorldPosition(this.vecObj);
-      const dist = this.vecCam.distanceTo(this.vecObj);
-      // scale factor: tweak 0.18 so that at radius ~3.5 size is reasonable; multiply by base
-      const scale = Math.max(0.2, dist * 0.18) * (this.data.base);
-      this.el.object3D.scale.set(scale, scale, scale);
-    }
-  });
-
-
+  // create a hotspot entity
   function makeHotspot(h) {
-    const hotspotRoot = document.createElement('a-entity');
-    hotspotRoot.setAttribute('look-at', '#camera');
-    hotspotRoot.setAttribute('constant-size', 'base: 1');
+    const hotspot = document.createElement('a-entity');
+    hotspot.classList.add('clickable');
+    hotspot.setAttribute('geometry', 'primitive: plane; height: 0.6; width: 0.6');
+    hotspot.setAttribute('material', `src: url(assets/hotspot.png); transparent: true; shader: flat`);
+    hotspot.setAttribute('look-at', '#camera'); // always face camera
+    hotspot.setAttribute('shadow', 'receive: false;cast:false');
+    hotspot.setAttribute('visible', true);
 
-    // Outer pulsing layer: use a slightly larger quad but with low opacity
-    const pulse = document.createElement('a-entity');
-    pulse.setAttribute('geometry', 'primitive: plane; height: 1; width: 1');
-    pulse.setAttribute('material',
-      `src: url(assets/hotspot.png);
-       shader: flat;
-       transparent: true;
-       alphaTest: 0.05;
-       depthTest: false;
-       depthWrite: false;
-       side: double;
-       opacity: 0.45`);
-    pulse.setAttribute('animation__pulse', 'property: scale; dir: alternate; dur: 1100; easing: easeInOutSine; loop: true; to: 1.45 1.45 1.45; from: 1 1 1');
-
-    // Inner icon (click target)
-    const icon = document.createElement('a-entity');
-    icon.setAttribute('geometry', 'primitive: plane; height: 0.7; width: 0.7');
-    icon.setAttribute('material',
-      `src: url(assets/hotspot.png);
-       shader: flat;
-       transparent: true;
-       alphaTest: 0.05;
-       depthTest: false;
-       depthWrite: false;
-       side: double`);
-    icon.classList.add('clickable');
-
-    // label
+    // label (text) above hotspot
     const label = document.createElement('a-entity');
     label.setAttribute('text', `value: ${h.label}; align: center; wrapCount: 20; width: 2`);
     label.setAttribute('position', `0 0.55 0`);
     label.setAttribute('visible', false);
 
-    // Hover interactions
-    icon.addEventListener('mouseenter', () => {
-      icon.setAttribute('animation__hover', 'property: scale; to: 1.15 1.15 1.15; dur: 150; easing: easeOutQuad');
+    // add small ring/animation for pulse
+    hotspot.setAttribute('animation__pulse', 'property: scale; dir: alternate; dur: 900; easing: easeInOutSine; loop: true; to: 1.1 1.1 1.1; from: 0.95 0.95 0.95');
+
+    // events
+    hotspot.addEventListener('mouseenter', () => {
+      hotspot.setAttribute('animation__hover', 'property: scale; to: 1.4 1.4 1.4; dur: 200; easing: easeOutQuad');
       label.setAttribute('visible', true);
     });
-    icon.addEventListener('mouseleave', () => {
-      icon.setAttribute('animation__hover', 'property: scale; to: 1 1 1; dur: 120; easing: easeOutQuad');
+    hotspot.addEventListener('mouseleave', () => {
+      hotspot.setAttribute('animation__hover', 'property: scale; to: 1 1 1; dur: 150; easing: easeOutQuad');
       label.setAttribute('visible', false);
     });
 
-    // Click
-    icon.addEventListener('click', (evt) => {
-      evt.stopPropagation && evt.stopPropagation();
-      const tgt = hotspotRoot.getAttribute('data-target');
-      if (tgt) {
-        disableHotspots();
-        fadeToScene(tgt);
-      }
+    // handle click / select / trigger
+    hotspot.addEventListener('click', () => {
+      // disable interactions briefly
+      disableHotspots();
+      // transition
+      fadeToScene(h.target);
     });
 
-    hotspotRoot.appendChild(pulse);
-    hotspotRoot.appendChild(icon);
-    hotspotRoot.appendChild(label);
-
-    return hotspotRoot;
+    hotspot.appendChild(label);
+    return hotspot;
   }
 
   function disableHotspots() {
-    hotspotsRoot.querySelectorAll('.clickable').forEach(el => { el.classList.remove('clickable'); el.classList.add('disabled'); });
+    hotspotsRoot.querySelectorAll('.clickable').forEach(el => { el.setAttribute('class', 'disabled'); el.removeEventListener && el.removeEventListener('click', ()=>{}); });
   }
   function enableHotspots() {
-    hotspotsRoot.querySelectorAll('.disabled').forEach(el => { el.classList.remove('disabled'); el.classList.add('clickable'); });
+    hotspotsRoot.querySelectorAll('.disabled').forEach(el => { el.setAttribute('class', 'clickable'); });
   }
 
+  // build hotspots for a given sceneName
   function buildHotspotsFor(sceneName) {
+    // clear existing
     while (hotspotsRoot.firstChild) hotspotsRoot.removeChild(hotspotsRoot.firstChild);
 
     const list = hotspotsData[sceneName] || [];
     list.forEach(h => {
-      const pos = latLonToCartesian(h.lat || 0, h.lon || 0, 3.5);
+      const pos = latLonToCartesian(h.lat || 0, h.lon || 0, 3.5); // radius of hotspot placement
       const ent = makeHotspot(h);
       ent.setAttribute('position', `${pos.x.toFixed(3)} ${pos.y.toFixed(3)} ${pos.z.toFixed(3)}`);
       ent.setAttribute('data-target', h.target);
+      // ensure it faces camera always
       ent.setAttribute('look-at', '#camera');
       hotspotsRoot.appendChild(ent);
     });
   }
 
-  // ---------- BLACK FADE TRANSITION ----------
+  // ---------- TRANSITION / FADE ----------
+  // Smooth fade: animate sky material opacity then replace texture
   let isTransitioning = false;
-  function wait(ms){ return new Promise(resolve => setTimeout(resolve, ms)); }
-
   async function fadeToScene(targetName) {
     if (isTransitioning) return;
     if (!scenes[targetName]) {
@@ -297,53 +262,30 @@ const pos = latLonToCartesian(h.lat || 0, h.lon || 0, 3.5);
       return;
     }
     isTransitioning = true;
-    const fadeDur = 700; // total fade duration in ms (black in + black out)
-    const half = Math.round(fadeDur/2);
+    const fadeDur = 600;
 
-    // ensure black plane visible and material ready
-    blackFade.setAttribute('visible', true);
-    blackFade.setAttribute('material', 'transparent', true);
+    // Fade out sky opacity
+    sky.setAttribute('material', 'transparent', true);
+    // animate using setAttribute with animation component
+    sky.setAttribute('animation__fadeout', `property: material.opacity; to: 0; dur: ${fadeDur}; easing: easeInOutQuad`);
 
-    // helper animator using requestAnimationFrame for reliable repeated fades
-    function animateOpacity(el, from, to, dur){
-      return new Promise(resolve => {
-        const start = performance.now();
-        function step(now){
-          const t = Math.min(1, (now - start) / dur);
-          // easeInOut (cosine)
-          const eased = 0.5 - 0.5 * Math.cos(Math.PI * t);
-          const val = from + (to - from) * eased;
-          el.setAttribute('material', 'opacity', val);
-          if (t < 1) requestAnimationFrame(step);
-          else resolve();
-        }
-        requestAnimationFrame(step);
-      });
-    }
+    // wait for animation
+    await new Promise(resolve => setTimeout(resolve, fadeDur + 30));
 
-    try {
-      // fade to black
-      await animateOpacity(blackFade, 0, 1, half);
+    // change texture
+    sky.setAttribute('src', scenes[targetName]);
 
-      // swap sky texture while view is black
-      sky.setAttribute('src', scenes[targetName]);
+    // small wait to let texture appear (already preloaded)
+    await new Promise(resolve => setTimeout(resolve, 80));
 
-      // rebuild hotspots while black covers view
-      buildHotspotsFor(targetName);
+    // fade in
+    sky.setAttribute('animation__fadein', `property: material.opacity; to: 1; dur: ${fadeDur}; easing: easeInOutQuad`);
 
-      // tiny pause to ensure texture applied
-      await new Promise(r => setTimeout(r, 80));
+    // rebuild hotspots for new scene
+    buildHotspotsFor(targetName);
 
-      // fade back to scene
-      await animateOpacity(blackFade, 1, 0, half);
-
-      // hide black plane and re-enable interactions
-      blackFade.setAttribute('visible', false);
-    } catch (err) {
-      console.error('Fade error', err);
-      blackFade.setAttribute('visible', false);
-    }
-
+    // wait then re-enable interactions
+    await new Promise(resolve => setTimeout(resolve, fadeDur + 30));
     isTransitioning = false;
     enableHotspots();
   }
@@ -358,6 +300,7 @@ const pos = latLonToCartesian(h.lat || 0, h.lon || 0, 3.5);
     sky.setAttribute('material', 'opacity', 1);
     buildHotspotsFor(sceneName);
 
+    // show desktop cursor if mouse present
     const deskCursor = document.getElementById('desktopCursor');
     if (AFRAME.utils.device.isDesktop()) {
       deskCursor.setAttribute('visible', true);
@@ -366,14 +309,23 @@ const pos = latLonToCartesian(h.lat || 0, h.lon || 0, 3.5);
     }
   }
 
+  // Make hotspots respond to controller events (some platforms use raycaster-intersected)
   sceneEl.addEventListener('loaded', () => {
+    // ensure sky material supports opacity
     sky.setAttribute('material', 'shader', 'flat');
-    blackFade.setAttribute('material', 'shader', 'flat');
   });
 
-  window.vrTour = { enterScene, fadeToScene, hotspotsData, scenes };
+  // Optional: expose a small API for debugging in console
+  window.vrTour = {
+    enterScene,
+    fadeToScene,
+    hotspotsData,
+    scenes
+  };
 
+  // Auto-start if overlay hidden by anything (fallback)
   if (overlay.style.display === 'none') enterScene(initialScene);
+
 </script>
 </body>
 </html>
