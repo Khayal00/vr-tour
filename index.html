@@ -2,326 +2,118 @@
 <html lang="ar">
 <head>
   <meta charset="utf-8" />
-  <title>VR 360 Tour - A-Frame (Crossfade) - مدموج</title>
+  <title>VR 360 Tour - انعكاس الهوت سبوت</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-  <style>
-    html,body { height:100%; margin:0; font-family: Arial, sans-serif; direction: rtl; }
-    #overlay {
-      position: absolute; inset:0; display:flex; align-items:center; justify-content:center;
-      background: linear-gradient(0deg, rgba(0,0,0,0.85), rgba(0,0,0,0.6));
-      color:#fff; z-index:10; flex-direction:column; gap:18px;
-    }
-    #welcomeBox { text-align:center; max-width:720px; padding:20px; }
-    #title { font-size:28px; margin-bottom:8px; }
-    #subtitle { font-size:16px; opacity:0.9; }
-    #progressBar {
-      width:80%; height:14px; background:rgba(255,255,255,0.15); border-radius:8px; overflow:hidden; margin-top:16px;
-    }
-    #progressFill { width:0%; height:100%; background:linear-gradient(90deg, rgba(255,255,255,0.18), rgba(255,255,255,0.32)); transition:width 200ms ease; }
-    #startBtn {
-      margin-top:14px; padding:10px 18px; border-radius:8px; border:none; background:#1e90ff; color:white; cursor:pointer;
-      font-size:16px;
-    }
-    #instructions { font-size:13px; opacity:0.9; margin-top:10px; }
-    @media (max-width:600px){ #title{font-size:22px;} #subtitle{font-size:14px;} }
-  </style>
+  <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
 </head>
 <body>
-  <div id="overlay">
-    <div id="welcomeBox">
-      <div id="title">مرحباً بكم في الجولة الافتراضية</div>
-      <div id="subtitle">التجربة تعمل على نظارات VR (Meta Quest) والموبايل والكمبيوتر — مرّر المؤشر على النقاط لتعريف المكان، واضغط أو انظر للنقطة للانتقال.</div>
+  <a-scene loading-screen="enabled:true" background="color: black">
+    <a-assets>
+      <img id="scene1" src="assets/scene1.jpg">
+      <img id="scene2" src="assets/scene2.jpg">
+      <img id="hotspot" src="assets/hotspot.png">
+    </a-assets>
 
-      <div id="progressBar"><div id="progressFill"></div></div>
-      <div id="progressText" style="margin-top:8px;">تحميل الصور: <span id="percent">0%</span></div>
+    <!-- الكاميرا -->
+    <a-entity id="camera" camera look-controls position="0 1.6 0"></a-entity>
 
-      <button id="startBtn" disabled>ابدأ الجولة</button>
-      <div id="instructions" style="margin-top:8px;">
-        تحكم: لمس / نقرة / المؤشر على الكمبيوتر — أو استخدم ذراع تحكم النظارة (laser).<br>
-        يمكنك تعديل مواقع الهوتسبوت في الكود ضمن مصفوفة `hotspotsData`.
-      </div>
-    </div>
-  </div>
+    <!-- السماء -->
+    <a-sky id="sky" src="#scene1"></a-sky>
 
-  <a-scene background="color: #000" vr-mode-ui="enabled: true">
-    <a-entity id="cameraRig">
-      <a-entity id="camera" camera look-controls position="0 1.6 0">
-        <a-entity id="gazeCursor"
-          cursor="fuse: true; fuseTimeout: 1000"
-          position="0 0 -1"
-          geometry="primitive: ring; radiusInner: 0.01; radiusOuter: 0.02"
-          material="color: white; shader: flat; opacity:0.9;">
-        </a-entity>
-      </a-entity>
+    <script>
+      const scenes = {
+        scene1: {
+          src: "#scene1",
+          hotspots: [
+            { position: "2 1.5 -3", rotation: "0 0 0", target: "scene2", label: "المشهد 2" }
+          ]
+        },
+        scene2: {
+          src: "#scene2",
+          hotspots: [
+            { position: "-2 1.5 -3", rotation: "0 0 0", target: "scene1", label: "المشهد 1" }
+          ]
+        }
+      };
 
-      <a-entity laser-controls="hand: right" raycaster="objects: .clickable" line="opacity: 0.75"></a-entity>
-      <a-entity laser-controls="hand: left" raycaster="objects: .clickable" line="opacity: 0.75"></a-entity>
-    </a-entity>
+      const sky = document.getElementById("sky");
+      const sceneEl = document.querySelector("a-scene");
 
-    <a-sky id="skyA" radius="5000" position="0 0 0" material="shader: flat; transparent: true; side: double; opacity:1"></a-sky>
-    <a-sky id="skyB" radius="5000" position="0 0 0" material="shader: flat; transparent: true; side: double; opacity:0"></a-sky>
+      function createLabel(text) {
+        const labelBg = document.createElement("a-plane");
+        labelBg.setAttribute("color", "#000");
+        labelBg.setAttribute("opacity", "0.6");
+        labelBg.setAttribute("height", "0.3");
+        labelBg.setAttribute("width", `${text.length * 0.15}`);
+        labelBg.setAttribute("position", "0 0.5 0");
+        labelBg.setAttribute("visible", "false");
 
-    <!-- HOTSPOTS ROOT -->
-    <a-entity id="hotspotsRoot" visible="true"></a-entity>
+        const label = document.createElement("a-text");
+        label.setAttribute("value", text);
+        label.setAttribute("align", "center");
+        label.setAttribute("color", "#fff");
+        label.setAttribute("width", "4");
+        label.setAttribute("position", "0 0 0.01");
 
-    <a-entity id="desktopCursor" cursor="rayOrigin: mouse" raycaster="objects: .clickable" visible="false"></a-entity>
-  </a-scene>
-
-<script>
-  // ---------- CONFIG ----------
-  const scenes = {
-    "Reception": "assets/Reception.jpg",
-    "Living_Room": "assets/Living_Room.jpg",
-    "Kitchen": "assets/Kitchen.jpg",
-    "Corridor": "assets/Corridor.jpg",
-    "Bedroom": "assets/Bedroom.jpg",
-    "Bathroom": "assets/Bathroom.jpg"
-  };
-
-  const hotspotsData = {
-    "Reception": [
-      { label: "الصالة", target: "Living_Room", lat: 0, lon: 60 }
-    ],
-    "Kitchen": [
-      { label: "الصالة", target: "Living_Room", lat: 10, lon: -80 }
-    ],
-    "Corridor": [
-      { label: "الصالة", target: "Living_Room", lat: 0, lon: 160 },
-      { label: "غرفة النوم", target: "Bedroom", lat: 5, lon: -30 },
-      { label: "الحمام", target: "Bathroom", lat: -5, lon: -60 }
-    ],
-    "Living_Room": [
-      { label: "الاستقبال", target: "Reception", lat: 0, lon: -110 },
-      { label: "المطبخ", target: "Kitchen", lat: 10, lon: 60 },
-      { label: "الممر", target: "Corridor", lat: -5, lon: 150 }
-    ],
-    "Bedroom": [
-      { label: "الممر", target: "Corridor", lat: 0, lon: 120 }
-    ],
-    "Bathroom": [
-      { label: "الممر", target: "Corridor", lat: 0, lon: -140 }
-    ]
-  };
-
-  const initialScene = "Reception";
-
-  // ---------- PRELOADER ----------
-  const overlay = document.getElementById('overlay');
-  const progressFill = document.getElementById('progressFill');
-  const percentText = document.getElementById('percent');
-  const startBtn = document.getElementById('startBtn');
-
-  const imageUrls = Object.values(scenes);
-  let loadedCount = 0;
-  function preloadImages(urls, onComplete, onProgress){
-    urls.forEach(url => {
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-      img.onload = () => { loadedCount++; onProgress(loadedCount, urls.length); if(loadedCount===urls.length) onComplete(); };
-      img.onerror = () => { console.warn('Failed to load', url); loadedCount++; onProgress(loadedCount, urls.length); if(loadedCount===urls.length) onComplete(); };
-      img.src = url;
-    });
-  }
-
-  preloadImages(imageUrls, () => {
-    startBtn.disabled = false;
-  }, (loaded,total) => {
-    const pct = Math.round(loaded/total*100);
-    progressFill.style.width = pct + "%";
-    percentText.innerText = pct + "%";
-  });
-
-  startBtn.addEventListener('click', () => {
-    overlay.style.display = 'none';
-    enterScene(initialScene);
-  });
-  document.addEventListener('keydown', e => {
-    if((e.key === 'Enter' || e.key === ' ') && !startBtn.disabled){
-      overlay.style.display = 'none';
-      enterScene(initialScene);
-    }
-  });
-
-  // ---------- UTILS ----------
-  function latLonToCartesian(latDeg, lonDeg, radius){
-    const lat = latDeg * Math.PI/180;
-    const lon = lonDeg * Math.PI/180;
-    const x = radius * Math.cos(lat) * Math.sin(lon);
-    const y = radius * Math.sin(lat);
-    const z = radius * Math.cos(lat) * Math.cos(lon) * -1;
-    return { x, y, z };
-  }
-
-  // ---------- HOTSPOTS ----------
-  const sceneEl = document.querySelector('a-scene');
-  const skyA = document.getElementById('skyA');
-  const skyB = document.getElementById('skyB');
-  let activeSky = skyA;
-  let inactiveSky = skyB;
-  const hotspotsRoot = document.getElementById('hotspotsRoot');
-
-  function makeHotspot(h) {
-    const hotspot = document.createElement('a-entity');
-    hotspot.classList.add('clickable');
-    hotspot.setAttribute('geometry', 'primitive: plane; height: 0.6; width: 0.6');
-    hotspot.setAttribute('material', 'src: url(assets/hotspot.png); transparent: true; shader: flat; side: double');
-    hotspot.setAttribute('look-at', '#camera');
-    hotspot.setAttribute('shadow', 'receive: false;cast:false');
-    hotspot.setAttribute('visible', true);
-
-    // 👇 انعكاس عمودي
-    hotspot.setAttribute("scale", "1 -1 1");
-
-    // pulse animation (معدل للانعكاس)
-    hotspot.setAttribute('animation__pulse', 'property: scale; dir: alternate; dur: 900; easing: easeInOutSine; loop: true; to: 1 -1.12 1.12; from: 1 -0.95 0.95');
-
-    // label background
-    const labelBg = document.createElement('a-plane');
-    labelBg.setAttribute('height', '0.28');
-    labelBg.setAttribute('width', '1.4');
-    labelBg.setAttribute('material', 'color: #000; opacity: 0.45; shader: flat;');
-    labelBg.setAttribute('position', `0 0.62 0`);
-    labelBg.setAttribute('visible', false);
-
-    // text label
-    const label = document.createElement('a-entity');
-    label.setAttribute('text',
-      `value: ${h.label}; align: center; wrapCount: 20; width: 1.7; color: #FFFFFF;`
-    );
-    label.setAttribute('position', `0 0.62 0.02`);
-    label.setAttribute('visible', false);
-
-    hotspot.addEventListener('mouseenter', () => {
-      hotspot.setAttribute('animation__hover', 'property: scale; to: 1 -1.45 1.45; dur: 180; easing: easeOutQuad');
-      label.setAttribute('visible', true);
-      labelBg.setAttribute('visible', true);
-    });
-    hotspot.addEventListener('mouseleave', () => {
-      hotspot.setAttribute('animation__hover', 'property: scale; to: 1 -1 1; dur: 150; easing: easeOutQuad');
-      label.setAttribute('visible', false);
-      labelBg.setAttribute('visible', false);
-    });
-
-    // click / controller
-    const triggerNavigate = () => {
-      const tgt = hotspot.getAttribute('data-target');
-      if (tgt) {
-        disableHotspots();
-        hotspotsRoot.setAttribute('visible', 'false');
-        fadeToScene(tgt);
+        labelBg.appendChild(label);
+        return labelBg;
       }
-    };
-    hotspot.addEventListener('click', triggerNavigate);
-    hotspot.addEventListener('triggerdown', triggerNavigate);
 
-    hotspot.appendChild(labelBg);
-    hotspot.appendChild(label);
-    return hotspot;
-  }
+      function makeHotspot(h) {
+        const hotspot = document.createElement("a-entity");
+        hotspot.classList.add("clickable");
+        hotspot.setAttribute("geometry", "primitive: plane; height: 0.6; width: 0.6");
+        hotspot.setAttribute("material", "src: url(assets/hotspot.png); transparent: true; shader: flat; side: double");
+        hotspot.setAttribute("look-at", "#camera");
+        hotspot.setAttribute("shadow", "receive: false;cast:false");
+        hotspot.setAttribute("visible", true);
 
-  function disableHotspots() {
-    hotspotsRoot.querySelectorAll('.clickable').forEach(el => {
-      el.classList.remove('clickable');
-      el.classList.add('disabled');
-    });
-  }
-  function enableHotspots() {
-    hotspotsRoot.querySelectorAll('.disabled').forEach(el => {
-      el.classList.remove('disabled');
-      el.classList.add('clickable');
-    });
-  }
+        // ✨ انعكاس الهوت سبوت
+        hotspot.setAttribute("scale", "-1 1 1");
 
-  function buildHotspotsFor(sceneName) {
-    while (hotspotsRoot.firstChild) hotspotsRoot.removeChild(hotspotsRoot.firstChild);
-    const list = hotspotsData[sceneName] || [];
-    list.forEach(h => {
-      const pos = latLonToCartesian(h.lat || 0, h.lon || 0, 3.5);
-      const ent = makeHotspot(h);
-      ent.setAttribute('position', `${pos.x.toFixed(3)} ${pos.y.toFixed(3)} ${pos.z.toFixed(3)}`);
-      ent.setAttribute('data-target', h.target);
-      ent.setAttribute('look-at', '#camera');
-      hotspotsRoot.appendChild(ent);
-    });
-  }
+        // حركة نبض
+        hotspot.setAttribute("animation__pulse", "property: scale; dir: alternate; dur: 900; easing: easeInOutSine; loop: true; to: 1.12 1.12 1.12; from: 0.95 0.95 0.95");
 
-  // ---------- CROSSFADE ----------
-  let isTransitioning = false;
-  async function fadeToScene(targetName) {
-    if (isTransitioning) return;
-    if (!scenes[targetName]) {
-      console.warn('Unknown scene target:', targetName);
-      hotspotsRoot.setAttribute('visible', 'true');
-      enableHotspots();
-      return;
-    }
-    isTransitioning = true;
-    const fadeDur = 700;
+        hotspot.setAttribute("position", h.position);
+        hotspot.setAttribute("rotation", h.rotation);
 
-    hotspotsRoot.setAttribute('visible', 'false');
+        const label = createLabel(h.label);
+        hotspot.appendChild(label);
 
-    inactiveSky.removeAttribute('animation__in');
-    activeSky.removeAttribute('animation__out');
+        hotspot.addEventListener("mouseenter", () => {
+          hotspot.setAttribute("scale", "1.3 1.3 1.3");
+          label.setAttribute("visible", "true");
+        });
+        hotspot.addEventListener("mouseleave", () => {
+          hotspot.setAttribute("scale", "1 1 1");
+          label.setAttribute("visible", "false");
+        });
+        hotspot.addEventListener("click", () => {
+          changeScene(h.target);
+        });
 
-    inactiveSky.setAttribute('material',
-      `src: url(${scenes[targetName]}); shader: flat; transparent: true; side: double; opacity: 0`
-    );
-    activeSky.setAttribute('material', `shader: flat; transparent: true; side: double; opacity: 1`);
+        sceneEl.appendChild(hotspot);
+        return hotspot;
+      }
 
-    inactiveSky.setAttribute('animation__in',
-      `property: material.opacity; to: 1; dur: ${fadeDur}; easing: easeInOutQuad`
-    );
-    activeSky.setAttribute('animation__out',
-      `property: material.opacity; to: 0; dur: ${fadeDur}; easing: easeInOutQuad`
-    );
+      let activeHotspots = [];
 
-    await new Promise(resolve => setTimeout(resolve, fadeDur + 40));
+      function changeScene(sceneName) {
+        activeHotspots.forEach(h => h.remove());
+        activeHotspots = [];
 
-    activeSky.setAttribute('material', 'opacity', 0);
-    inactiveSky.setAttribute('material', 'opacity', 1);
+        const scene = scenes[sceneName];
+        sky.setAttribute("src", scene.src);
 
-    const tmp = activeSky;
-    activeSky = inactiveSky;
-    inactiveSky = tmp;
+        scene.hotspots.forEach(h => {
+          const hotspot = makeHotspot(h);
+          activeHotspots.push(hotspot);
+        });
+      }
 
-    activeSky.removeAttribute('animation__in');
-    inactiveSky.removeAttribute('animation__out');
-
-    buildHotspotsFor(targetName);
-
-    await new Promise(resolve => setTimeout(resolve, 90));
-    hotspotsRoot.setAttribute('visible', 'true');
-    enableHotspots();
-    isTransitioning = false;
-  }
-
-  // ---------- ENTER SCENE ----------
-  function enterScene(sceneName) {
-    if (!scenes[sceneName]) {
-      console.error('Initial scene not found:', sceneName);
-      return;
-    }
-    activeSky.setAttribute('material', `src: url(${scenes[sceneName]}); shader: flat; transparent: true; side: double; opacity: 1`);
-    inactiveSky.setAttribute('material', `shader: flat; transparent: true; side: double; opacity: 0`);
-    buildHotspotsFor(sceneName);
-
-    const deskCursor = document.getElementById('desktopCursor');
-    if (AFRAME.utils.device.isDesktop()) {
-      deskCursor.setAttribute('visible', true);
-    } else {
-      deskCursor.setAttribute('visible', false);
-    }
-  }
-
-  sceneEl.addEventListener('loaded', () => {
-    activeSky.setAttribute('material', 'shader: flat; transparent: true; side: double;');
-    inactiveSky.setAttribute('material', 'shader: flat; transparent: true; side: double;');
-  });
-
-  window.vrTour = { enterScene, fadeToScene, hotspotsData, scenes };
-
-  if (overlay.style.display === 'none') enterScene(initialScene);
-</script>
+      changeScene("scene1");
+    </script>
+  </a-scene>
 </body>
 </html>
