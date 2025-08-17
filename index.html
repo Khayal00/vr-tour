@@ -1,119 +1,835 @@
-<!doctype html>
-<html lang="ar">
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
 <head>
-  <meta charset="utf-8" />
-  <title>VR 360 Tour - انعكاس الهوت سبوت</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>جولة افتراضية متطورة - مع هوت سبوتات متعددة الصور</title>
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-  <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      color: #fff;
+      direction: rtl;
+    }
+    
+    /* شاشة التحميل */
+    #overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+      color: #fff;
+      z-index: 100;
+      flex-direction: column;
+      gap: 20px;
+    }
+    
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    
+    #welcomeBox {
+      text-align: center;
+      max-width: 800px;
+      padding: 30px;
+      background: rgba(0, 0, 0, 0.7);
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+    }
+    
+    #title {
+      font-size: 42px;
+      margin-bottom: 15px;
+      background: linear-gradient(to right, #ff8a00, #da1b60);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: 800;
+      letter-spacing: 1px;
+    }
+    
+    #subtitle {
+      font-size: 20px;
+      opacity: 0.9;
+      line-height: 1.6;
+      margin-bottom: 25px;
+    }
+    
+    #progressBar {
+      width: 80%;
+      height: 18px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 25px auto;
+    }
+    
+    #progressFill {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, #00c9ff, #92fe9d);
+      transition: width 400ms ease;
+      border-radius: 10px;
+    }
+    
+    #startBtn {
+      margin-top: 20px;
+      padding: 14px 45px;
+      border-radius: 50px;
+      border: none;
+      background: linear-gradient(45deg, #ff416c, #ff4b2b);
+      color: white;
+      cursor: pointer;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      transition: all 0.3s ease;
+      box-shadow: 0 5px 15px rgba(255, 75, 43, 0.4);
+    }
+    
+    #startBtn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(255, 75, 43, 0.6);
+    }
+    
+    #startBtn:active {
+      transform: translateY(1px);
+    }
+    
+    #instructions {
+      font-size: 16px;
+      opacity: 0.85;
+      margin-top: 25px;
+      line-height: 1.6;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 15px;
+      border-radius: 12px;
+    }
+    
+    .hotspot-gallery {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.7);
+      border-radius: 15px;
+      padding: 15px;
+      width: 90%;
+      max-width: 700px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      z-index: 50;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5);
+    }
+    
+    .gallery-title {
+      font-size: 22px;
+      margin-bottom: 15px;
+      color: #ffcc00;
+      font-weight: 700;
+    }
+    
+    .gallery-container {
+      display: flex;
+      width: 100%;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+    }
+    
+    .gallery-btn {
+      background: linear-gradient(45deg, #2193b0, #6dd5ed);
+      border: none;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      color: white;
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    }
+    
+    .gallery-btn:hover {
+      transform: scale(1.1);
+    }
+    
+    .gallery-main {
+      width: 400px;
+      height: 250px;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+      border: 3px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .gallery-main img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.5s ease;
+    }
+    
+    .gallery-main img:hover {
+      transform: scale(1.03);
+    }
+    
+    .gallery-thumbnails {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+    
+    .thumbnail {
+      width: 70px;
+      height: 50px;
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: pointer;
+      opacity: 0.6;
+      transition: all 0.3s ease;
+      border: 2px solid transparent;
+    }
+    
+    .thumbnail:hover, .thumbnail.active {
+      opacity: 1;
+      transform: scale(1.1);
+      border-color: #ffcc00;
+    }
+    
+    .thumbnail img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .gallery-counter {
+      margin-top: 12px;
+      font-size: 16px;
+      color: #6dd5ed;
+      font-weight: 600;
+    }
+    
+    .scene-info {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 15px 25px;
+      border-radius: 15px;
+      font-size: 22px;
+      font-weight: 700;
+      color: #ffcc00;
+      z-index: 50;
+      backdrop-filter: blur(5px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    }
+    
+    @media (max-width: 768px) {
+      #title { font-size: 32px; }
+      #subtitle { font-size: 17px; }
+      #welcomeBox { padding: 20px; max-width: 90%; }
+      .gallery-main { width: 300px; height: 200px; }
+      .gallery-btn { width: 40px; height: 40px; }
+    }
+    
+    @media (max-width: 480px) {
+      #title { font-size: 26px; }
+      #subtitle { font-size: 15px; }
+      #startBtn { padding: 12px 30px; font-size: 18px; }
+      .gallery-main { width: 250px; height: 160px; }
+      .thumbnail { width: 50px; height: 40px; }
+      .scene-info { font-size: 18px; padding: 10px 15px; }
+    }
+  </style>
 </head>
 <body>
-  <a-scene loading-screen="enabled:true" background="color: black">
-    <a-assets>
-      <img id="scene1" src="assets/scene1.jpg">
-      <img id="scene2" src="assets/scene2.jpg">
-      <img id="hotspot" src="assets/hotspot.png">
-    </a-assets>
+  <!-- شاشة التحميل -->
+  <div id="overlay">
+    <div id="welcomeBox">
+      <div id="title">جولة افتراضية في منزل الأحلام</div>
+      <div id="subtitle">
+        استكشف هذا المنزل الرائع بتقنية الواقع الافتراضي 360 درجة. اضغط على النقاط الساخنة لاكتشاف المزيد من الصور لكل منطقة.<br>
+        يمكنك استخدام نظارات VR (ميتا كويست)، الموبايل، أو الكمبيوتر.
+      </div>
+      
+      <div id="progressBar">
+        <div id="progressFill"></div>
+      </div>
+      <div id="progressText" style="margin-top: 12px; font-size: 18px;">
+        جارٍ تحميل الصور: <span id="percent">0%</span>
+      </div>
+      
+      <button id="startBtn" disabled>
+        <i class="fas fa-play" style="margin-left: 10px;"></i> ابدأ الجولة
+      </button>
+      
+      <div id="instructions">
+        <i class="fas fa-info-circle" style="margin-left: 8px;"></i> 
+        للتحكم: استخدم اللمس على الموبايل، النقر بالماوس على الكمبيوتر، أو ذراع التحكم في نظارة VR.<br>
+        يمكنك تعديل مواقع النقاط الساخنة في الكود حسب احتياجاتك.
+      </div>
+    </div>
+  </div>
+  
+  <!-- معرض الصور للهوت سبوت -->
+  <div id="hotspotGallery" class="hotspot-gallery" style="display: none;">
+    <div class="gallery-title" id="galleryTitle">معرض صور</div>
+    <div class="gallery-container">
+      <button class="gallery-btn" id="prevBtn"><i class="fas fa-arrow-right"></i></button>
+      <div class="gallery-main">
+        <img id="mainImage" src="" alt="صورة الهوت سبوت">
+      </div>
+      <button class="gallery-btn" id="nextBtn"><i class="fas fa-arrow-left"></i></button>
+    </div>
+    <div class="gallery-thumbnails" id="thumbnailsContainer"></div>
+    <div class="gallery-counter" id="imageCounter">1 / 3</div>
+  </div>
+  
+  <!-- معلومات المشهد الحالي -->
+  <div class="scene-info" id="sceneInfo" style="display: none;">الاستقبال</div>
+  
+  <!-- مشهد A-Frame -->
+  <a-scene background="color: #000" vr-mode-ui="enabled: true">
+    <a-entity id="cameraRig">
+      <a-entity id="camera" camera look-controls position="0 1.6 0">
+        <a-entity id="gazeCursor"
+          cursor="fuse: true; fuseTimeout: 1000"
+          position="0 0 -1"
+          geometry="primitive: ring; radiusInner: 0.01; radiusOuter: 0.02"
+          material="color: white; shader: flat; opacity:0.9;">
+        </a-entity>
+      </a-entity>
+      
+      <a-entity laser-controls="hand: right" raycaster="objects: .clickable" line="opacity: 0.75"></a-entity>
+      <a-entity laser-controls="hand: left" raycaster="objects: .clickable" line="opacity: 0.75"></a-entity>
+    </a-entity>
+    
+    <a-sky id="skyA" radius="5000" position="0 0 0" material="shader: flat; transparent: true; side: double; opacity:1"></a-sky>
+    <a-sky id="skyB" radius="5000" position="0 0 0" material="shader: flat; transparent: true; side: double; opacity:0"></a-sky>
+    
+    <!-- HOTSPOTS ROOT -->
+    <a-entity id="hotspotsRoot" visible="true"></a-entity>
+    
+    <a-entity id="desktopCursor" cursor="rayOrigin: mouse" raycaster="objects: .clickable" visible="false"></a-entity>
+  </a-scene>
 
-    <!-- الكاميرا -->
-    <a-entity id="camera" camera look-controls position="0 1.6 0"></a-entity>
+  <script>
+    // ---------- CONFIG ----------
+    const scenes = {
+      "lobby": {
+        image: "https://images.unsplash.com/photo-1615529162924-f8605388463a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80",
+        name: "الاستقبال"
+      },
+      "living_room": {
+        image: "https://images.unsplash.com/photo-1616486029423-aaa4789e8c9a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80",
+        name: "الصالة"
+      },
+      "kitchen": {
+        image: "https://images.unsplash.com/photo-1600566752355-35792bedcfea?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80",
+        name: "المطبخ"
+      },
+      "corridor": {
+        image: "https://images.unsplash.com/photo-1598928636135-d146006ff4be?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80",
+        name: "الممر"
+      },
+      "bedroom": {
+        image: "https://images.unsplash.com/photo-1616486029423-aaa4789e8c9a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80",
+        name: "غرفة النوم"
+      },
+      "bathroom": {
+        image: "https://images.unsplash.com/photo-1630569461395-8d60247cb0ba?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80",
+        name: "الحمام"
+      }
+    };
 
-    <!-- السماء -->
-    <a-sky id="sky" src="#scene1"></a-sky>
-
-    <script>
-      const scenes = {
-        scene1: {
-          src: "#scene1",
-          hotspots: [
-            { position: "2 1.5 -3", rotation: "0 0 0", target: "scene2", label: "المشهد 2" }
-          ]
-        },
-        scene2: {
-          src: "#scene2",
-          hotspots: [
-            { position: "-2 1.5 -3", rotation: "0 0 0", target: "scene1", label: "المشهد 1" }
+    const hotspotsData = {
+      "lobby": [
+        { 
+          label: "الصالة", 
+          target: "living_room", 
+          lat: 0, 
+          lon: 60,
+          images: [
+            "https://images.unsplash.com/photo-1631679706909-1844bbd07221?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+            "https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+            "https://images.unsplash.com/photo-1615529162924-f8605388463a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
           ]
         }
+      ],
+      "kitchen": [
+        { 
+          label: "الصالة", 
+          target: "living_room", 
+          lat: 10, 
+          lon: -80,
+          images: [
+            "https://images.unsplash.com/photo-1600566752355-35792bedcfea?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+            "https://images.unsplash.com/photo-1556911220-ef412ae179a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+            "https://images.unsplash.com/photo-1600566753086-00f18fb6b4ea?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+          ]
+        }
+      ],
+      "corridor": [
+        { 
+          label: "الصالة", 
+          target: "living_room", 
+          lat: 0, 
+          lon: 160,
+          images: [
+            "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+            "https://images.unsplash.com/photo-1598928636135-d146006ff4be?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+          ]
+        },
+        { 
+          label: "غرفة النوم", 
+          target: "bedroom", 
+          lat: 5, 
+          lon: -30,
+          images: [
+            "https://images.unsplash.com/photo-1615529162924-f8605388463a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+            "https://images.unsplash.com/photo-1615529162924-f8605388463a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+            "https://images.unsplash.com/photo-1615529162924-f8605388463a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+            "https://images.unsplash.com/photo-1615529162924-f8605388463a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+          ]
+        },
+        { 
+          label: "الحمام", 
+          target: "bathroom", 
+          lat: -5, 
+          lon: -60,
+          images: [
+            "https://images.unsplash.com/photo-1630569461395-8d60247cb0ba?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+            "https://images.unsplash.com/photo-1564540583246-934409427776?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+          ]
+        }
+      ],
+      "living_room": [
+        { 
+          label: "الاستقبال", 
+          target: "lobby", 
+          lat: 0, 
+          lon: -110,
+          images: [
+            "https://images.unsplash.com/photo-1616486029423-aaa4789e8c9a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+            "https://images.unsplash.com/photo-1616486029423-aaa4789e8c9a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+            "https://images.unsplash.com/photo-1616486029423-aaa4789e8c9a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+          ]
+        },
+        { 
+          label: "المطبخ", 
+          target: "kitchen", 
+          lat: 10, 
+          lon: 60,
+          images: [
+            "https://images.unsplash.com/photo-1600566752355-35792bedcfea?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+            "https://images.unsplash.com/photo-1600566752355-35792bedcfea?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+          ]
+        },
+        { 
+          label: "الممر", 
+          target: "corridor", 
+          lat: -5, 
+          lon: 150,
+          images: [
+            "https://images.unsplash.com/photo-1598928636135-d146006ff4be?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+          ]
+        }
+      ],
+      "bedroom": [
+        { 
+          label: "الممر", 
+          target: "corridor", 
+          lat: 0, 
+          lon: 120,
+          images: [
+            "https://images.unsplash.com/photo-1615529162924-f8605388463a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+            "https://images.unsplash.com/photo-1615529162924-f8605388463a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+            "https://images.unsplash.com/photo-1615529162924-f8605388463a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+          ]
+        }
+      ],
+      "bathroom": [
+        { 
+          label: "الممر", 
+          target: "corridor", 
+          lat: 0, 
+          lon: -140,
+          images: [
+            "https://images.unsplash.com/photo-1630569461395-8d60247cb0ba?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+            "https://images.unsplash.com/photo-1564540583246-934409427776?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+            "https://images.unsplash.com/photo-1630569461395-8d60247cb0ba?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+          ]
+        }
+      ]
+    };
+
+    const initialScene = "lobby";
+
+    // ---------- PRELOADER ----------
+    const overlay = document.getElementById('overlay');
+    const progressFill = document.getElementById('progressFill');
+    const percentText = document.getElementById('percent');
+    const startBtn = document.getElementById('startBtn');
+    
+    // جمع جميع عناوين الصور
+    let allImages = Object.values(scenes).map(scene => scene.image);
+    
+    // جمع صور الهوت سبوتات
+    Object.values(hotspotsData).forEach(hotspots => {
+      hotspots.forEach(hotspot => {
+        if (hotspot.images && hotspot.images.length) {
+          allImages = allImages.concat(hotspot.images);
+        }
+      });
+    });
+    
+    // إزالة التكرارات
+    allImages = [...new Set(allImages)];
+    
+    let loadedCount = 0;
+    function preloadImages(urls, onComplete, onProgress){
+      urls.forEach(url => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => { 
+          loadedCount++; 
+          onProgress(loadedCount, urls.length); 
+          if(loadedCount === urls.length) onComplete(); 
+        };
+        img.onerror = () => { 
+          console.warn('Failed to load', url); 
+          loadedCount++; 
+          onProgress(loadedCount, urls.length); 
+          if(loadedCount === urls.length) onComplete(); 
+        };
+        img.src = url;
+      });
+    }
+
+    preloadImages(allImages, () => {
+      startBtn.disabled = false;
+      startBtn.innerHTML = '<i class="fas fa-play" style="margin-left: 10px;"></i> ابدأ الجولة الآن!';
+    }, (loaded, total) => {
+      const pct = Math.round(loaded/total*100);
+      progressFill.style.width = pct + "%";
+      percentText.innerText = pct + "%";
+    });
+
+    startBtn.addEventListener('click', () => {
+      overlay.style.display = 'none';
+      document.getElementById('sceneInfo').style.display = 'block';
+      enterScene(initialScene);
+    });
+    
+    document.addEventListener('keydown', e => {
+      if((e.key === 'Enter' || e.key === ' ') && !startBtn.disabled){
+        overlay.style.display = 'none';
+        document.getElementById('sceneInfo').style.display = 'block';
+        enterScene(initialScene);
+      }
+    });
+
+    // ---------- معرض صور الهوت سبوت ----------
+    const gallery = document.getElementById('hotspotGallery');
+    const mainImage = document.getElementById('mainImage');
+    const thumbnailsContainer = document.getElementById('thumbnailsContainer');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const imageCounter = document.getElementById('imageCounter');
+    const galleryTitle = document.getElementById('galleryTitle');
+    
+    let currentHotspot = null;
+    let currentImageIndex = 0;
+    
+    function showGallery(hotspot) {
+      currentHotspot = hotspot;
+      currentImageIndex = 0;
+      
+      // تحديث العنوان
+      galleryTitle.textContent = hotspot.label;
+      
+      // تحديث الصور
+      updateGallery();
+      
+      // إظهار المعرض
+      gallery.style.display = 'flex';
+    }
+    
+    function hideGallery() {
+      gallery.style.display = 'none';
+    }
+    
+    function updateGallery() {
+      const images = currentHotspot.images || [];
+      
+      if (images.length === 0) return;
+      
+      // عرض الصورة الرئيسية
+      mainImage.src = images[currentImageIndex];
+      
+      // تحديث العداد
+      imageCounter.textContent = `${currentImageIndex + 1} / ${images.length}`;
+      
+      // تحديث الصور المصغرة
+      thumbnailsContainer.innerHTML = '';
+      
+      images.forEach((img, index) => {
+        const thumbnail = document.createElement('div');
+        thumbnail.className = `thumbnail ${index === currentImageIndex ? 'active' : ''}`;
+        thumbnail.innerHTML = `<img src="${img}" alt="صورة ${index + 1}">`;
+        
+        thumbnail.addEventListener('click', () => {
+          currentImageIndex = index;
+          updateGallery();
+        });
+        
+        thumbnailsContainer.appendChild(thumbnail);
+      });
+    }
+    
+    prevBtn.addEventListener('click', () => {
+      if (currentHotspot && currentHotspot.images) {
+        currentImageIndex = (currentImageIndex - 1 + currentHotspot.images.length) % currentHotspot.images.length;
+        updateGallery();
+      }
+    });
+    
+    nextBtn.addEventListener('click', () => {
+      if (currentHotspot && currentHotspot.images) {
+        currentImageIndex = (currentImageIndex + 1) % currentHotspot.images.length;
+        updateGallery();
+      }
+    });
+    
+    // إغلاق المعرض عند النقر خارج الصور
+    document.addEventListener('click', (e) => {
+      if (gallery.style.display === 'flex' && 
+          !gallery.contains(e.target) && 
+          e.target.className !== 'gallery-btn') {
+        hideGallery();
+      }
+    });
+    
+    // ---------- UTILS ----------
+    function latLonToCartesian(latDeg, lonDeg, radius){
+      const lat = latDeg * Math.PI/180;
+      const lon = lonDeg * Math.PI/180;
+      const x = radius * Math.cos(lat) * Math.sin(lon);
+      const y = radius * Math.sin(lat);
+      const z = radius * Math.cos(lat) * Math.cos(lon) * -1;
+      return { x, y, z };
+    }
+
+    // ---------- HOTSPOTS ----------
+    const sceneEl = document.querySelector('a-scene');
+    const skyA = document.getElementById('skyA');
+    const skyB = document.getElementById('skyB');
+    let activeSky = skyA;
+    let inactiveSky = skyB;
+    const hotspotsRoot = document.getElementById('hotspotsRoot');
+
+    function makeHotspot(h) {
+      const hotspot = document.createElement('a-entity');
+      hotspot.classList.add('clickable');
+      
+      // إنشاء رمز الهوت سبوت
+      const icon = document.createElement('a-entity');
+      icon.setAttribute('geometry', 'primitive: circle; radius: 0.15');
+      icon.setAttribute('material', 'shader: flat; color: #FF9800; transparent: true; opacity: 0.9');
+      icon.setAttribute('animation__pulse', 'property: scale; dir: alternate; dur: 1200; easing: easeInOutSine; loop: true; to: 1.3 1.3 1.3; from: 0.9 0.9 0.9');
+      
+      // إنشاء شعاع ضوئي تحت الرمز
+      const beam = document.createElement('a-entity');
+      beam.setAttribute('geometry', 'primitive: cylinder; height: 1; radius: 0.05; openEnded: true');
+      beam.setAttribute('material', 'shader: flat; color: #FF5722; transparent: true; opacity: 0.4');
+      beam.setAttribute('position', '0 -0.5 0');
+      beam.setAttribute('rotation', '90 0 0');
+      
+      hotspot.appendChild(icon);
+      hotspot.appendChild(beam);
+      
+      hotspot.setAttribute('look-at', '#camera');
+      hotspot.setAttribute('shadow', 'receive: false;cast:false');
+      hotspot.setAttribute('visible', true);
+
+      // تأثير التمرير
+      hotspot.addEventListener('mouseenter', () => {
+        icon.setAttribute('animation__hover', 'property: scale; to: 1.8 1.8 1.8; dur: 200; easing: easeOutQuad');
+        icon.setAttribute('material', 'color', '#FF5722');
+      });
+      
+      hotspot.addEventListener('mouseleave', () => {
+        icon.setAttribute('animation__hover', 'property: scale; to: 1 1 1; dur: 250; easing: easeOutQuad');
+        icon.setAttribute('material', 'color', '#FF9800');
+      });
+
+      // النقر للانتقال أو عرض المعرض
+      const triggerNavigate = () => {
+        const tgt = hotspot.getAttribute('data-target');
+        
+        // إذا كان هناك صور متعددة، اعرض المعرض
+        if (h.images && h.images.length > 0) {
+          showGallery(h);
+        } 
+        // وإلا انتقل مباشرة إلى المشهد الهدف
+        else if (tgt) {
+          disableHotspots();
+          hotspotsRoot.setAttribute('visible', 'false');
+          fadeToScene(tgt);
+        }
       };
+      
+      hotspot.addEventListener('click', triggerNavigate);
+      hotspot.addEventListener('triggerdown', triggerNavigate);
 
-      const sky = document.getElementById("sky");
-      const sceneEl = document.querySelector("a-scene");
+      return hotspot;
+    }
 
-      function createLabel(text) {
-        const labelBg = document.createElement("a-plane");
-        labelBg.setAttribute("color", "#000");
-        labelBg.setAttribute("opacity", "0.6");
-        labelBg.setAttribute("height", "0.3");
-        labelBg.setAttribute("width", `${text.length * 0.15}`);
-        labelBg.setAttribute("position", "0 0.5 0");
-        labelBg.setAttribute("visible", "false");
+    function disableHotspots() {
+      hotspotsRoot.querySelectorAll('.clickable').forEach(el => {
+        el.classList.remove('clickable');
+        el.classList.add('disabled');
+      });
+    }
+    
+    function enableHotspots() {
+      hotspotsRoot.querySelectorAll('.disabled').forEach(el => {
+        el.classList.remove('disabled');
+        el.classList.add('clickable');
+      });
+    }
 
-        const label = document.createElement("a-text");
-        label.setAttribute("value", text);
-        label.setAttribute("align", "center");
-        label.setAttribute("color", "#fff");
-        label.setAttribute("width", "4");
-        label.setAttribute("position", "0 0 0.01");
+    function buildHotspotsFor(sceneName) {
+      // إخفاء المعرض عند تغيير المشهد
+      hideGallery();
+      
+      // تحديث معلومات المشهد
+      document.getElementById('sceneInfo').textContent = scenes[sceneName].name;
+      
+      // إزالة أي هوت سبوتات سابقة
+      while (hotspotsRoot.firstChild) hotspotsRoot.removeChild(hotspotsRoot.firstChild);
 
-        labelBg.appendChild(label);
-        return labelBg;
+      const list = hotspotsData[sceneName] || [];
+      list.forEach(h => {
+        const pos = latLonToCartesian(h.lat || 0, h.lon || 0, 3.5);
+        const ent = makeHotspot(h);
+        ent.setAttribute('position', `${pos.x.toFixed(3)} ${pos.y.toFixed(3)} ${pos.z.toFixed(3)}`);
+        ent.setAttribute('data-target', h.target);
+        hotspotsRoot.appendChild(ent);
+      });
+    }
+
+    // ---------- CROSSFADE ----------
+    let isTransitioning = false;
+    async function fadeToScene(targetName) {
+      if (isTransitioning) return;
+      if (!scenes[targetName]) {
+        console.warn('Unknown scene target:', targetName);
+        hotspotsRoot.setAttribute('visible', 'true');
+        enableHotspots();
+        return;
       }
+      isTransitioning = true;
+      const fadeDur = 800;
 
-      function makeHotspot(h) {
-        const hotspot = document.createElement("a-entity");
-        hotspot.classList.add("clickable");
-        hotspot.setAttribute("geometry", "primitive: plane; height: 0.6; width: 0.6");
-        hotspot.setAttribute("material", "src: url(assets/hotspot.png); transparent: true; shader: flat; side: double");
-        hotspot.setAttribute("look-at", "#camera");
-        hotspot.setAttribute("shadow", "receive: false;cast:false");
-        hotspot.setAttribute("visible", true);
+      // إخفاء الهوت سبوتات
+      hotspotsRoot.setAttribute('visible', 'false');
 
-        // ✨ انعكاس الهوت سبوت
-        hotspot.setAttribute("scale", "-1 1 1");
+      // تنظيف الرسوم المتحركة السابقة
+      inactiveSky.removeAttribute('animation__in');
+      activeSky.removeAttribute('animation__out');
 
-        // حركة نبض
-        hotspot.setAttribute("animation__pulse", "property: scale; dir: alternate; dur: 900; easing: easeInOutSine; loop: true; to: 1.12 1.12 1.12; from: 0.95 0.95 0.95");
+      // تعيين نسيج جديد للسماء الخاملة
+      inactiveSky.setAttribute('material',
+        `src: ${scenes[targetName].image}; shader: flat; transparent: true; side: double; opacity: 0`
+      );
 
-        hotspot.setAttribute("position", h.position);
-        hotspot.setAttribute("rotation", h.rotation);
+      // ضمان وجود مادة متسقة للسماء النشطة
+      activeSky.setAttribute('material', `shader: flat; transparent: true; side: double; opacity: 1`);
 
-        const label = createLabel(h.label);
-        hotspot.appendChild(label);
+      // الرسوم المتحركة للتلاشي
+      inactiveSky.setAttribute('animation__in',
+        `property: material.opacity; to: 1; dur: ${fadeDur}; easing: easeInOutQuad`
+      );
+      activeSky.setAttribute('animation__out',
+        `property: material.opacity; to: 0; dur: ${fadeDur}; easing: easeInOutQuad`
+      );
 
-        hotspot.addEventListener("mouseenter", () => {
-          hotspot.setAttribute("scale", "1.3 1.3 1.3");
-          label.setAttribute("visible", "true");
-        });
-        hotspot.addEventListener("mouseleave", () => {
-          hotspot.setAttribute("scale", "1 1 1");
-          label.setAttribute("visible", "false");
-        });
-        hotspot.addEventListener("click", () => {
-          changeScene(h.target);
-        });
+      // الانتظار حتى انتهاء الرسوم المتحركة
+      await new Promise(resolve => setTimeout(resolve, fadeDur + 50));
 
-        sceneEl.appendChild(hotspot);
-        return hotspot;
+      // تثبيت الشفافية وتبديل المراجع
+      activeSky.setAttribute('material', 'opacity', 0);
+      inactiveSky.setAttribute('material', 'opacity', 1);
+
+      const tmp = activeSky;
+      activeSky = inactiveSky;
+      inactiveSky = tmp;
+
+      // إزالة سمات الرسوم المتحركة
+      activeSky.removeAttribute('animation__in');
+      inactiveSky.removeAttribute('animation__out');
+
+      // إعادة بناء الهوت سبوتات للمشهد الجديد
+      buildHotspotsFor(targetName);
+
+      // تأخير صغير لإظهار الهوت سبوتات
+      await new Promise(resolve => setTimeout(resolve, 100));
+      hotspotsRoot.setAttribute('visible', 'true');
+      enableHotspots();
+      isTransitioning = false;
+    }
+
+    // ---------- ENTER SCENE ----------
+    function enterScene(sceneName) {
+      if (!scenes[sceneName]) {
+        console.error('Initial scene not found:', sceneName);
+        return;
       }
+      // تعيين السماء النشطة والشفافية
+      activeSky.setAttribute('material', `src: ${scenes[sceneName].image}; shader: flat; transparent: true; side: double; opacity: 1`);
+      inactiveSky.setAttribute('material', `shader: flat; transparent: true; side: double; opacity: 0`);
+      buildHotspotsFor(sceneName);
 
-      let activeHotspots = [];
-
-      function changeScene(sceneName) {
-        activeHotspots.forEach(h => h.remove());
-        activeHotspots = [];
-
-        const scene = scenes[sceneName];
-        sky.setAttribute("src", scene.src);
-
-        scene.hotspots.forEach(h => {
-          const hotspot = makeHotspot(h);
-          activeHotspots.push(hotspot);
-        });
+      // إظهار مؤشر الماوس على سطح المكتب فقط
+      const deskCursor = document.getElementById('desktopCursor');
+      if (AFRAME.utils.device.isDesktop()) {
+        deskCursor.setAttribute('visible', true);
+      } else {
+        deskCursor.setAttribute('visible', false);
       }
+    }
 
-      changeScene("scene1");
-    </script>
-  </a-scene>
+    sceneEl.addEventListener('loaded', () => {
+      activeSky.setAttribute('material', 'shader: flat; transparent: true; side: double;');
+      inactiveSky.setAttribute('material', 'shader: flat; transparent: true; side: double;');
+    });
+
+    window.vrTour = { enterScene, fadeToScene, hotspotsData, scenes };
+
+    if (overlay.style.display === 'none') enterScene(initialScene);
+  </script>
 </body>
 </html>
