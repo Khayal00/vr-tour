@@ -2,10 +2,10 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>VR Tour with Pulsing Hotspots</title>
+    <title>VR Tour - PNG Hotspots</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-    <!-- مكتبة look-at لجعل النصوص تواجه الكاميرا -->
+    <!-- مكتبة look-at لجعل النصوص/اللوحات تواجه الكاميرا -->
     <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
     <style>
       body { margin: 0; }
@@ -14,6 +14,28 @@
   </head>
   <body>
     <a-scene>
+      <!-- أصول (استبدل بالصور/أصواتك) -->
+      <a-assets>
+        <!-- صور الخلفيات 360 -->
+        <img id="Living_Room_img" src="assets/Living_Room.jpg">
+        <img id="Kitchen_img" src="assets/Kitchen.jpg">
+        <img id="Reception_img" src="assets/Reception.jpg">
+        <img id="Corridor_img" src="assets/Corridor.jpg">
+        <img id="Bathroom_img" src="assets/Bathroom.jpg">
+        <img id="Bedroom_img" src="assets/Bedroom.jpg">
+
+        <!-- صور الهوت سبوت (استبدلها بملفاتك) -->
+        <img id="hot_kitchen" src="assets/link1.png">
+        <img id="hot_reception" src="assets/link2.png">
+        <img id="hot_corridor" src="assets/link.png">
+        <img id="hot_bathroom" src="assets/link1.png">
+        <img id="hot_bedroom" src="assets/link2.png">
+        <img id="hot_default" src="assets/hot_default.png">
+
+        <!-- صوت الانتقال -->
+        <audio id="transitionSound" src="assets/transition.mp3"></audio>
+      </a-assets>
+
       <!-- الكاميرا -->
       <a-entity id="cameraRig" camera look-controls position="0 1.6 0">
         <a-cursor
@@ -24,7 +46,7 @@
           material="color: white; shader: flat">
         </a-cursor>
 
-        <!-- طبقة التلاشي -->
+        <!-- طبقة التلاشي أمام الكاميرا -->
         <a-plane id="fadePlane" position="0 0 -0.5" width="2" height="2"
                  material="color: black; opacity: 0; transparent: true"
                  animation__fadeout="startEvents: fadeout; property: material.opacity; from: 0; to: 1; dur: 800"
@@ -33,57 +55,53 @@
       </a-entity>
 
       <!-- السماء -->
-      <a-sky id="sky" rotation="0 -90 0"></a-sky>
+      <a-sky id="sky" rotation="0 -90 0" src="#Living_Room_img"></a-sky>
 
       <!-- حاوية للهوت سبوت -->
       <a-entity id="hotspotContainer"></a-entity>
-
-      <!-- تحميل الصوت -->
-      <a-assets>
-        <audio id="transitionSound" src="assets/transition.mp3"></audio>
-      </a-assets>
     </a-scene>
 
     <script>
+      // تعريف المشاهد — الآن كل هوت سبوت يحتوي على حقل image الذي يشير إلى id داخل a-assets
       const scenes = {
         Living_Room: {
-          src: 'assets/Living_Room.jpg',
+          assetId: '#Living_Room_img',
           hotspots: [
-            { target: 'Kitchen', position: '-3 1.6 4' },
-            { target: 'Reception', position: '-3 1.6 -1.7' },
-            { target: 'Corridor', position: '3 1.6 3' }
+            { target: 'Kitchen', position: '-3 1.6 4', image: '#hot_kitchen', size: 0.6 },
+            { target: 'Reception', position: '-3 1.6 -1.7', image: '#hot_reception', size: 0.6 },
+            { target: 'Corridor', position: '3 1.6 3', image: '#hot_corridor', size: 0.7 }
           ]
         },
         Kitchen: {
-          src: 'assets/Kitchen.jpg',
+          assetId: '#Kitchen_img',
           hotspots: [
-            { target: 'Living_Room', position: '4 1.6 -7' }
+            { target: 'Living_Room', position: '4 1.6 -7', image: '#hot_default', size: 0.7 }
           ]
         },
         Reception: {
-          src: 'assets/Reception.jpg',
+          assetId: '#Reception_img',
           hotspots: [
-            { target: 'Living_Room', position: '5 1.6 -1' }
+            { target: 'Living_Room', position: '5 1.6 -1', image: '#hot_reception', size: 0.6 }
           ]
         },
         Corridor: {
-          src: 'assets/Corridor.jpg',
+          assetId: '#Corridor_img',
           hotspots: [
-            { target: 'Bathroom', position: '3 1.6 -0.5' },
-            { target: 'Bedroom', position: '-0.2 1.6 -3.5' },
-            { target: 'Living_Room', position: '1 1.6 3' }
+            { target: 'Bathroom', position: '3 1.6 -0.5', image: '#hot_bathroom', size: 0.55 },
+            { target: 'Bedroom', position: '-0.2 1.6 -3.5', image: '#hot_bedroom', size: 0.55 },
+            { target: 'Living_Room', position: '1 1.6 3', image: '#hot_corridor', size: 0.65 }
           ]
         },
         Bathroom: {
-          src: 'assets/Bathroom.jpg',
+          assetId: '#Bathroom_img',
           hotspots: [
-            { target: 'Corridor', position: '-1 1.6 4' }
+            { target: 'Corridor', position: '-1 1.6 4', image: '#hot_bathroom', size: 0.55 }
           ]
         },
         Bedroom: {
-          src: 'assets/Bedroom.jpg',
+          assetId: '#Bedroom_img',
           hotspots: [
-            { target: 'Corridor', position: '-0.5 1.6 4' }
+            { target: 'Corridor', position: '-0.5 1.6 4', image: '#hot_bedroom', size: 0.55 }
           ]
         }
       };
@@ -97,58 +115,75 @@
         fadePlane.emit('fadeout');
 
         setTimeout(() => {
-          // تغيير الخلفية
-          sky.setAttribute('src', scenes[sceneName].src);
+          // تغيير الخلفية بالـ assetId
+          sky.setAttribute('src', scenes[sceneName].assetId);
 
-          // إزالة النقاط القديمة
+          // إزالة الهوت سبوت القديمة
           hotspotContainer.innerHTML = '';
 
-          // إضافة النقاط الجديدة
+          // إضافة الهوت سبوت الجديدة
           scenes[sceneName].hotspots.forEach(hs => {
-            // إنشاء الكرة البيضاء
-            const el = document.createElement('a-sphere');
-            el.setAttribute('class', 'hotspot');
-            el.setAttribute('position', hs.position);
-            el.setAttribute('radius', 0.12);
-            el.setAttribute('color', '#FFFFFF');
-            el.setAttribute('material', 'shader: standard; emissive: #FFD700; emissiveIntensity: 0.3');
+            // العنصر الرئيسي: صورة PNG
+            const imgEl = document.createElement('a-image');
+            imgEl.setAttribute('class', 'hotspot');
+            imgEl.setAttribute('src', hs.image || '#hot_default');
+            imgEl.setAttribute('position', hs.position);
+            imgEl.setAttribute('width', hs.size || 0.6);
+            imgEl.setAttribute('height', (hs.size || 0.6) * 1.0); // نسبة العرض/الارتفاع حسب الصورة
+            // خلي الصورة شفافة (مفيدة إذا الـ PNG له خلفية شفافة)
+            imgEl.setAttribute('material', 'transparent: true; depthTest: true;');
+            // اجعل الصورة دائماً تواجه الكاميرا
+            imgEl.setAttribute('look-at', '#cameraRig');
 
-            // نبض دائم
-            el.setAttribute('animation__pulse', 'property: scale; dir: alternate; dur: 1500; loop: true; to: 1.3 1.3 1.3');
+            // نبض دائم للصورة
+            imgEl.setAttribute('animation__pulse', 'property: scale; dir: alternate; dur: 1500; loop: true; to: 1.15 1.15 1.15');
 
-            // إنشاء حلقة توهج حول الكرة
+            // تأثيرات hover (تكبر أكثر عند المرور)
+            imgEl.setAttribute('animation__hover', 'property: scale; startEvents: mouseenter; to: 1.4 1.4 1.4; dur: 150');
+            imgEl.setAttribute('animation__leave', 'property: scale; startEvents: mouseleave; to: 1 1 1; dur: 150');
+
+            // حلقة خلف الصورة (توضع كطفل داخل العنصر لكي تنتقل معه)
             const ring = document.createElement('a-ring');
-            ring.setAttribute('position', '0 0 0');
+            ring.setAttribute('position', '0 -0.02 -0.01'); // خلف الصورة قليلًا
             ring.setAttribute('rotation', '-90 0 0');
-            ring.setAttribute('radius-inner', 0.25);
-            ring.setAttribute('radius-outer', 1);
-            ring.setAttribute('material', 'color: #FFD700; shader: flat; opacity: 0.5; transparent: true');
+            ring.setAttribute('radius-inner', 0.35);
+            ring.setAttribute('radius-outer', 0.7);
+            ring.setAttribute('material', 'color: #FFD700; shader: flat; opacity: 0.45; transparent: true');
             ring.setAttribute('scale', '1 1 1');
-            el.appendChild(ring);
+            // نبض خفيف للحلقة
+            ring.setAttribute('animation__pulse_ring', 'property: scale; dir: alternate; dur: 1500; loop: true; to: 1.12 1.12 1.12');
+            // تكبر الحلقة عند hover (ابدأ عندما يدخل المؤشر على الصورة)
+            ring.setAttribute('animation__hover_ring', 'property: scale; startEvents: mouseenter; to: 1.5 1.5 1.5; dur: 150');
+            ring.setAttribute('animation__leave_ring', 'property: scale; startEvents: mouseleave; to: 1 1 1; dur: 150');
 
-            // تأثيرات المرور
-            el.setAttribute('animation__hover_emissive', 'property: material.emissiveIntensity; startEvents: mouseenter; to: 1; dur: 200');
-            el.setAttribute('animation__leave_emissive', 'property: material.emissiveIntensity; startEvents: mouseleave; to: 0.3; dur: 200');
+            // ضع الحلقة كابن للصورة بحيث تتحرك مع الصورة
+            imgEl.appendChild(ring);
 
-            // تشغيل الصوت والتنقل عند النقر
-            el.addEventListener('click', () => {
+            // عند النقر: تشغيل صوت + التنقل للمشهد الهدف
+            imgEl.addEventListener('click', () => {
+              // منع تداخل النقرات السريعة
               audio.pause();
               audio.currentTime = 0;
               audio.play().catch(() => {});
               changeScene(hs.target);
             });
 
-            hotspotContainer.appendChild(el);
+            hotspotContainer.appendChild(imgEl);
 
-            // إضافة تسمية الغرفة
+            // تسمية الغرفة أعلى الهوت سبوت (تواجه الكاميرا)
             const label = document.createElement('a-text');
             label.setAttribute('value', hs.target.replace('_', ' '));
             label.setAttribute('align', 'center');
             label.setAttribute('color', '#FFD700');
             label.setAttribute('width', 2);
-            label.setAttribute('look-at', '#cameraRig'); // تجعل النص يواجه الكاميرا
+            // يوضع أعلى الصورة بقيمة y أعلى بمقدار 0.4
             const pos = hs.position.split(' ');
-            label.setAttribute('position', `${pos[0]} ${parseFloat(pos[1]) + 0.4} ${pos[2]}`);
+            label.setAttribute('position', `${pos[0]} ${parseFloat(pos[1]) + 0.45} ${pos[2]}`);
+            label.setAttribute('look-at', '#cameraRig');
+
+            // يمكنك أيضاً أن تجعل النص نابضاً إذا أردت
+            label.setAttribute('animation__pulse_text', 'property: scale; dir: alternate; dur: 1800; loop: true; to: 1.05 1.05 1.05');
+
             hotspotContainer.appendChild(label);
           });
 
@@ -156,8 +191,8 @@
         }, 800);
       }
 
+      // تفعيل المشهد الابتدائي وتشغيل الصوت بعد النقر الأول (سياسة المتصفح)
       window.addEventListener('load', () => {
-        // تفعيل الصوت بعد أول نقرة (سياسة المتصفح)
         document.body.addEventListener('click', () => {
           const audio = document.querySelector('#transitionSound');
           audio.play().catch(() => {});
