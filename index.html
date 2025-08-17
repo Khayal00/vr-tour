@@ -79,43 +79,49 @@
     "Bathroom": "assets/Bathroom.jpg"
   };
 
-  // لكل هوتسبوت: icon (PNG) + iconWidth + iconHeight
+  // لكل هوتسبوت: icon (PNG) + iconWidth + iconHeight + distance
   const hotspotsData = {
     "Reception": [
-      { label: "الصالة", target: "Living_Room", lat: 0, lon: 60,
-        icon: 'assets/link.png', iconWidth: 0.7, iconHeight: 0.7 }
+      { label: "الصالة", target: "Living_Room", lat: 30, lon: 60,
+        icon: 'assets/icons/hotspot_reception.png', iconWidth: 0.7, iconHeight: 0.7, distance: 4.5 }
     ],
     "Kitchen": [
       { label: "الصالة", target: "Living_Room", lat: 10, lon: -80,
-        icon: 'assets/icons/hotspot_kitchen.png', iconWidth: 0.6, iconHeight: 0.6 }
+        icon: 'assets/icons/hotspot_kitchen.png', iconWidth: 0.6, iconHeight: 0.6, distance: 5 }
     ],
     "Corridor": [
       { label: "الصالة", target: "Living_Room", lat: 0, lon: 160,
-        icon: 'assets/icons/hotspot_corridor1.png', iconWidth: 0.65, iconHeight: 0.65 },
+        icon: 'assets/icons/hotspot_corridor1.png', iconWidth: 0.65, iconHeight: 0.65, distance: 5 },
       { label: "غرفة النوم", target: "Bedroom", lat: 5, lon: -30,
-        icon: 'assets/icons/hotspot_bedroom.png', iconWidth: 0.55, iconHeight: 0.7 },
+        icon: 'assets/icons/hotspot_bedroom.png', iconWidth: 0.55, iconHeight: 0.7, distance: 6 },
       { label: "الحمام", target: "Bathroom", lat: -5, lon: -60,
-        icon: 'assets/icons/hotspot_bathroom.png', iconWidth: 0.5, iconHeight: 0.5 }
+        icon: 'assets/icons/hotspot_bathroom.png', iconWidth: 0.5, iconHeight: 0.5, distance: 5 }
     ],
     "Living_Room": [
       { label: "الاستقبال", target: "Reception", lat: 0, lon: -110,
-        icon: 'assets/icons/hotspot_reception_small.png', iconWidth: 0.6, iconHeight: 0.6 },
+        icon: 'assets/icons/hotspot_reception_small.png', iconWidth: 0.6, iconHeight: 0.6, distance: 4.5 },
       { label: "المطبخ", target: "Kitchen", lat: 10, lon: 60,
-        icon: 'assets/icons/hotspot_kitchen2.png', iconWidth: 0.7, iconHeight: 0.6 },
+        icon: 'assets/icons/hotspot_kitchen2.png', iconWidth: 0.7, iconHeight: 0.6, distance: 5 },
       { label: "الممر", target: "Corridor", lat: -5, lon: 150,
-        icon: 'assets/icons/hotspot_corridor2.png', iconWidth: 0.6, iconHeight: 0.6 }
+        icon: 'assets/icons/hotspot_corridor2.png', iconWidth: 0.6, iconHeight: 0.6, distance: 6 }
     ],
     "Bedroom": [
       { label: "الممر", target: "Corridor", lat: 0, lon: 120,
-        icon: 'assets/icons/hotspot_corridor1.png', iconWidth: 0.6, iconHeight: 0.6 }
+        icon: 'assets/icons/hotspot_corridor1.png', iconWidth: 0.6, iconHeight: 0.6, distance: 5 }
     ],
     "Bathroom": [
       { label: "الممر", target: "Corridor", lat: 0, lon: -140,
-        icon: 'assets/icons/hotspot_bathroom2.png', iconWidth: 0.5, iconHeight: 0.5 }
+        icon: 'assets/icons/hotspot_bathroom2.png', iconWidth: 0.5, iconHeight: 0.5, distance: 5.5 }
     ]
   };
 
   const initialScene = "Reception";
+
+// ---------- HOTSPOT DISTANCE (يمكنك تغيير القيمة الافتراضية هنا)
+// المسافة الافتراضية من الكاميرا إلى نقاط الهوتسبوت (وحدات A-Frame — تقريباً أمتار افتراضية)
+// يمكنك أيضاً تحديد حقل `distance` لكل هوتسبوت في hotspotsData لتجاوز القيمة الافتراضية.
+const hotspotDefaultDistance = 3.5; // اجعلها أكبر لجعل النقاط أبعد (مثال: 6, 8)
+
 
   // ---------- PRELOADER ----------
   const overlay = document.getElementById('overlay');
@@ -242,7 +248,9 @@
 
     const list = hotspotsData[sceneName] || [];
     list.forEach(h => {
-      const pos = latLonToCartesian(h.lat || 0, h.lon || 0, 3.5);
+      // allow per-hotspot distance override (falls back to global default)
+      const radius = h.distance || h.iconDistance || hotspotDefaultDistance;
+      const pos = latLonToCartesian(h.lat || 0, h.lon || 0, radius);
       const ent = makeHotspot(h);
       ent.setAttribute('position', `${pos.x.toFixed(3)} ${pos.y.toFixed(3)} ${pos.z.toFixed(3)}`);
       ent.setAttribute('data-target', h.target);
