@@ -82,7 +82,7 @@
   // لكل هوتسبوت: icon (PNG) + iconWidth + iconHeight
   const hotspotsData = {
     "Reception": [
-      { label: "الصالة", target: "Living_Room", lat: 50, lon: 100,
+      { label: "الصالة", target: "Living_Room", lat: 50, lon: 50,
         icon: 'assets/link.png', iconWidth: 0.7, iconHeight: 0.7 }
     ],
     "Kitchen": [
@@ -185,15 +185,7 @@
 
     // pulse animation (running)
     hotspot.setAttribute('animation__pulse', 'property: scale; dir: alternate; dur: 900; easing: easeInOutSine; loop: true; to: 1.12 1.12 1.12; from: 0.95 0.95 0.95');
-
-    // label background
-    const labelBg = document.createElement('a-plane');
-    labelBg.setAttribute('height', '0.28');
-    labelBg.setAttribute('width', '1.4');
-    labelBg.setAttribute('material', 'color: #000; opacity: 0.45; shader: flat;');
-    labelBg.setAttribute('position', `0 0.62 0`);
-    labelBg.setAttribute('visible', false);
-
+    
     // text label (NO msdf)
     const label = document.createElement('a-entity');
     label.setAttribute('text', `value: ${h.label}; align: center; wrapCount: 20; width: 1.7; color: #FFFFFF;`);
