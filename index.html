@@ -169,6 +169,10 @@
     hotspot.setAttribute('look-at', '#camera');
     hotspot.setAttribute('shadow', 'receive: false;cast:false');
     hotspot.setAttribute('visible', true);
+    if (h.label === "الصالة") {
+  hotspot.setAttribute("scale", "1 -1 1");
+}
+
 
     // pulse animation (running)
     hotspot.setAttribute('animation__pulse', 'property: scale; dir: alternate; dur: 900; easing: easeInOutSine; loop: true; to: 1.12 1.12 1.12; from: 0.95 0.95 0.95');
