@@ -62,7 +62,7 @@
     <a-sky id="skyA" radius="5000" position="0 0 0" material="shader: flat; transparent: true; side: double; opacity:1"></a-sky>
     <a-sky id="skyB" radius="5000" position="0 0 0" material="shader: flat; transparent: true; side: double; opacity:0"></a-sky>
 
-    <!-- HOTSPOTS ROOT: نتحكم في ظهوره لإخفاء العناصر أثناء التلاشي -->
+    <!-- HOTSPOTS ROOT -->
     <a-entity id="hotspotsRoot" visible="true"></a-entity>
 
     <a-entity id="desktopCursor" cursor="rayOrigin: mouse" raycaster="objects: .clickable" visible="false"></a-entity>
@@ -169,13 +169,12 @@
     hotspot.setAttribute('look-at', '#camera');
     hotspot.setAttribute('shadow', 'receive: false;cast:false');
     hotspot.setAttribute('visible', true);
-    if (h.label === "الصالة") {
-  hotspot.setAttribute("scale", "1 -1 1");
-}
 
+    // 👇 انعكاس عمودي
+    hotspot.setAttribute("scale", "-1 -1 -1");
 
-    // pulse animation (running)
-    hotspot.setAttribute('animation__pulse', 'property: scale; dir: alternate; dur: 900; easing: easeInOutSine; loop: true; to: 1.12 1.12 1.12; from: 0.95 0.95 0.95');
+    // pulse animation (معدل للانعكاس)
+    hotspot.setAttribute('animation__pulse', 'property: scale; dir: alternate; dur: 900; easing: easeInOutSine; loop: true; to: 1 -1.12 1.12; from: 1 -0.95 0.95');
 
     // label background
     const labelBg = document.createElement('a-plane');
@@ -185,21 +184,21 @@
     labelBg.setAttribute('position', `0 0.62 0`);
     labelBg.setAttribute('visible', false);
 
-    // text label (NO msdf)
+    // text label
     const label = document.createElement('a-entity');
     label.setAttribute('text',
       `value: ${h.label}; align: center; wrapCount: 20; width: 1.7; color: #FFFFFF;`
     );
-    label.setAttribute('position', `0 0.62 0.02`); // in front of bg to avoid z-fighting
+    label.setAttribute('position', `0 0.62 0.02`);
     label.setAttribute('visible', false);
 
     hotspot.addEventListener('mouseenter', () => {
-      hotspot.setAttribute('animation__hover', 'property: scale; to: 1.45 1.45 1.45; dur: 180; easing: easeOutQuad');
+      hotspot.setAttribute('animation__hover', 'property: scale; to: 1 -1.45 1.45; dur: 180; easing: easeOutQuad');
       label.setAttribute('visible', true);
       labelBg.setAttribute('visible', true);
     });
     hotspot.addEventListener('mouseleave', () => {
-      hotspot.setAttribute('animation__hover', 'property: scale; to: 1 1 1; dur: 150; easing: easeOutQuad');
+      hotspot.setAttribute('animation__hover', 'property: scale; to: 1 -1 1; dur: 150; easing: easeOutQuad');
       label.setAttribute('visible', false);
       labelBg.setAttribute('visible', false);
     });
@@ -209,7 +208,6 @@
       const tgt = hotspot.getAttribute('data-target');
       if (tgt) {
         disableHotspots();
-        // hide entire hotspots root immediately to avoid lingering visuals during crossfade
         hotspotsRoot.setAttribute('visible', 'false');
         fadeToScene(tgt);
       }
@@ -217,7 +215,6 @@
     hotspot.addEventListener('click', triggerNavigate);
     hotspot.addEventListener('triggerdown', triggerNavigate);
 
-    // append: bg first, then text (text slightly in front)
     hotspot.appendChild(labelBg);
     hotspot.appendChild(label);
     return hotspot;
@@ -237,18 +234,7 @@
   }
 
   function buildHotspotsFor(sceneName) {
-    // reset any running pulse animations to avoid leftover scales
-    hotspotsRoot.querySelectorAll('[animation__pulse]').forEach(el => {
-      try {
-        el.removeAttribute('animation__pulse');
-        // reset scale (object3D exists once in scene)
-        if (el.object3D) el.object3D.scale.set(1,1,1);
-      } catch(e) { /* ignore */ }
-    });
-
-    // clear previous children
     while (hotspotsRoot.firstChild) hotspotsRoot.removeChild(hotspotsRoot.firstChild);
-
     const list = hotspotsData[sceneName] || [];
     list.forEach(h => {
       const pos = latLonToCartesian(h.lat || 0, h.lon || 0, 3.5);
@@ -273,22 +259,16 @@
     isTransitioning = true;
     const fadeDur = 700;
 
-    // ensure hotspots hidden (in case caller didn't)
     hotspotsRoot.setAttribute('visible', 'false');
 
-    // clean previous animations on skies
     inactiveSky.removeAttribute('animation__in');
     activeSky.removeAttribute('animation__out');
 
-    // set new texture on inactive sky (opacity 0 to start)
     inactiveSky.setAttribute('material',
       `src: url(${scenes[targetName]}); shader: flat; transparent: true; side: double; opacity: 0`
     );
-
-    // ensure active sky has consistent material
     activeSky.setAttribute('material', `shader: flat; transparent: true; side: double; opacity: 1`);
 
-    // animate crossfade
     inactiveSky.setAttribute('animation__in',
       `property: material.opacity; to: 1; dur: ${fadeDur}; easing: easeInOutQuad`
     );
@@ -296,10 +276,8 @@
       `property: material.opacity; to: 0; dur: ${fadeDur}; easing: easeInOutQuad`
     );
 
-    // wait for animation to finish
     await new Promise(resolve => setTimeout(resolve, fadeDur + 40));
 
-    // finalize opacities and swap refs
     activeSky.setAttribute('material', 'opacity', 0);
     inactiveSky.setAttribute('material', 'opacity', 1);
 
@@ -307,14 +285,11 @@
     activeSky = inactiveSky;
     inactiveSky = tmp;
 
-    // remove animation attrs to keep clean state
     activeSky.removeAttribute('animation__in');
     inactiveSky.removeAttribute('animation__out');
 
-    // rebuild hotspots for the new scene
     buildHotspotsFor(targetName);
 
-    // tiny delay so rebuild finishes then show and enable
     await new Promise(resolve => setTimeout(resolve, 90));
     hotspotsRoot.setAttribute('visible', 'true');
     enableHotspots();
@@ -327,7 +302,6 @@
       console.error('Initial scene not found:', sceneName);
       return;
     }
-    // set active sky and opacities
     activeSky.setAttribute('material', `src: url(${scenes[sceneName]}); shader: flat; transparent: true; side: double; opacity: 1`);
     inactiveSky.setAttribute('material', `shader: flat; transparent: true; side: double; opacity: 0`);
     buildHotspotsFor(sceneName);
