@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>جولة افتراضية متطورة - مع هوت سبوتات متعددة الصور</title>
+  <title>جولة افتراضية - هوت سبوتات متعددة الصور</title>
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -122,115 +122,6 @@
       border-radius: 12px;
     }
     
-    .hotspot-gallery {
-      position: absolute;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.7);
-      border-radius: 15px;
-      padding: 15px;
-      width: 90%;
-      max-width: 700px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      z-index: 50;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5);
-    }
-    
-    .gallery-title {
-      font-size: 22px;
-      margin-bottom: 15px;
-      color: #ffcc00;
-      font-weight: 700;
-    }
-    
-    .gallery-container {
-      display: flex;
-      width: 100%;
-      align-items: center;
-      justify-content: center;
-      gap: 15px;
-    }
-    
-    .gallery-btn {
-      background: linear-gradient(45deg, #2193b0, #6dd5ed);
-      border: none;
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      color: white;
-      font-size: 20px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-    }
-    
-    .gallery-btn:hover {
-      transform: scale(1.1);
-    }
-    
-    .gallery-main {
-      width: 400px;
-      height: 250px;
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
-      border: 3px solid rgba(255, 255, 255, 0.2);
-    }
-    
-    .gallery-main img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      transition: transform 0.5s ease;
-    }
-    
-    .gallery-main img:hover {
-      transform: scale(1.03);
-    }
-    
-    .gallery-thumbnails {
-      display: flex;
-      gap: 10px;
-      margin-top: 15px;
-    }
-    
-    .thumbnail {
-      width: 70px;
-      height: 50px;
-      border-radius: 8px;
-      overflow: hidden;
-      cursor: pointer;
-      opacity: 0.6;
-      transition: all 0.3s ease;
-      border: 2px solid transparent;
-    }
-    
-    .thumbnail:hover, .thumbnail.active {
-      opacity: 1;
-      transform: scale(1.1);
-      border-color: #ffcc00;
-    }
-    
-    .thumbnail img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    
-    .gallery-counter {
-      margin-top: 12px;
-      font-size: 16px;
-      color: #6dd5ed;
-      font-weight: 600;
-    }
-    
     .scene-info {
       position: absolute;
       top: 20px;
@@ -250,17 +141,14 @@
       #title { font-size: 32px; }
       #subtitle { font-size: 17px; }
       #welcomeBox { padding: 20px; max-width: 90%; }
-      .gallery-main { width: 300px; height: 200px; }
-      .gallery-btn { width: 40px; height: 40px; }
+      .scene-info { font-size: 18px; padding: 10px 15px; }
     }
     
     @media (max-width: 480px) {
       #title { font-size: 26px; }
       #subtitle { font-size: 15px; }
       #startBtn { padding: 12px 30px; font-size: 18px; }
-      .gallery-main { width: 250px; height: 160px; }
-      .thumbnail { width: 50px; height: 40px; }
-      .scene-info { font-size: 18px; padding: 10px 15px; }
+      .scene-info { font-size: 16px; padding: 8px 12px; }
     }
   </style>
 </head>
@@ -288,23 +176,9 @@
       <div id="instructions">
         <i class="fas fa-info-circle" style="margin-left: 8px;"></i> 
         للتحكم: استخدم اللمس على الموبايل، النقر بالماوس على الكمبيوتر، أو ذراع التحكم في نظارة VR.<br>
-        يمكنك تعديل مواقع النقاط الساخنة في الكود حسب احتياجاتك.
+        يمكنك إضافة صور مختلفة لكل نقطة ساخنة بسهولة.
       </div>
     </div>
-  </div>
-  
-  <!-- معرض الصور للهوت سبوت -->
-  <div id="hotspotGallery" class="hotspot-gallery" style="display: none;">
-    <div class="gallery-title" id="galleryTitle">معرض صور</div>
-    <div class="gallery-container">
-      <button class="gallery-btn" id="prevBtn"><i class="fas fa-arrow-right"></i></button>
-      <div class="gallery-main">
-        <img id="mainImage" src="" alt="صورة الهوت سبوت">
-      </div>
-      <button class="gallery-btn" id="nextBtn"><i class="fas fa-arrow-left"></i></button>
-    </div>
-    <div class="gallery-thumbnails" id="thumbnailsContainer"></div>
-    <div class="gallery-counter" id="imageCounter">1 / 3</div>
   </div>
   
   <!-- معلومات المشهد الحالي -->
@@ -364,6 +238,7 @@
       }
     };
 
+    // هنا يمكنك إضافة صورة مختلفة لكل نقطة هوت سبوت
     const hotspotsData = {
       "lobby": [
         { 
@@ -371,11 +246,14 @@
           target: "living_room", 
           lat: 0, 
           lon: 60,
-          images: [
-            "https://images.unsplash.com/photo-1631679706909-1844bbd07221?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-            "https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-            "https://images.unsplash.com/photo-1615529162924-f8605388463a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-          ]
+          image: "assets/link.png"
+        },
+        { 
+          label: "المكتب", 
+          target: "bedroom", 
+          lat: -10, 
+          lon: -60,
+          image: "assets/link1.png"
         }
       ],
       "kitchen": [
@@ -384,11 +262,14 @@
           target: "living_room", 
           lat: 10, 
           lon: -80,
-          images: [
-            "https://images.unsplash.com/photo-1600566752355-35792bedcfea?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-            "https://images.unsplash.com/photo-1556911220-ef412ae179a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-            "https://images.unsplash.com/photo-1600566753086-00f18fb6b4ea?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-          ]
+          image: "https://images.unsplash.com/photo-1556911220-ef412ae179a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"
+        },
+        { 
+          label: "المخزن", 
+          target: "lobby", 
+          lat: -5, 
+          lon: 120,
+          image: "https://images.unsplash.com/photo-1617103996702-96ff29b1c467?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"
         }
       ],
       "corridor": [
@@ -397,32 +278,21 @@
           target: "living_room", 
           lat: 0, 
           lon: 160,
-          images: [
-            "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-            "https://images.unsplash.com/photo-1598928636135-d146006ff4be?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-          ]
+          image: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"
         },
         { 
           label: "غرفة النوم", 
           target: "bedroom", 
           lat: 5, 
           lon: -30,
-          images: [
-            "https://images.unsplash.com/photo-1615529162924-f8605388463a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-            "https://images.unsplash.com/photo-1615529162924-f8605388463a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-            "https://images.unsplash.com/photo-1615529162924-f8605388463a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-            "https://images.unsplash.com/photo-1615529162924-f8605388463a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-          ]
+          image: "https://images.unsplash.com/photo-1513694203232-719a280e022f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"
         },
         { 
           label: "الحمام", 
           target: "bathroom", 
           lat: -5, 
           lon: -60,
-          images: [
-            "https://images.unsplash.com/photo-1630569461395-8d60247cb0ba?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-            "https://images.unsplash.com/photo-1564540583246-934409427776?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-          ]
+          image: "https://images.unsplash.com/photo-1564540583246-934409427776?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"
         }
       ],
       "living_room": [
@@ -431,30 +301,21 @@
           target: "lobby", 
           lat: 0, 
           lon: -110,
-          images: [
-            "https://images.unsplash.com/photo-1616486029423-aaa4789e8c9a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-            "https://images.unsplash.com/photo-1616486029423-aaa4789e8c9a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-            "https://images.unsplash.com/photo-1616486029423-aaa4789e8c9a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-          ]
+          image: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"
         },
         { 
           label: "المطبخ", 
           target: "kitchen", 
           lat: 10, 
           lon: 60,
-          images: [
-            "https://images.unsplash.com/photo-1600566752355-35792bedcfea?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-            "https://images.unsplash.com/photo-1600566752355-35792bedcfea?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-          ]
+          image: "https://images.unsplash.com/photo-1600566753086-00f18fb6b4ea?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"
         },
         { 
           label: "الممر", 
           target: "corridor", 
           lat: -5, 
           lon: 150,
-          images: [
-            "https://images.unsplash.com/photo-1598928636135-d146006ff4be?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-          ]
+          image: "https://images.unsplash.com/photo-1598928636135-d146006ff4be?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"
         }
       ],
       "bedroom": [
@@ -463,11 +324,14 @@
           target: "corridor", 
           lat: 0, 
           lon: 120,
-          images: [
-            "https://images.unsplash.com/photo-1615529162924-f8605388463a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-            "https://images.unsplash.com/photo-1615529162924-f8605388463a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-            "https://images.unsplash.com/photo-1615529162924-f8605388463a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-          ]
+          image: "https://images.unsplash.com/photo-1615529162924-f8605388463a?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"
+        },
+        { 
+          label: "الحمام", 
+          target: "bathroom", 
+          lat: -10, 
+          lon: -30,
+          image: "https://images.unsplash.com/photo-1564540583246-934409427776?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"
         }
       ],
       "bathroom": [
@@ -476,11 +340,7 @@
           target: "corridor", 
           lat: 0, 
           lon: -140,
-          images: [
-            "https://images.unsplash.com/photo-1630569461395-8d60247cb0ba?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-            "https://images.unsplash.com/photo-1564540583246-934409427776?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-            "https://images.unsplash.com/photo-1630569461395-8d60247cb0ba?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-          ]
+          image: "https://images.unsplash.com/photo-1630569461395-8d60247cb0ba?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"
         }
       ]
     };
@@ -499,8 +359,8 @@
     // جمع صور الهوت سبوتات
     Object.values(hotspotsData).forEach(hotspots => {
       hotspots.forEach(hotspot => {
-        if (hotspot.images && hotspot.images.length) {
-          allImages = allImages.concat(hotspot.images);
+        if (hotspot.image) {
+          allImages.push(hotspot.image);
         }
       });
     });
@@ -551,87 +411,6 @@
       }
     });
 
-    // ---------- معرض صور الهوت سبوت ----------
-    const gallery = document.getElementById('hotspotGallery');
-    const mainImage = document.getElementById('mainImage');
-    const thumbnailsContainer = document.getElementById('thumbnailsContainer');
-    const prevBtn = document.getElementById('prevBtn');
-    const nextBtn = document.getElementById('nextBtn');
-    const imageCounter = document.getElementById('imageCounter');
-    const galleryTitle = document.getElementById('galleryTitle');
-    
-    let currentHotspot = null;
-    let currentImageIndex = 0;
-    
-    function showGallery(hotspot) {
-      currentHotspot = hotspot;
-      currentImageIndex = 0;
-      
-      // تحديث العنوان
-      galleryTitle.textContent = hotspot.label;
-      
-      // تحديث الصور
-      updateGallery();
-      
-      // إظهار المعرض
-      gallery.style.display = 'flex';
-    }
-    
-    function hideGallery() {
-      gallery.style.display = 'none';
-    }
-    
-    function updateGallery() {
-      const images = currentHotspot.images || [];
-      
-      if (images.length === 0) return;
-      
-      // عرض الصورة الرئيسية
-      mainImage.src = images[currentImageIndex];
-      
-      // تحديث العداد
-      imageCounter.textContent = `${currentImageIndex + 1} / ${images.length}`;
-      
-      // تحديث الصور المصغرة
-      thumbnailsContainer.innerHTML = '';
-      
-      images.forEach((img, index) => {
-        const thumbnail = document.createElement('div');
-        thumbnail.className = `thumbnail ${index === currentImageIndex ? 'active' : ''}`;
-        thumbnail.innerHTML = `<img src="${img}" alt="صورة ${index + 1}">`;
-        
-        thumbnail.addEventListener('click', () => {
-          currentImageIndex = index;
-          updateGallery();
-        });
-        
-        thumbnailsContainer.appendChild(thumbnail);
-      });
-    }
-    
-    prevBtn.addEventListener('click', () => {
-      if (currentHotspot && currentHotspot.images) {
-        currentImageIndex = (currentImageIndex - 1 + currentHotspot.images.length) % currentHotspot.images.length;
-        updateGallery();
-      }
-    });
-    
-    nextBtn.addEventListener('click', () => {
-      if (currentHotspot && currentHotspot.images) {
-        currentImageIndex = (currentImageIndex + 1) % currentHotspot.images.length;
-        updateGallery();
-      }
-    });
-    
-    // إغلاق المعرض عند النقر خارج الصور
-    document.addEventListener('click', (e) => {
-      if (gallery.style.display === 'flex' && 
-          !gallery.contains(e.target) && 
-          e.target.className !== 'gallery-btn') {
-        hideGallery();
-      }
-    });
-    
     // ---------- UTILS ----------
     function latLonToCartesian(latDeg, lonDeg, radius){
       const lat = latDeg * Math.PI/180;
@@ -654,10 +433,19 @@
       const hotspot = document.createElement('a-entity');
       hotspot.classList.add('clickable');
       
-      // إنشاء رمز الهوت سبوت
+      // إنشاء رمز الهوت سبوت باستخدام الصورة المخصصة
       const icon = document.createElement('a-entity');
-      icon.setAttribute('geometry', 'primitive: circle; radius: 0.15');
-      icon.setAttribute('material', 'shader: flat; color: #FF9800; transparent: true; opacity: 0.9');
+      
+      if (h.image) {
+        // إذا كانت هناك صورة مخصصة، استخدمها
+        icon.setAttribute('geometry', 'primitive: circle; radius: 0.2');
+        icon.setAttribute('material', `shader: flat; src: url(${h.image}); transparent: true; opacity: 0.9`);
+      } else {
+        // إذا لم توجد صورة، استخدم الشكل الافتراضي
+        icon.setAttribute('geometry', 'primitive: circle; radius: 0.15');
+        icon.setAttribute('material', 'shader: flat; color: #FF9800; transparent: true; opacity: 0.9');
+      }
+      
       icon.setAttribute('animation__pulse', 'property: scale; dir: alternate; dur: 1200; easing: easeInOutSine; loop: true; to: 1.3 1.3 1.3; from: 0.9 0.9 0.9');
       
       // إنشاء شعاع ضوئي تحت الرمز
@@ -677,24 +465,22 @@
       // تأثير التمرير
       hotspot.addEventListener('mouseenter', () => {
         icon.setAttribute('animation__hover', 'property: scale; to: 1.8 1.8 1.8; dur: 200; easing: easeOutQuad');
-        icon.setAttribute('material', 'color', '#FF5722');
+        if (!h.image) {
+          icon.setAttribute('material', 'color', '#FF5722');
+        }
       });
       
       hotspot.addEventListener('mouseleave', () => {
         icon.setAttribute('animation__hover', 'property: scale; to: 1 1 1; dur: 250; easing: easeOutQuad');
-        icon.setAttribute('material', 'color', '#FF9800');
+        if (!h.image) {
+          icon.setAttribute('material', 'color', '#FF9800');
+        }
       });
 
-      // النقر للانتقال أو عرض المعرض
+      // النقر للانتقال إلى المشهد الهدف
       const triggerNavigate = () => {
         const tgt = hotspot.getAttribute('data-target');
-        
-        // إذا كان هناك صور متعددة، اعرض المعرض
-        if (h.images && h.images.length > 0) {
-          showGallery(h);
-        } 
-        // وإلا انتقل مباشرة إلى المشهد الهدف
-        else if (tgt) {
+        if (tgt) {
           disableHotspots();
           hotspotsRoot.setAttribute('visible', 'false');
           fadeToScene(tgt);
@@ -722,9 +508,6 @@
     }
 
     function buildHotspotsFor(sceneName) {
-      // إخفاء المعرض عند تغيير المشهد
-      hideGallery();
-      
       // تحديث معلومات المشهد
       document.getElementById('sceneInfo').textContent = scenes[sceneName].name;
       
