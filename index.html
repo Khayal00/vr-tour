@@ -108,7 +108,7 @@
             // إنشاء صورة PNG للهوت سبوت
             const el = document.createElement('a-image');
             el.setAttribute('class', 'hotspot');
-            el.setAttribute('src', hs.icon || 'assets/default.png');
+            el.setAttribute('src', hs.icon || 'assets/link1.png');
             el.setAttribute('position', hs.position);
             el.setAttribute('width', 0.6);
             el.setAttribute('height', 0.6);
@@ -131,18 +131,6 @@
             });
 
             hotspotContainer.appendChild(el);
-
-            // إضافة تسمية الغرفة
-            const label = document.createElement('a-text');
-            label.setAttribute('value', hs.target.replace('_', ' '));
-            label.setAttribute('align', 'center');
-            label.setAttribute('color', '#FFD700');
-            label.setAttribute('width', 2);
-            label.setAttribute('look-at', '#cameraRig');
-            const pos = hs.position.split(' ');
-            label.setAttribute('position', `${pos[0]} ${parseFloat(pos[1]) + 0.6} ${pos[2]}`);
-            hotspotContainer.appendChild(label);
-          });
 
           fadePlane.emit('fadein');
         }, 800);
