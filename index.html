@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>VR Tour with PNG Hotspots Facing Camera</title>
+    <title>VR Tour with Hover Text</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
@@ -13,7 +13,6 @@
   </head>
   <body>
     <a-scene>
-      <!-- الكاميرا -->
       <a-entity id="cameraRig" camera look-controls position="0 1.6 0">
         <a-cursor
           rayOrigin="mouse"
@@ -24,13 +23,8 @@
         </a-cursor>
       </a-entity>
 
-      <!-- السماء -->
       <a-sky id="sky" rotation="0 -90 0"></a-sky>
-
-      <!-- حاوية للهوت سبوت -->
       <a-entity id="hotspotContainer"></a-entity>
-
-      <!-- تحميل الصوت -->
       <a-assets>
         <audio id="transitionSound" src="assets/transition.mp3"></audio>
       </a-assets>
@@ -85,13 +79,9 @@
         const hotspotContainer = document.querySelector('#hotspotContainer');
         const audio = document.querySelector('#transitionSound');
 
-        // تغيير الخلفية مباشرة
         sky.setAttribute('src', scenes[sceneName].src);
-
-        // إزالة النقاط القديمة
         hotspotContainer.innerHTML = '';
 
-        // إضافة النقاط الجديدة بصور PNG تواجه الكاميرا
         scenes[sceneName].hotspots.forEach(hs => {
           const el = document.createElement('a-plane');
           el.setAttribute('class', 'hotspot');
@@ -99,20 +89,19 @@
           el.setAttribute('width', 0.6);
           el.setAttribute('height', 0.6);
           el.setAttribute('material', `src: url(${hs.img}); transparent: true; shader: flat`);
-          el.setAttribute('look-at', '#cameraRig'); // ← هذا يجعل الصورة تلتف مع الكاميرا
-
-          // نبض دائم
+          el.setAttribute('look-at', '#cameraRig');
           el.setAttribute('animation__pulse', 'property: scale; dir: alternate; dur: 1500; loop: true; to: 1.3 1.3 1.3');
 
           // تكبير عند المرور
           el.addEventListener('mouseenter', () => {
             el.setAttribute('animation__hover', 'property: scale; to: 1.5 1.5 1.5; dur: 200; easing: easeOutQuad');
+            if (label) label.setAttribute('visible', 'true'); // إظهار النص
           });
           el.addEventListener('mouseleave', () => {
             el.setAttribute('animation__hover', 'property: scale; to: 1 1 1; dur: 200; easing: easeOutQuad');
+            if (label) label.setAttribute('visible', 'false'); // إخفاء النص
           });
 
-          // النقر للتنقل
           el.addEventListener('click', () => {
             audio.pause();
             audio.currentTime = 0;
@@ -122,15 +111,16 @@
 
           hotspotContainer.appendChild(el);
 
-          // إضافة تسمية الغرفة
+          // النص المخفي افتراضيًا
           const label = document.createElement('a-text');
           label.setAttribute('value', hs.target.replace('_', ' '));
           label.setAttribute('align', 'center');
           label.setAttribute('color', '#FFD700');
           label.setAttribute('width', 2);
-          label.setAttribute('look-at', '#cameraRig'); // النص يواجه الكاميرا
+          label.setAttribute('look-at', '#cameraRig');
           const pos = hs.position.split(' ');
           label.setAttribute('position', `${pos[0]} ${parseFloat(pos[1]) + 0.45} ${pos[2]}`);
+          label.setAttribute('visible', 'false'); // مخفي افتراضيًا
           hotspotContainer.appendChild(label);
         });
       }
