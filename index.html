@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>VR Tour with HUD Scene Name</title>
+    <title>VR Tour with HUD and Hotspot Labels</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
@@ -22,15 +22,25 @@
           material="color: white; shader: flat">
         </a-cursor>
 
-        <!-- HUD: اسم المشهد أعلى الشاشة -->
-        <a-text 
-          id="sceneLabel"
-          value="Living Room"
-          position="-1.25 0.75 -1"
-          align="center"
-          color="#FFFFFF"
-          width="1.8">
-        </a-text>
+        <!-- HUD: اسم المشهد داخل مستطيل شبه شفاف -->
+        <a-entity id="sceneHUD" position="0 0.8 -1">
+          <a-plane 
+            id="sceneLabelBg"
+            width="3.5" 
+            height="0.6" 
+            color="#000000" 
+            opacity="0.5" 
+            position="0 0 0">
+          </a-plane>
+          <a-text 
+            id="sceneLabel"
+            value="Living Room"
+            align="center"
+            color="#FFFFFF"
+            width="3"
+            position="0 0 0.01">
+          </a-text>
+        </a-entity>
       </a-entity>
 
       <a-sky id="sky" rotation="0 -90 0"></a-sky>
@@ -103,7 +113,6 @@
         const hotspotContainer = document.querySelector('#hotspotContainer');
         const audio = document.querySelector('#transitionSound');
 
-        // تغيير صورة السماء
         sky.setAttribute('src', scenes[sceneName].src);
         hotspotContainer.innerHTML = '';
 
@@ -138,28 +147,39 @@
           glow.setAttribute('material', `src: #${glowId}; transparent: true; shader: flat; depthTest: false; opacity: 0`);
           glow.setAttribute('visible', 'false');
 
-          // label فوق الهوتسبوت (scale للظهور والاختفاء)
+          // نص الهوتسبوت داخل مستطيل شبه شفاف
+          const labelEntity = document.createElement('a-entity');
+          labelEntity.setAttribute('position', `${hs.position}`);
+          labelEntity.setAttribute('look-at', '#cameraRig');
+          labelEntity.setAttribute('scale', '0 0 0'); // يبدأ مخفي
+
+          const labelBg = document.createElement('a-plane');
+          labelBg.setAttribute('width', 1.2);
+          labelBg.setAttribute('height', 0.4);
+          labelBg.setAttribute('color', '#000000');
+          labelBg.setAttribute('opacity', '0.5');
+          labelBg.setAttribute('position', '0 0 0');
+
           const label = document.createElement('a-text');
           label.setAttribute('value', hs.target.replace('_', ' '));
           label.setAttribute('align', 'center');
           label.setAttribute('color', '#FFFFFF');
-          label.setAttribute('width', 4);
-          label.setAttribute('look-at', '#cameraRig');
-          const pos = hs.position.split(' ');
-          label.setAttribute('position', `${pos[0]} ${parseFloat(pos[1]) + 0.6} ${pos[2]}`);
-          label.setAttribute('scale', '0 0 0'); // يبدأ مخفيًا
-          label.setAttribute('visible', 'true');
+          label.setAttribute('width', 1);
+          label.setAttribute('position', '0 0 0.01');
+
+          labelEntity.appendChild(labelBg);
+          labelEntity.appendChild(label);
 
           // Mouse interactions
           el.addEventListener('mouseenter', () => {
             el.removeAttribute('animation__pulse');
             el.setAttribute('animation__hover', 'property: scale; to: 1.5 1.5 1.5; dur: 180; easing: easeOutQuad');
 
-            // ظهور نص الهوتسبوت
-            label.removeAttribute('animation__scalefadeout');
-            label.setAttribute('animation__scalefadein', 'property: scale; to: 1 1 1; dur: 300; easing: easeOutQuad');
+            // ظهور نص الهوتسبوت تدريجيًا
+            labelEntity.removeAttribute('animation__scaleout');
+            labelEntity.setAttribute('animation__scalein', 'property: scale; to: 1 1 1; dur: 300; easing: easeOutQuad');
 
-            // إظهار التوهج
+            // ظهور التوهج
             glow.setAttribute('visible', 'true');
             glow.removeAttribute('animation__fadeout');
             glow.setAttribute('animation__fadein', 'property: material.opacity; to: 0.85; dur: 200; easing: easeOutQuad');
@@ -173,8 +193,8 @@
             el.setAttribute('animation__pulse', 'property: scale; dir: alternate; dur: 1500; loop: true; to: 1.3 1.3 1.3');
 
             // إخفاء نص الهوتسبوت تدريجيًا
-            label.removeAttribute('animation__scalefadein');
-            label.setAttribute('animation__scalefadeout', 'property: scale; to: 0 0 0; dur: 300; easing: easeOutQuad');
+            labelEntity.removeAttribute('animation__scalein');
+            labelEntity.setAttribute('animation__scaleout', 'property: scale; to: 0 0 0; dur: 300; easing: easeOutQuad');
 
             // إخفاء التوهج تدريجيًا
             glow.removeAttribute('animation__fadein');
@@ -194,7 +214,7 @@
 
           hotspotContainer.appendChild(glow);
           hotspotContainer.appendChild(el);
-          hotspotContainer.appendChild(label);
+          hotspotContainer.appendChild(labelEntity);
         });
       }
 
