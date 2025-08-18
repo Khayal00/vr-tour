@@ -76,7 +76,7 @@
       };
 
       // ترجع dataURL لصورة توهج متدرج (تقدر تغير الألوان/حجم الكانفاس هنا)
-      function makeGlowDataURL(size = 512, colorCenter = '255,240,200', colorMid = '255,220,150') {
+      function makeGlowDataURL(size = 512, colorCenter = '255,240,200', colorMid = '0,128,255') {
         const canvas = document.createElement('canvas');
         canvas.width = canvas.height = size;
         const ctx = canvas.getContext('2d');
@@ -91,241 +91,104 @@
       }
 
       function changeScene(sceneName) {
-        const sceneData = scenes[sceneName];
-        const audio = document.querySelector('#transitionSound');
+        const sky = document.querySelector('#sky');
         const hotspotContainer = document.querySelector('#hotspotContainer');
-        const sceneEl = document.querySelector('a-scene');
-        const FADE_DUR = 700; // مدة التلاشي بالملي ثانية
+        const audio = document.querySelector('#transitionSound');
 
-        // إنشاء sky جديد أمام الحالي مع شفافية 0
-        const newSky = document.createElement('a-sky');
-        newSky.setAttribute('rotation', '0 -90 0');
-        // استخدم خاصية src مباشرة — أكثر موثوقية من وضع url داخل material
-        newSky.setAttribute('src', sceneData.src);
-        newSky.setAttribute('material', 'shader: flat; transparent: true; opacity: 0');
-        newSky.setAttribute('id', 'sky-temp');
-        sceneEl.appendChild(newSky);
+        sky.setAttribute('src', scenes[sceneName].src);
+        hotspotContainer.innerHTML = '';
 
-        // دالة تنفيذ الانتقال (تُستدعى بعد تحميل texture الخاص بالسما الجديد)
-        const proceedTransition = () => {
-          // نخفّض تدرجياً شواغل المشهد الحالي (الهوتسبوتات) كي لا تختفي فجأة
-          const oldChildren = Array.from(hotspotContainer.children);
-          oldChildren.forEach(child => {
-            try {
-              if (child.getAttribute('material')) {
-                child.setAttribute('animation__fadeout', 'property: material.opacity; to: 0; dur: ' + FADE_DUR + '; easing: easeInOutQuad');
-              }
-              if (child.tagName.toLowerCase() === 'a-text') {
-                setTimeout(() => { try { child.setAttribute('visible', 'false'); } catch(e){} }, FADE_DUR + 20);
-              }
-            } catch(e) { /* ignore */ }
+        scenes[sceneName].hotspots.forEach((hs, idx) => {
+          // create unique id for glow texture so it won't collide
+          const glowId = `glow-img-${sceneName}-${idx}-${Date.now()}`;
+          const dataURL = makeGlowDataURL(512);
+          const glowImg = document.createElement('img');
+          glowImg.setAttribute('id', glowId);
+          glowImg.setAttribute('src', dataURL);
+          // append to a-assets so aframe can use it as a texture
+          document.querySelector('a-assets').appendChild(glowImg);
+
+          // main hotspot (png image)
+          const el = document.createElement('a-plane');
+          el.setAttribute('class', 'hotspot');
+          el.setAttribute('position', hs.position);
+          el.setAttribute('width', hs.size || 0.6);
+          el.setAttribute('height', hs.size || 0.6);
+          el.setAttribute('material', `src: url(${hs.img}); transparent: true; shader: flat`);
+          el.setAttribute('look-at', '#cameraRig');
+          el.setAttribute('animation__pulse', 'property: scale; dir: alternate; dur: 1500; loop: true; to: 1.3 1.3 1.3');
+
+          // glow plane (خلف الهوتسبوت) - سيُعرض فقط عند المرور
+          const glow = document.createElement('a-plane');
+          glow.setAttribute('position', hs.position);
+          // نجعل التوهج أكبر من الحجمة الأصلية
+          const glowScale = (hs.size || 0.6) * 1.2;
+          glow.setAttribute('width', glowScale);
+          glow.setAttribute('height', glowScale);
+          glow.setAttribute('look-at', '#cameraRig');
+          // استخدم صورة الـ canvas كخامة، اجعلها شفافة بالبداية
+          glow.setAttribute('material', `src: #${glowId}; transparent: true; shader: flat; depthTest: false`);
+          glow.setAttribute('visible', 'false');
+          glow.setAttribute('scale', '1 1 1');
+          // set initial opacity to 0
+          glow.setAttribute('material.opacity', '0');
+
+          // label (اسم المشهد) - مخفي افتراضياً
+          const label = document.createElement('a-text');
+          label.setAttribute('value', hs.target.replace('_', ' '));
+          label.setAttribute('align', 'center');
+          label.setAttribute('color', '#FFFFFF');
+          label.setAttribute('width', 4);
+          label.setAttribute('look-at', '#cameraRig');
+          const pos = hs.position.split(' ');
+          label.setAttribute('position', `${pos[0]} ${parseFloat(pos[1]) + 0.6} ${pos[2]}`);
+          label.setAttribute('visible', 'false');
+
+          // Mouse interactions
+          el.addEventListener('mouseenter', () => {
+            // اضغط صلتك: نوقف نبضة العنصر مؤقتاً (كي لا يتعارض مع التكبير)
+            el.removeAttribute('animation__pulse');
+            el.setAttribute('animation__hover', 'property: scale; to: 1.5 1.5 1.5; dur: 180; easing: easeOutQuad');
+            label.setAttribute('visible', 'true');
+
+            // show glow: make it visible then raise opacity وتكبير طفيف للتوهج
+            glow.setAttribute('visible', 'true');
+            glow.removeAttribute('animation__fadeout');
+            glow.setAttribute('animation__fadein', 'property: material.opacity; to: 0.85; dur: 200; easing: easeOutQuad');
+            glow.removeAttribute('animation__glowscaleback');
+            glow.setAttribute('animation__glowscale', 'property: scale; to: 1.25 1.25 1.25; dur: 200; easing: easeOutQuad');
           });
 
-          // تلاشي السما الحالي إذا وُجد
-          const currentSky = document.querySelector('#sky');
-          if (currentSky) {
-            let mat = currentSky.getAttribute('material') || '';
-            if (mat.indexOf('transparent: true') === -1) {
-              if (mat.trim().charAt(0) === ';') mat = mat.trim().slice(1);
-              currentSky.setAttribute('material', mat + '; transparent: true');
-            }
-            currentSky.setAttribute('animation__fadeout', 'property: material.opacity; to: 0; dur: ' + FADE_DUR + '; easing: easeInOutQuad');
-          }
-
-          // ارفع سما الجديد تدريجياً
-          newSky.setAttribute('animation__fadein', 'property: material.opacity; to: 1; dur: ' + FADE_DUR + '; easing: easeInOutQuad');
-
-          // شغّل صوت الانتقال
-          audio.pause();
-          audio.currentTime = 0;
-          audio.play().catch(() => {});
-
-          // بعد انتهاء التلاشي، نزيل القديم ونضع الهوتسبوتات الجديدة ثم نُظهرها بتلاشي دخول
-          setTimeout(() => {
-            try { if (currentSky) currentSky.parentNode.removeChild(currentSky); } catch(e){}
-            newSky.setAttribute('id', 'sky');
-
-            hotspotContainer.innerHTML = '';
-
-            sceneData.hotspots.forEach((hs, idx) => {
-              const glowId = 'glow-img-' + sceneName + '-' + idx + '-' + Date.now();
-              const dataURL = makeGlowDataURL(512);
-              const glowImg = document.createElement('img');
-              glowImg.setAttribute('id', glowId);
-              glowImg.setAttribute('src', dataURL);
-              document.querySelector('a-assets').appendChild(glowImg);
-
-              const el = document.createElement('a-plane');
-              el.setAttribute('class', 'hotspot');
-              el.setAttribute('position', hs.position);
-              el.setAttribute('width', hs.size || 0.6);
-              el.setAttribute('height', hs.size || 0.6);
-              el.setAttribute('material', 'src: url(' + hs.img + '); transparent: true; shader: flat; opacity: 0');
-              el.setAttribute('look-at', '#cameraRig');
-              el.setAttribute('animation__pulse', 'property: scale; dir: alternate; dur: 1500; loop: true; to: 1.3 1.3 1.3');
-
-              const glow = document.createElement('a-plane');
-              glow.setAttribute('position', hs.position);
-              const glowScale = (hs.size || 0.6) * 1.2;
-              glow.setAttribute('width', glowScale);
-              glow.setAttribute('height', glowScale);
-              glow.setAttribute('look-at', '#cameraRig');
-              glow.setAttribute('material', 'src: #' + glowId + '; transparent: true; shader: flat; opacity: 0');
-              glow.setAttribute('visible', 'false');
-
-              const label = document.createElement('a-text');
-              label.setAttribute('value', hs.target.replace('_', ' '));
-              label.setAttribute('align', 'center');
-              label.setAttribute('color', '#FFFFFF');
-              label.setAttribute('width', 4);
-              label.setAttribute('look-at', '#cameraRig');
-              const pos = hs.position.split(' ');
-              label.setAttribute('position', pos[0] + ' ' + (parseFloat(pos[1]) + 0.6) + ' ' + pos[2]);
-              label.setAttribute('visible', 'false');
-
-              el.addEventListener('mouseenter', () => {
-                el.removeAttribute('animation__pulse');
-                el.setAttribute('animation__hover', 'property: scale; to: 1.5 1.5 1.5; dur: 180; easing: easeOutQuad');
-                label.setAttribute('visible', 'true');
-
-                glow.setAttribute('visible', 'true');
-                glow.removeAttribute('animation__fadeout');
-                glow.setAttribute('animation__fadein', 'property: material.opacity; to: 0.85; dur: 200; easing: easeOutQuad');
-                glow.removeAttribute('animation__glowscaleback');
-                glow.setAttribute('animation__glowscale', 'property: scale; to: 1.25 1.25 1.25; dur: 200; easing: easeOutQuad');
-              });
-
-              el.addEventListener('mouseleave', () => {
-                el.removeAttribute('animation__hover');
-                el.setAttribute('scale', '1 1 1');
-                el.setAttribute('animation__pulse', 'property: scale; dir: alternate; dur: 1500; loop: true; to: 1.3 1.3 1.3');
-                label.setAttribute('visible', 'false');
-
-                glow.removeAttribute('animation__fadein');
-                glow.setAttribute('animation__fadeout', 'property: material.opacity; to: 0; dur: 300; easing: easeOutQuad');
-                glow.removeAttribute('animation__glowscale');
-                glow.setAttribute('animation__glowscaleback', 'property: scale; to: 1 1 1; dur: 300; easing: easeOutQuad');
-
-                setTimeout(() => { try { glow.setAttribute('visible', 'false'); } catch(e){} }, 320);
-              });
-
-              el.addEventListener('click', () => {
-                audio.pause();
-                audio.currentTime = 0;
-                audio.play().catch(() => {});
-                changeScene(hs.target);
-              });
-
-              hotspotContainer.appendChild(glow);
-              hotspotContainer.appendChild(el);
-              hotspotContainer.appendChild(label);
-
-              // fade-in للـ hotspot الجديد
-              setTimeout(() => {
-                try {
-                  el.setAttribute('animation__fadein', 'property: material.opacity; to: 1; dur: ' + FADE_DUR + '; easing: easeInOutQuad');
-                } catch(e) { }
-              }, 50);
-            });
-
-          }, FADE_DUR + 20);
-        };
-
-        // استدعي proceedTransition فقط بعد تحميل texture الجديد — هذا يمنع شاشة بيضاء
-        let fired = false;
-        newSky.addEventListener('materialtextureloaded', () => { if (!fired) { fired = true; proceedTransition(); } });
-        // fallback: لو ما جاءت الـ event خلال 300ms نتابع على أي حال
-        setTimeout(() => { if (!fired) { fired = true; proceedTransition(); } }, 300);
-
-        // بعد انتهاء التلاشي، نزيل القديم ونضع الهوتسبوتات الجديدة ثم نُظهرها بتلاشي دخول
-        setTimeout(() => {
-          try { if (currentSky) currentSky.parentNode.removeChild(currentSky); } catch(e){}
-          newSky.setAttribute('id', 'sky');
-
-          hotspotContainer.innerHTML = '';
-
-          sceneData.hotspots.forEach((hs, idx) => {
-            const glowId = 'glow-img-' + sceneName + '-' + idx + '-' + Date.now();
-            const dataURL = makeGlowDataURL(512);
-            const glowImg = document.createElement('img');
-            glowImg.setAttribute('id', glowId);
-            glowImg.setAttribute('src', dataURL);
-            document.querySelector('a-assets').appendChild(glowImg);
-
-            const el = document.createElement('a-plane');
-            el.setAttribute('class', 'hotspot');
-            el.setAttribute('position', hs.position);
-            el.setAttribute('width', hs.size || 0.6);
-            el.setAttribute('height', hs.size || 0.6);
-            el.setAttribute('material', 'src: url(' + hs.img + '); transparent: true; shader: flat; opacity: 0');
-            el.setAttribute('look-at', '#cameraRig');
+          el.addEventListener('mouseleave', () => {
+            // ارجع كل شيء لحالته
+            el.removeAttribute('animation__hover');
+            el.setAttribute('scale', '1 1 1');
             el.setAttribute('animation__pulse', 'property: scale; dir: alternate; dur: 1500; loop: true; to: 1.3 1.3 1.3');
-
-            const glow = document.createElement('a-plane');
-            glow.setAttribute('position', hs.position);
-            const glowScale = (hs.size || 0.6) * 1.2;
-            glow.setAttribute('width', glowScale);
-            glow.setAttribute('height', glowScale);
-            glow.setAttribute('look-at', '#cameraRig');
-            glow.setAttribute('material', 'src: #' + glowId + '; transparent: true; shader: flat; opacity: 0');
-            glow.setAttribute('visible', 'false');
-
-            const label = document.createElement('a-text');
-            label.setAttribute('value', hs.target.replace('_', ' '));
-            label.setAttribute('align', 'center');
-            label.setAttribute('color', '#FFFFFF');
-            label.setAttribute('width', 4);
-            label.setAttribute('look-at', '#cameraRig');
-            const pos = hs.position.split(' ');
-            label.setAttribute('position', pos[0] + ' ' + (parseFloat(pos[1]) + 0.6) + ' ' + pos[2]);
             label.setAttribute('visible', 'false');
 
-            el.addEventListener('mouseenter', () => {
-              el.removeAttribute('animation__pulse');
-              el.setAttribute('animation__hover', 'property: scale; to: 1.5 1.5 1.5; dur: 180; easing: easeOutQuad');
-              label.setAttribute('visible', 'true');
+            // اخفِ التوهّج تدريجياً
+            glow.removeAttribute('animation__fadein');
+            glow.setAttribute('animation__fadeout', 'property: material.opacity; to: 0; dur: 300; easing: easeOutQuad');
+            glow.removeAttribute('animation__glowscale');
+            glow.setAttribute('animation__glowscaleback', 'property: scale; to: 1 1 1; dur: 300; easing: easeOutQuad');
 
-              glow.setAttribute('visible', 'true');
-              glow.removeAttribute('animation__fadeout');
-              glow.setAttribute('animation__fadein', 'property: material.opacity; to: 0.85; dur: 200; easing: easeOutQuad');
-              glow.removeAttribute('animation__glowscaleback');
-              glow.setAttribute('animation__glowscale', 'property: scale; to: 1.25 1.25 1.25; dur: 200; easing: easeOutQuad');
-            });
-
-            el.addEventListener('mouseleave', () => {
-              el.removeAttribute('animation__hover');
-              el.setAttribute('scale', '1 1 1');
-              el.setAttribute('animation__pulse', 'property: scale; dir: alternate; dur: 1500; loop: true; to: 1.3 1.3 1.3');
-              label.setAttribute('visible', 'false');
-
-              glow.removeAttribute('animation__fadein');
-              glow.setAttribute('animation__fadeout', 'property: material.opacity; to: 0; dur: 300; easing: easeOutQuad');
-              glow.removeAttribute('animation__glowscale');
-              glow.setAttribute('animation__glowscaleback', 'property: scale; to: 1 1 1; dur: 300; easing: easeOutQuad');
-
-              setTimeout(() => { try { glow.setAttribute('visible', 'false'); } catch(e){} }, 320);
-            });
-
-            el.addEventListener('click', () => {
-              audio.pause();
-              audio.currentTime = 0;
-              audio.play().catch(() => {});
-              changeScene(hs.target);
-            });
-
-            hotspotContainer.appendChild(glow);
-            hotspotContainer.appendChild(el);
-            hotspotContainer.appendChild(label);
-
-            // fade-in للـ hotspot الجديد
-            setTimeout(() => {
-              try {
-                el.setAttribute('animation__fadein', 'property: material.opacity; to: 1; dur: ' + FADE_DUR + '; easing: easeInOutQuad');
-              } catch(e) { }
-            }, 50);
+            // بعد انتهاء الانيميشن اجعل العنصر غير مرئي لعدم الظهور قبل المرور التالي
+            setTimeout(() => { try { glow.setAttribute('visible', 'false'); } catch(e){} }, 320);
           });
 
-        }, FADE_DUR + 20);
+          // النقر ينقلك للمشهد المستهدف
+          el.addEventListener('click', () => {
+            audio.pause();
+            audio.currentTime = 0;
+            audio.play().catch(() => {});
+            changeScene(hs.target);
+          });
+
+          // append in correct order: glow خلف الهوتسبوت
+          hotspotContainer.appendChild(glow);
+          hotspotContainer.appendChild(el);
+          hotspotContainer.appendChild(label);
+        });
       }
 
       window.addEventListener('load', () => {
