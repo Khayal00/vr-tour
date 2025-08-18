@@ -128,7 +128,7 @@
           glow.setAttribute('look-at', '#cameraRig');
           // استخدم صورة الـ canvas كخامة، اجعلها شفافة بالبداية
           glow.setAttribute('material', `src: #${glowId}; transparent: true; shader: flat; depthTest: false`);
-          glow.setAttribute('visible', 'true');
+          glow.setAttribute('visible', 'false');
           glow.setAttribute('scale', '1 1 1');
           // set initial opacity to 0
           glow.setAttribute('material.opacity', '0');
@@ -151,7 +151,8 @@
             el.setAttribute('animation__hover', 'property: scale; to: 1.5 1.5 1.5; dur: 180; easing: easeOutQuad');
             label.setAttribute('visible', 'true');
 
-            // show glow: ارفع الشفافية وسوٍ تكبير طفيف للتوهج
+            // show glow: make it visible then raise opacity وتكبير طفيف للتوهج
+            glow.setAttribute('visible', 'true');
             glow.removeAttribute('animation__fadeout');
             glow.setAttribute('animation__fadein', 'property: material.opacity; to: 0.85; dur: 200; easing: easeOutQuad');
             glow.removeAttribute('animation__glowscaleback');
@@ -171,7 +172,8 @@
             glow.removeAttribute('animation__glowscale');
             glow.setAttribute('animation__glowscaleback', 'property: scale; to: 1 1 1; dur: 300; easing: easeOutQuad');
 
-            // بعد انتهاء الانيميشن اجعل العنصر غير مرئي لو رغبت (هنا نتركه ظاهراً لكن شفاف)
+            // بعد انتهاء الانيميشن اجعل العنصر غير مرئي لعدم الظهور قبل المرور التالي
+            setTimeout(() => { try { glow.setAttribute('visible', 'false'); } catch(e){} }, 320);
           });
 
           // النقر ينقلك للمشهد المستهدف
