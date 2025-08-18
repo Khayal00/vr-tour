@@ -5,6 +5,7 @@
     <title>VR Tour with Pulsing Hotspots</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <!-- مكتبة look-at لجعل النصوص تواجه الكاميرا -->
     <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
     <style>
       body { margin: 0; }
@@ -24,9 +25,8 @@
         </a-cursor>
       </a-entity>
 
-      <!-- السماء: سماءان للمزج السلس -->
-      <a-sky id="skyA" rotation="0 -90 0"></a-sky>
-      <a-sky id="skyB" rotation="0 -90 0" visible="false"></a-sky>
+      <!-- السماء -->
+      <a-sky id="sky" rotation="0 -90 0"></a-sky>
 
       <!-- حاوية للهوت سبوت -->
       <a-entity id="hotspotContainer"></a-entity>
@@ -81,23 +81,31 @@
         }
       };
 
-      const activeSky = document.querySelector('#skyA');
-      const inactiveSky = document.querySelector('#skyB');
-
-      function buildHotspots(sceneName) {
+      function changeScene(sceneName) {
+        const sky = document.querySelector('#sky');
         const hotspotContainer = document.querySelector('#hotspotContainer');
         const audio = document.querySelector('#transitionSound');
+
+        // تغيير الخلفية مباشرة
+        sky.setAttribute('src', scenes[sceneName].src);
+
+        // إزالة النقاط القديمة
         hotspotContainer.innerHTML = '';
 
+        // إضافة النقاط الجديدة
         scenes[sceneName].hotspots.forEach(hs => {
+          // إنشاء الكرة البيضاء
           const el = document.createElement('a-sphere');
           el.setAttribute('class', 'hotspot');
           el.setAttribute('position', hs.position);
           el.setAttribute('radius', 0.12);
           el.setAttribute('color', '#FFFFFF');
           el.setAttribute('material', 'shader: standard; emissive: #FFD700; emissiveIntensity: 0.3');
+
+          // نبض دائم
           el.setAttribute('animation__pulse', 'property: scale; dir: alternate; dur: 1500; loop: true; to: 1.3 1.3 1.3');
 
+          // إنشاء حلقة توهج حول الكرة
           const ring = document.createElement('a-ring');
           ring.setAttribute('position', '0 0 0');
           ring.setAttribute('rotation', '-90 0 0');
@@ -106,9 +114,11 @@
           ring.setAttribute('material', 'color: #FFD700; shader: flat; opacity: 0.5; transparent: true');
           el.appendChild(ring);
 
+          // تأثيرات المرور
           el.setAttribute('animation__hover_emissive', 'property: material.emissiveIntensity; startEvents: mouseenter; to: 1; dur: 200');
           el.setAttribute('animation__leave_emissive', 'property: material.emissiveIntensity; startEvents: mouseleave; to: 0.3; dur: 200');
 
+          // تشغيل الصوت والتنقل عند النقر
           el.addEventListener('click', () => {
             audio.pause();
             audio.currentTime = 0;
@@ -118,6 +128,7 @@
 
           hotspotContainer.appendChild(el);
 
+          // إضافة تسمية الغرفة
           const label = document.createElement('a-text');
           label.setAttribute('value', hs.target.replace('_', ' '));
           label.setAttribute('align', 'center');
@@ -130,48 +141,14 @@
         });
       }
 
-      function changeScene(sceneName) {
-        const hotspotContainer = document.querySelector('#hotspotContainer');
-        const audio = document.querySelector('#transitionSound');
-
-        // إعداد السماء الجديدة
-        inactiveSky.setAttribute('src', scenes[sceneName].src);
-        inactiveSky.setAttribute('material', 'shader: standard; transparent: true; opacity: 0');
-        inactiveSky.setAttribute('visible', true);
-
-        const duration = 800;
-        const step = 40;
-        let elapsed = 0;
-        const fadeInterval = setInterval(() => {
-          elapsed += step;
-          let t = elapsed / duration;
-          if (t > 1) t = 1;
-          activeSky.setAttribute('material', 'opacity', 1 - t);
-          inactiveSky.setAttribute('material', 'opacity', t);
-
-          if (t >= 1) {
-            clearInterval(fadeInterval);
-            activeSky.setAttribute('visible', false);
-
-            // تبديل السماء
-            const tmp = activeSky.id === 'skyA' ? document.querySelector('#skyB') : document.querySelector('#skyA');
-            activeSky.id === 'skyA' ? activeSky = document.querySelector('#skyB') : activeSky = document.querySelector('#skyA');
-            inactiveSky.id === 'skyA' ? inactiveSky = document.querySelector('#skyB') : inactiveSky = document.querySelector('#skyA');
-
-            // إعادة بناء الهوتسبوت
-            buildHotspots(sceneName);
-          }
-        }, step);
-      }
-
       window.addEventListener('load', () => {
+        // تفعيل الصوت بعد أول نقرة (سياسة المتصفح)
         document.body.addEventListener('click', () => {
           const audio = document.querySelector('#transitionSound');
           audio.play().catch(() => {});
         }, { once: true });
 
-        buildHotspots('Living_Room');
-        activeSky.setAttribute('src', scenes['Living_Room'].src);
+        changeScene('Living_Room');
       });
     </script>
   </body>
