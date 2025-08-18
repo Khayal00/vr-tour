@@ -1,340 +1,163 @@
-<!doctype html>
-<html lang="ar">
-<head>
-  <meta charset="utf-8" />
-  <title>VR 360 Tour - A-Frame (Crossfade) - مدموج</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-  <style>
-    html,body { height:100%; margin:0; font-family: Arial, sans-serif; direction: rtl; }
-    #overlay {
-      position: absolute; inset:0; display:flex; align-items:center; justify-content:center;
-      background: linear-gradient(0deg, rgba(0,0,0,0.85), rgba(0,0,0,0.6));
-      color:#fff; z-index:10; flex-direction:column; gap:18px;
-    }
-    #welcomeBox { text-align:center; max-width:720px; padding:20px; }
-    #title { font-size:28px; margin-bottom:8px; }
-    #subtitle { font-size:16px; opacity:0.9; }
-    #progressBar {
-      width:80%; height:14px; background:rgba(255,255,255,0.15); border-radius:8px; overflow:hidden; margin-top:16px;
-    }
-    #progressFill { width:0%; height:100%; background:linear-gradient(90deg, rgba(255,255,255,0.18), rgba(255,255,255,0.32)); transition:width 200ms ease; }
-    #startBtn {
-      margin-top:14px; padding:10px 18px; border-radius:8px; border:none; background:#1e90ff; color:white; cursor:pointer;
-      font-size:16px;
-    }
-    #instructions { font-size:13px; opacity:0.9; margin-top:10px; }
-    @media (max-width:600px){ #title{font-size:22px;} #subtitle{font-size:14px;} }
-  </style>
-</head>
-<body>
-  <div id="overlay">
-    <div id="welcomeBox">
-      <div id="title">مرحباً بكم في الجولة الافتراضية</div>
-      <div id="subtitle">التجربة تعمل على نظارات VR (Meta Quest) والموبايل والكمبيوتر — مرّر المؤشر على النقاط لتعريف المكان، واضغط أو انظر للنقطة للانتقال.</div>
-
-      <div id="progressBar"><div id="progressFill"></div></div>
-      <div id="progressText" style="margin-top:8px;">تحميل الصور: <span id="percent">0%</span></div>
-
-      <button id="startBtn" disabled>ابدأ الجولة</button>
-      <div id="instructions" style="margin-top:8px;">
-        تحكم: لمس / نقرة / المؤشر على الكمبيوتر — أو استخدم ذراع تحكم النظارة (laser).<br>
-        الآن كل هوتسبوت يستخدم ملف PNG مختلف عبر الحقل `icon`، ويمكن ضبط حجمه بواسطة `iconWidth` و`iconHeight`.
-      </div>
-    </div>
-  </div>
-
-  <a-scene background="color: #000" vr-mode-ui="enabled: true">
-    <a-entity id="cameraRig">
-      <a-entity id="camera" camera look-controls position="0 1.6 0">
-        <a-entity id="gazeCursor"
-          cursor="fuse: true; fuseTimeout: 1000"
-          position="0 0 -1"
-          geometry="primitive: ring; radiusInner: 0.01; radiusOuter: 0.02"
-          material="color: white; shader: flat; opacity:0.9;">
-        </a-entity>
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>VR Tour with PNG Hotspots and Crossfade</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
+    <style>
+      body { margin: 0; }
+      .hotspot { cursor: pointer; }
+    </style>
+  </head>
+  <body>
+    <a-scene>
+      <!-- الكاميرا مع مؤشر -->
+      <a-entity id="cameraRig" camera look-controls position="0 1.6 0">
+        <a-cursor
+          rayOrigin="mouse"
+          raycaster="objects: .hotspot"
+          fuse="false"
+          geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
+          material="color: white; shader: flat">
+        </a-cursor>
       </a-entity>
 
-      <a-entity laser-controls="hand: right" raycaster="objects: .clickable" line="opacity: 0.75"></a-entity>
-      <a-entity laser-controls="hand: left" raycaster="objects: .clickable" line="opacity: 0.75"></a-entity>
-    </a-entity>
+      <!-- السماء القديمة والجديدة للانتقال المتداخل -->
+      <a-sky id="skyOld" src="" visible="true"></a-sky>
+      <a-sky id="skyNew" src="" visible="false" material="opacity: 0; transparent: true"></a-sky>
 
-    <a-sky id="skyA" radius="5000" position="0 0 0" material="shader: flat; transparent: true; side: double; opacity:1"></a-sky>
-    <a-sky id="skyB" radius="5000" position="0 0 0" material="shader: flat; transparent: true; side: double; opacity:0"></a-sky>
+      <!-- حاوية النقاط -->
+      <a-entity id="hotspotContainer"></a-entity>
 
-    <!-- HOTSPOTS ROOT: نتحكم في ظهوره لإخفاء العناصر أثناء التلاشي -->
-    <a-entity id="hotspotsRoot" visible="true"></a-entity>
+      <!-- تحميل الصوت -->
+      <a-assets>
+        <audio id="transitionSound" src="assets/transition.mp3"></audio>
+        <!-- صور PNG للنقاط -->
+        <img id="hsLivingToKitchen" src="assets/hs_kitchen.png">
+        <img id="hsLivingToReception" src="assets/hs_reception.png">
+        <img id="hsLivingToCorridor" src="assets/hs_corridor.png">
+        <img id="hsKitchenToLiving" src="assets/hs_living.png">
+        <img id="hsReceptionToLiving" src="assets/hs_living.png">
+        <img id="hsCorridorToBathroom" src="assets/hs_bathroom.png">
+        <img id="hsCorridorToBedroom" src="assets/hs_bedroom.png">
+        <img id="hsCorridorToLiving" src="assets/hs_living.png">
+        <img id="hsBathroomToCorridor" src="assets/hs_corridor.png">
+        <img id="hsBedroomToCorridor" src="assets/hs_corridor.png">
+      </a-assets>
+    </a-scene>
 
-    <a-entity id="desktopCursor" cursor="rayOrigin: mouse" raycaster="objects: .clickable" visible="false"></a-entity>
-  </a-scene>
+    <script>
+      const scenes = {
+        Living_Room: {
+          src: 'assets/Living_Room.jpg',
+          hotspots: [
+            { target: 'Kitchen', position: '-3 1.6 4', img: '#hsLivingToKitchen' },
+            { target: 'Reception', position: '-3 1.6 -1.7', img: '#hsLivingToReception' },
+            { target: 'Corridor', position: '3 1.6 3', img: '#hsLivingToCorridor' }
+          ]
+        },
+        Kitchen: {
+          src: 'assets/Kitchen.jpg',
+          hotspots: [
+            { target: 'Living_Room', position: '4 1.6 -7', img: '#hsKitchenToLiving' }
+          ]
+        },
+        Reception: {
+          src: 'assets/Reception.jpg',
+          hotspots: [
+            { target: 'Living_Room', position: '5 1.6 -1', img: '#hsReceptionToLiving' }
+          ]
+        },
+        Corridor: {
+          src: 'assets/Corridor.jpg',
+          hotspots: [
+            { target: 'Bathroom', position: '3 1.6 -0.5', img: '#hsCorridorToBathroom' },
+            { target: 'Bedroom', position: '-0.2 1.6 -3.5', img: '#hsCorridorToBedroom' },
+            { target: 'Living_Room', position: '1 1.6 3', img: '#hsCorridorToLiving' }
+          ]
+        },
+        Bathroom: {
+          src: 'assets/Bathroom.jpg',
+          hotspots: [
+            { target: 'Corridor', position: '-1 1.6 4', img: '#hsBathroomToCorridor' }
+          ]
+        },
+        Bedroom: {
+          src: 'assets/Bedroom.jpg',
+          hotspots: [
+            { target: 'Corridor', position: '-0.5 1.6 4', img: '#hsBedroomToCorridor' }
+          ]
+        }
+      };
 
-<script>
-  // ---------- CONFIG ----------
-  const scenes = {
-    "Reception": "assets/Reception.jpg",
-    "Living_Room": "assets/Living_Room.jpg",
-    "Kitchen": "assets/Kitchen.jpg",
-    "Corridor": "assets/Corridor.jpg",
-    "Bedroom": "assets/Bedroom.jpg",
-    "Bathroom": "assets/Bathroom.jpg"
-  };
+      function changeScene(sceneName) {
+        const skyOld = document.querySelector('#skyOld');
+        const skyNew = document.querySelector('#skyNew');
+        const hotspotContainer = document.querySelector('#hotspotContainer');
+        const audio = document.querySelector('#transitionSound');
 
-  // لكل هوتسبوت: icon (PNG) + iconWidth + iconHeight + optional distance
-  // الآن يمكن استخدام إحداثيات ثلاثية الأبعاد مباشرة عبر الحقول x, y, z لكل هوتسبوت.
-  // ملاحظة: إحداثيات النظام هي نفس نظام A-Frame، والكاميرا الافتراضية موضوعة عند y = 1.6.
-  const hotspotsData = {
-    "Reception": [
-      // مثال: نقطة أمام الكاميرا بمقدار 4.5 وحدة
-      { label: "الصالة", target: "Living_Room", x: -1.1, y: 1.6, z: -4.5,
-        icon: 'assets/icons/hotspot_reception.png', iconWidth: 0.7, iconHeight: 0.7 }
-    ],
-    "Kitchen": [
-      // مثال: نقطة إلى اليمين وأعلى
-      { label: "الصالة", target: "Living_Room", x: -7, y: 1.9, z: -4,
-        icon: 'assets/icons/hotspot_kitchen.png', iconWidth: 0.6, iconHeight: 0.6 }
-    ],
-    "Corridor": [
-      { label: "الصالة", target: "Living_Room", x: -1.8, y: 1.7, z: -5.0,
-        icon: 'assets/icons/hotspot_corridor1.png', iconWidth: 0.65, iconHeight: 0.65 },
-      { label: "غرفة النوم", target: "Bedroom", x: 1.1, y: 1.5, z: -5.5,
-        icon: 'assets/icons/hotspot_bedroom.png', iconWidth: 0.55, iconHeight: 0.7 },
-      { label: "الحمام", target: "Bathroom", x: 0.4, y: 1.3, z: -4.8,
-        icon: 'assets/icons/hotspot_bathroom.png', iconWidth: 0.5, iconHeight: 0.5 }
-    ],
-    "Living_Room": [
-      { label: "الاستقبال", target: "Reception", x: -3.5, y: 1.6, z: 3,
-        icon: 'assets/icons/hotspot_reception_small.png', iconWidth: 0.6, iconHeight: 0.6 },
-      { label: "المطبخ", target: "Kitchen", x: 3.5, y: 1.6, z: 3,
-        icon: 'assets/icons/hotspot_kitchen2.png', iconWidth: 0.7, iconHeight: 0.6 },
-      { label: "الممر", target: "Corridor", x: 3, y: 1.6, z: -3,
-        icon: 'assets/icons/hotspot_corridor2.png', iconWidth: 0.6, iconHeight: 0.6 }
-    ],
-    "Bedroom": [
-      { label: "الممر", target: "Corridor", x: -1.2, y: 1.6, z: -5.2,
-        icon: 'assets/icons/hotspot_corridor1.png', iconWidth: 0.6, iconHeight: 0.6 }
-    ],
-    "Bathroom": [
-      { label: "الممر", target: "Corridor", x: 0.8, y: 1.4, z: -4.9,
-        icon: 'assets/icons/hotspot_bathroom2.png', iconWidth: 0.5, iconHeight: 0.5 }
-    ]
-  };
+        // ضبط السماء الجديدة
+        skyNew.setAttribute('src', scenes[sceneName].src);
+        skyNew.setAttribute('visible', true);
+        skyNew.setAttribute('material', 'opacity', 0);
 
-  const initialScene = "Living_Room";
+        audio.pause();
+        audio.currentTime = 0;
+        audio.play().catch(() => {});
 
-// ---------- HOTSPOT DISTANCE (يمكنك تغيير القيمة الافتراضية هنا)
-// المسافة الافتراضية من الكاميرا إلى نقاط الهوتسبوت (وحدات A-Frame — تقريباً أمتار افتراضية)
-// يمكنك أيضاً تحديد حقل `distance` لكل هوتسبوت في hotspotsData لتجاوز القيمة الافتراضية.
-const hotspotDefaultDistance = 3.5; // اجعلها أكبر لجعل النقاط أبعد (مثال: 6, 8)
+        // تلاشي متداخل
+        skyNew.setAttribute('animation__fadein', 'property: material.opacity; from: 0; to: 1; dur: 800; easing: linear');
+        skyOld.setAttribute('animation__fadeout', 'property: material.opacity; from: 1; to: 0; dur: 800; easing: linear');
 
+        setTimeout(() => {
+          skyOld.setAttribute('src', scenes[sceneName].src);
+          skyOld.setAttribute('material', 'opacity', 1);
+          skyNew.setAttribute('visible', false);
 
-  // ---------- PRELOADER ----------
-  const overlay = document.getElementById('overlay');
-  const progressFill = document.getElementById('progressFill');
-  const percentText = document.getElementById('percent');
-  const startBtn = document.getElementById('startBtn');
+          // إزالة النقاط القديمة وإضافة الجديدة
+          hotspotContainer.innerHTML = '';
+          scenes[sceneName].hotspots.forEach(hs => {
+            const el = document.createElement('a-image');
+            el.setAttribute('class', 'hotspot');
+            el.setAttribute('src', hs.img);
+            el.setAttribute('position', hs.position);
+            el.setAttribute('width', 0.5);
+            el.setAttribute('height', 0.5);
 
-  // جمع صور المشاهد + ايقونات الهوتسبوت
-  const hotspotIcons = [];
-  Object.values(hotspotsData).flat().forEach(h => { if (h.icon) hotspotIcons.push(h.icon); });
-  const imageUrls = Array.from(new Set([...Object.values(scenes), ...hotspotIcons]));
+            // نبض
+            el.setAttribute('animation__pulse', 'property: scale; dir: alternate; dur: 1500; loop: true; to: 0.6 0.6 0.6');
 
-  let loadedCount = 0;
-  function preloadImages(urls, onComplete, onProgress){
-    urls.forEach(url => {
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-      img.onload = () => { loadedCount++; onProgress(loadedCount, urls.length); if(loadedCount===urls.length) onComplete(); };
-      img.onerror = () => { console.warn('Failed to load', url); loadedCount++; onProgress(loadedCount, urls.length); if(loadedCount===urls.length) onComplete(); };
-      img.src = url;
-    });
-  }
+            // التأثير عند المرور
+            el.setAttribute('animation__hover', 'property: scale; startEvents: mouseenter; to: 0.7 0.7 0.7; dur: 200');
+            el.setAttribute('animation__leave', 'property: scale; startEvents: mouseleave; to: 0.5 0.5 0.5; dur: 200');
 
-  preloadImages(imageUrls, () => { startBtn.disabled = false; }, (loaded,total) => {
-    const pct = Math.round(loaded/total*100);
-    progressFill.style.width = pct + "%";
-    percentText.innerText = pct + "%";
-  });
+            el.addEventListener('click', () => changeScene(hs.target));
+            hotspotContainer.appendChild(el);
 
-  startBtn.addEventListener('click', () => { overlay.style.display = 'none'; enterScene(initialScene); });
-  document.addEventListener('keydown', e => { if((e.key === 'Enter' || e.key === ' ') && !startBtn.disabled){ overlay.style.display = 'none'; enterScene(initialScene); } });
-
-  // ---------- UTILS ----------
-  function latLonToCartesian(latDeg, lonDeg, radius){
-    const lat = latDeg * Math.PI/180;
-    const lon = lonDeg * Math.PI/180;
-    const x = radius * Math.cos(lat) * Math.sin(lon);
-    const y = radius * Math.sin(lat);
-    const z = radius * Math.cos(lat) * Math.cos(lon) * -1;
-    return { x, y, z };
-  }
-
-  // ---------- HOTSPOTS ----------
-  const sceneEl = document.querySelector('a-scene');
-  const skyA = document.getElementById('skyA');
-  const skyB = document.getElementById('skyB');
-  let activeSky = skyA;
-  let inactiveSky = skyB;
-  const hotspotsRoot = document.getElementById('hotspotsRoot');
-
-  function makeHotspot(h) {
-    const hotspot = document.createElement('a-entity');
-    hotspot.classList.add('clickable');
-
-    // use per-hotspot geometry size if provided
-    const width = h.iconWidth || 0.6;
-    const height = h.iconHeight || 0.6;
-    hotspot.setAttribute('geometry', `primitive: plane; height: ${height}; width: ${width}`);
-
-    // per-hotspot icon (PNG) fallback to default if missing
-    const iconSrc = h.icon || 'assets/hotspot.png';
-    hotspot.setAttribute('material', `src: url(${iconSrc}); transparent: true; shader: flat; side: double`);
-
-    hotspot.setAttribute('look-at', '#camera');
-    hotspot.setAttribute('shadow', 'receive: false;cast:false');
-    hotspot.setAttribute('visible', true);
-
-    // pulse animation (running)
-    hotspot.setAttribute('animation__pulse', 'property: scale; dir: alternate; dur: 900; easing: easeInOutSine; loop: true; to: 1.12 1.12 1.12; from: 0.95 0.95 0.95');
-
-    // label background
-    const labelBg = document.createElement('a-plane');
-    labelBg.setAttribute('height', '0.28');
-    labelBg.setAttribute('width', '1.4');
-    labelBg.setAttribute('material', 'color: #000; opacity: 0.45; shader: flat;');
-    labelBg.setAttribute('position', `0 0.62 0`);
-    labelBg.setAttribute('visible', false);
-
-    // text label (NO msdf)
-    const label = document.createElement('a-entity');
-    label.setAttribute('text', `value: ${h.label}; align: center; wrapCount: 20; width: 1.7; color: #FFFFFF;`);
-    label.setAttribute('position', `0 0.62 0.02`); // in front of bg to avoid z-fighting
-    label.setAttribute('visible', false);
-
-    hotspot.addEventListener('mouseenter', () => {
-      hotspot.setAttribute('animation__hover', 'property: scale; to: 1.45 1.45 1.45; dur: 180; easing: easeOutQuad');
-      label.setAttribute('visible', true);
-      labelBg.setAttribute('visible', true);
-    });
-    hotspot.addEventListener('mouseleave', () => {
-      hotspot.setAttribute('animation__hover', 'property: scale; to: 1 1 1; dur: 150; easing: easeOutQuad');
-      label.setAttribute('visible', false);
-      labelBg.setAttribute('visible', false);
-    });
-
-    // click / controller
-    const triggerNavigate = () => {
-      const tgt = hotspot.getAttribute('data-target');
-      if (tgt) {
-        disableHotspots();
-        // hide entire hotspots root immediately to avoid lingering visuals during crossfade
-        hotspotsRoot.setAttribute('visible', 'false');
-        fadeToScene(tgt);
+            // التسمية
+            const label = document.createElement('a-text');
+            label.setAttribute('value', hs.target.replace('_', ' '));
+            label.setAttribute('align', 'center');
+            label.setAttribute('color', '#FFD700');
+            label.setAttribute('width', 2);
+            label.setAttribute('look-at', '#cameraRig');
+            const pos = hs.position.split(' ');
+            label.setAttribute('position', `${pos[0]} ${parseFloat(pos[1]) + 0.4} ${pos[2]}`);
+            hotspotContainer.appendChild(label);
+          });
+        }, 800);
       }
-    };
-    hotspot.addEventListener('click', triggerNavigate);
-    hotspot.addEventListener('triggerdown', triggerNavigate);
 
-    // append: bg first, then text (text slightly in front)
-    hotspot.appendChild(labelBg);
-    hotspot.appendChild(label);
-    return hotspot;
-  }
+      window.addEventListener('load', () => {
+        document.body.addEventListener('click', () => {
+          const audio = document.querySelector('#transitionSound');
+          audio.play().catch(() => {});
+        }, { once: true });
 
-  function disableHotspots() { hotspotsRoot.querySelectorAll('.clickable').forEach(el => { el.classList.remove('clickable'); el.classList.add('disabled'); }); }
-  function enableHotspots() { hotspotsRoot.querySelectorAll('.disabled').forEach(el => { el.classList.remove('disabled'); el.classList.add('clickable'); }); }
-
-  function buildHotspotsFor(sceneName) {
-    // reset any running pulse animations to avoid leftover scales
-    hotspotsRoot.querySelectorAll('[animation__pulse]').forEach(el => { try { el.removeAttribute('animation__pulse'); if (el.object3D) el.object3D.scale.set(1,1,1); } catch(e) { /* ignore */ } });
-
-    // clear previous children
-    while (hotspotsRoot.firstChild) hotspotsRoot.removeChild(hotspotsRoot.firstChild);
-
-    const list = hotspotsData[sceneName] || [];
-    list.forEach(h => {
-      // قبول إحداثيات x,y,z مباشرة أو الاستمرار باستعمال lat/lon كنسخة احتياطية
-      let pos;
-      if (typeof h.x === 'number' && typeof h.y === 'number' && typeof h.z === 'number') {
-        pos = { x: h.x, y: h.y, z: h.z };
-      } else {
-        const radius = h.distance || h.iconDistance || hotspotDefaultDistance;
-        pos = latLonToCartesian(h.lat || 0, h.lon || 0, radius);
-      }
-      const ent = makeHotspot(h);
-      ent.setAttribute('position', `${pos.x.toFixed(3)} ${pos.y.toFixed(3)} ${pos.z.toFixed(3)}`);
-      ent.setAttribute('data-target', h.target);
-      ent.setAttribute('look-at', '#camera');
-      hotspotsRoot.appendChild(ent);
-    });
-  }
-
-  // ---------- CROSSFADE ----------
-  let isTransitioning = false;
-  async function fadeToScene(targetName) {
-    if (isTransitioning) return;
-    if (!scenes[targetName]) { console.warn('Unknown scene target:', targetName); hotspotsRoot.setAttribute('visible', 'true'); enableHotspots(); return; }
-    isTransitioning = true;
-    const fadeDur = 700;
-
-    // ensure hotspots hidden (in case caller didn't)
-    hotspotsRoot.setAttribute('visible', 'false');
-
-    // clean previous animations on skies
-    inactiveSky.removeAttribute('animation__in');
-    activeSky.removeAttribute('animation__out');
-
-    // set new texture on inactive sky (opacity 0 to start)
-    inactiveSky.setAttribute('material', `src: url(${scenes[targetName]}); shader: flat; transparent: true; side: double; opacity: 0`);
-
-    // ensure active sky has consistent material
-    activeSky.setAttribute('material', `shader: flat; transparent: true; side: double; opacity: 1`);
-
-    // animate crossfade
-    inactiveSky.setAttribute('animation__in', `property: material.opacity; to: 1; dur: ${fadeDur}; easing: easeInOutQuad`);
-    activeSky.setAttribute('animation__out', `property: material.opacity; to: 0; dur: ${fadeDur}; easing: easeInOutQuad`);
-
-    // wait for animation to finish
-    await new Promise(resolve => setTimeout(resolve, fadeDur + 40));
-
-    // finalize opacities and swap refs
-    activeSky.setAttribute('material', 'opacity', 0);
-    inactiveSky.setAttribute('material', 'opacity', 1);
-
-    const tmp = activeSky;
-    activeSky = inactiveSky;
-    inactiveSky = tmp;
-
-    // remove animation attrs to keep clean state
-    activeSky.removeAttribute('animation__in');
-    inactiveSky.removeAttribute('animation__out');
-
-    // rebuild hotspots for the new scene
-    buildHotspotsFor(targetName);
-
-    // tiny delay so rebuild finishes then show and enable
-    await new Promise(resolve => setTimeout(resolve, 90));
-    hotspotsRoot.setAttribute('visible', 'true');
-    enableHotspots();
-    isTransitioning = false;
-  }
-
-  // ---------- ENTER SCENE ----------
-  function enterScene(sceneName) {
-    if (!scenes[sceneName]) { console.error('Initial scene not found:', sceneName); return; }
-    // set active sky and opacities
-    activeSky.setAttribute('material', `src: url(${scenes[sceneName]}); shader: flat; transparent: true; side: double; opacity: 1`);
-    inactiveSky.setAttribute('material', `shader: flat; transparent: true; side: double; opacity: 0`);
-    buildHotspotsFor(sceneName);
-
-    const deskCursor = document.getElementById('desktopCursor');
-    if (AFRAME.utils.device.isDesktop()) { deskCursor.setAttribute('visible', true); } else { deskCursor.setAttribute('visible', false); }
-  }
-
-  sceneEl.addEventListener('loaded', () => { activeSky.setAttribute('material', 'shader: flat; transparent: true; side: double;'); inactiveSky.setAttribute('material', 'shader: flat; transparent: true; side: double;'); });
-
-  window.vrTour = { enterScene, fadeToScene, hotspotsData, scenes };
-
-  if (overlay.style.display === 'none') enterScene(initialScene);
-</script>
-</body>
+        changeScene('Living_Room');
+      });
+    </script>
+  </body>
 </html>
