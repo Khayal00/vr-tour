@@ -115,11 +115,11 @@
           const label = document.createElement('a-text');
           label.setAttribute('value', hs.target.replace('_', ' '));
           label.setAttribute('align', 'center');
-          label.setAttribute('color', '#FFD700');
-          label.setAttribute('width', 2);
+          label.setAttribute('color', '#FFFFFF');
+          label.setAttribute('width', 4);
           label.setAttribute('look-at', '#cameraRig');
           const pos = hs.position.split(' ');
-          label.setAttribute('position', `${pos[0]} ${parseFloat(pos[1]) + 0.45} ${pos[2]}`);
+          label.setAttribute('position', `${pos[0]} ${parseFloat(pos[1]) + 0.5} ${pos[2]}`);
           label.setAttribute('visible', 'false'); // مخفي افتراضيًا
           hotspotContainer.appendChild(label);
         });
