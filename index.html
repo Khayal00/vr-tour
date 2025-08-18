@@ -121,12 +121,10 @@
           glow.setAttribute('width', glowScale);
           glow.setAttribute('height', glowScale);
           glow.setAttribute('look-at', '#cameraRig');
-          glow.setAttribute('material', `src: #${glowId}; transparent: true; shader: flat; depthTest: false`);
+          glow.setAttribute('material', `src: #${glowId}; transparent: true; shader: flat; depthTest: false; opacity: 0`);
           glow.setAttribute('visible', 'false');
-          glow.setAttribute('scale', '1 1 1');
-          glow.setAttribute('material.opacity', '0');
 
-          // label (اسم المشهد) مع opacity لتأثير fade
+          // label (اسم المشهد) مع shader: flat و transparent true
           const label = document.createElement('a-text');
           label.setAttribute('value', hs.target.replace('_', ' '));
           label.setAttribute('align', 'center');
@@ -135,7 +133,7 @@
           label.setAttribute('look-at', '#cameraRig');
           const pos = hs.position.split(' ');
           label.setAttribute('position', `${pos[0]} ${parseFloat(pos[1]) + 0.6} ${pos[2]}`);
-          label.setAttribute('material', 'opacity: 0; transparent: true;');
+          label.setAttribute('material', 'shader: flat; transparent: true; opacity: 0;');
           label.setAttribute('visible', 'true');
 
           // Mouse interactions
