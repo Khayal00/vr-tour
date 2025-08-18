@@ -76,7 +76,7 @@
       };
 
       // ترجع dataURL لصورة توهج متدرج (تقدر تغير الألوان/حجم الكانفاس هنا)
-      function makeGlowDataURL(size = 512, colorCenter = '255,240,200', colorMid = '255,220,150') {
+      function makeGlowDataURL(size = 512, colorCenter = '255,240,200', colorMid = '0,128,255') {
         const canvas = document.createElement('canvas');
         canvas.width = canvas.height = size;
         const ctx = canvas.getContext('2d');
