@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>VR Tour with Hover Text</title>
+    <title>VR Tour with Hover Text and Custom Hotspot Sizes</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
@@ -35,41 +35,41 @@
         Living_Room: {
           src: 'assets/Living_Room.jpg',
           hotspots: [
-            { target: 'Kitchen', position: '-3 1.6 4', img: 'assets/link2.png' },
-            { target: 'Reception', position: '-3 1.6 -1.7', img: 'assets/link.png' },
-            { target: 'Corridor', position: '3 1.6 3', img: 'assets/link1.png' }
+            { target: 'Kitchen', position: '-3 1.6 4', img: 'assets/link2.png', size: 1 },
+            { target: 'Reception', position: '-3 1.6 -1.7', img: 'assets/link.png', size: 1},
+            { target: 'Corridor', position: '3 1.6 3', img: 'assets/link1.png', size: 0.9 }
           ]
         },
         Kitchen: {
           src: 'assets/Kitchen.jpg',
           hotspots: [
-            { target: 'Living_Room', position: '4 1.6 -7', img: 'assets/link2.png' }
+            { target: 'Living_Room', position: '4 1.6 -7', img: 'assets/link2.png', size: 1.5 }
           ]
         },
         Reception: {
           src: 'assets/Reception.jpg',
           hotspots: [
-            { target: 'Living_Room', position: '5 1.6 -1', img: 'assets/link.png' }
+            { target: 'Living_Room', position: '5 1.6 -1', img: 'assets/link.png', size: 1 }
           ]
         },
         Corridor: {
           src: 'assets/Corridor.jpg',
           hotspots: [
-            { target: 'Bathroom', position: '3 1.6 -0.5', img: 'assets/link2.png' },
-            { target: 'Bedroom', position: '-0.2 1.6 -3.5', img: 'assets/link2.png' },
-            { target: 'Living_Room', position: '1 1.6 3', img: 'assets/link2.png' }
+            { target: 'Bathroom', position: '3 1.6 -0.5', img: 'assets/link2.png', size: 1 },
+            { target: 'Bedroom', position: '-0.2 1.6 -3.5', img: 'assets/link2.png', size: 1 },
+            { target: 'Living_Room', position: '1 1.6 3', img: 'assets/link2.png', size: 1 }
           ]
         },
         Bathroom: {
           src: 'assets/Bathroom.jpg',
           hotspots: [
-            { target: 'Corridor', position: '-1 1.6 4', img: 'assets/link1.png' }
+            { target: 'Corridor', position: '-1 1.6 4', img: 'assets/link1.png', size: 1 }
           ]
         },
         Bedroom: {
           src: 'assets/Bedroom.jpg',
           hotspots: [
-            { target: 'Corridor', position: '-0.5 1.6 4', img: 'assets/link1.png' }
+            { target: 'Corridor', position: '-0.5 1.6 4', img: 'assets/link1.png', size: 1 }
           ]
         }
       };
@@ -86,8 +86,8 @@
           const el = document.createElement('a-plane');
           el.setAttribute('class', 'hotspot');
           el.setAttribute('position', hs.position);
-          el.setAttribute('width', 0.6);
-          el.setAttribute('height', 0.6);
+          el.setAttribute('width', hs.size || 0.6);
+          el.setAttribute('height', hs.size || 0.6);
           el.setAttribute('material', `src: url(${hs.img}); transparent: true; shader: flat`);
           el.setAttribute('look-at', '#cameraRig');
           el.setAttribute('animation__pulse', 'property: scale; dir: alternate; dur: 1500; loop: true; to: 1.3 1.3 1.3');
