@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>VR Tour with Welcome Screen</title>
+    <title>VR Tour with Fade Transitions</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
@@ -85,19 +85,21 @@
         <!-- HUD -->
         <a-text id="sceneLabel" value="Living Room" position="-1.2 0.8 -1"
           align="center" color="#FFFFFF" width="1"></a-text>
-
-        <a-entity id="hudPlane" position="-1.2 0.8 -1">
-          <a-plane width="0.3" height="0.1"
-            material="color: #000000; opacity: 0.5; side: double; transparent: true">
-          </a-plane>
-        </a-entity>
       </a-entity>
 
-      <a-sky id="sky" rotation="0 -90 0" material="opacity: 1"></a-sky>
+      <a-sky id="sky" rotation="0 -90 0"></a-sky>
       <a-entity id="hotspotContainer"></a-entity>
+
+      <!-- فلتر التلاشي للخروج والدخول -->
+      <a-plane id="fadeLayer"
+        position="0 0 -0.5"
+        width="2" height="2"
+        material="color: black; opacity: 0; transparent: true"
+        scale="5 5 5">
+      </a-plane>
+
       <a-assets>
         <audio id="transitionSound" src="assets/transition.mp3"></audio>
-        <!-- صور المشاهد -->
         <img id="imgLiving" src="assets/Living_Room.jpg">
         <img id="imgKitchen" src="assets/Kitchen.jpg">
         <img id="imgReception" src="assets/Reception.jpg">
@@ -117,38 +119,16 @@
             { target: 'Corridor', position: '3 1.6 3', img: 'assets/link1.png', size: 0.6 }
           ]
         },
-        Kitchen: {
-          src: '#imgKitchen',
-          hotspots: [
-            { target: 'Living_Room', position: '4 1.6 -7', img: 'assets/link2.png', size: 0.8 }
-          ]
-        },
-        Reception: {
-          src: '#imgReception',
-          hotspots: [
-            { target: 'Living_Room', position: '5 1.6 -1', img: 'assets/link.png', size: 0.6 }
-          ]
-        },
-        Corridor: {
-          src: '#imgCorridor',
-          hotspots: [
+        Kitchen: { src: '#imgKitchen', hotspots: [{ target: 'Living_Room', position: '4 1.6 -7', img: 'assets/link2.png', size: 0.8 }] },
+        Reception: { src: '#imgReception', hotspots: [{ target: 'Living_Room', position: '5 1.6 -1', img: 'assets/link.png', size: 0.6 }] },
+        Corridor: { src: '#imgCorridor', hotspots: [
             { target: 'Bathroom', position: '3 1.6 -0.5', img: 'assets/link2.png', size: 0.6 },
             { target: 'Bedroom', position: '-0.2 1.6 -3.5', img: 'assets/link2.png', size: 0.6 },
             { target: 'Living_Room', position: '1 1.6 3', img: 'assets/link2.png', size: 0.6 }
           ]
         },
-        Bathroom: {
-          src: '#imgBathroom',
-          hotspots: [
-            { target: 'Corridor', position: '-1 1.6 4', img: 'assets/link1.png', size: 0.6 }
-          ]
-        },
-        Bedroom: {
-          src: '#imgBedroom',
-          hotspots: [
-            { target: 'Corridor', position: '-0.5 1.6 4', img: 'assets/link1.png', size: 0.6 }
-          ]
-        }
+        Bathroom: { src: '#imgBathroom', hotspots: [{ target: 'Corridor', position: '-1 1.6 4', img: 'assets/link1.png', size: 0.6 }] },
+        Bedroom: { src: '#imgBedroom', hotspots: [{ target: 'Corridor', position: '-0.5 1.6 4', img: 'assets/link1.png', size: 0.6 }] }
       };
 
       function makeGlowDataURL(size = 512, colorCenter = '255,240,200', colorMid = '0,128,255') {
@@ -168,21 +148,25 @@
       function changeScene(sceneName) {
         const sky = document.querySelector('#sky');
         const hotspotContainer = document.querySelector('#hotspotContainer');
+        const fadeLayer = document.querySelector('#fadeLayer');
         const audio = document.querySelector('#transitionSound');
 
-        // Fade Out
-        sky.setAttribute('animation__fadeout', {
+        // 1) خروج (تعتيم تدريجي)
+        fadeLayer.setAttribute('animation__fadeout', {
           property: 'material.opacity',
-          to: 0,
-          dur: 600,
+          from: 0,
+          to: 1,
+          dur: 700,
           easing: 'easeInOutQuad'
         });
 
         setTimeout(() => {
+          // 2) تبديل المشهد
           sky.setAttribute('src', scenes[sceneName].src);
           hotspotContainer.innerHTML = '';
           document.querySelector('#sceneLabel').setAttribute('value', sceneName.replace('_', ' '));
 
+          // إضافة الهوت سبوتات
           scenes[sceneName].hotspots.forEach((hs, idx) => {
             const glowId = `glow-img-${sceneName}-${idx}-${Date.now()}`;
             const dataURL = makeGlowDataURL(512);
@@ -257,14 +241,16 @@
             hotspotContainer.appendChild(label);
           });
 
-          // Fade In
-          sky.setAttribute('animation__fadein', {
+          // 3) دخول (كشف تدريجي)
+          fadeLayer.setAttribute('animation__fadein', {
             property: 'material.opacity',
-            to: 1,
-            dur: 600,
+            from: 1,
+            to: 0,
+            dur: 700,
             easing: 'easeInOutQuad'
           });
-        }, 600);
+
+        }, 700); // نفس مدة الخروج
       }
 
       // شاشة الترحيب + تحميل
