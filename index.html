@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>VR Tour with HUD Scene Name (Crossfade)</title>
+    <title>VR Tour with HUD Scene Name (Improved Crossfade)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
@@ -44,10 +44,13 @@
 
       </a-entity>
 
-      <!-- السماء الافتراضية (سيُستبدل عند الانتقال) -->
-      <a-sky id="sky" rotation="0 -90 0" material="shader: flat; opacity: 1; transparent: true"></a-sky>
+      <!-- نستخدم سماء ثنائية لتفادي مشاكل z-fighting عند التلاشي -->
+      <a-sky id="skyA" rotation="0 -90 0" material="shader: flat; opacity: 1; transparent: true; side: double; depthTest: false"></a-sky>
+      <a-sky id="skyB" rotation="0 -90 0" material="shader: flat; opacity: 0; transparent: true; side: double; depthTest: false"></a-sky>
 
       <a-entity id="hotspotContainer"></a-entity>
+
+      <a-assets id="assets"></a-assets>
 
       <a-assets>
         <audio id="transitionSound" src="assets/transition.mp3"></audio>
@@ -55,51 +58,40 @@
     </a-scene>
 
     <script>
-      // تعريف المشاهد والـ hotspots (كما في كودك)
       const scenes = {
-        Living_Room: {
-          src: 'assets/Living_Room.jpg',
-          hotspots: [
+        Living_Room: { src: 'assets/Living_Room.jpg', hotspots: [
             { target: 'Kitchen', position: '-3 1.6 4', img: 'assets/link2.png', size: 0.8 },
             { target: 'Reception', position: '-3 1.6 -1.7', img: 'assets/link.png', size: 0.6 },
             { target: 'Corridor', position: '3 1.6 3', img: 'assets/link1.png', size: 1 }
           ]
         },
-        Kitchen: {
-          src: 'assets/Kitchen.jpg',
-          hotspots: [
-            { target: 'Living_Room', position: '4 1.6 -7', img: 'assets/link2.png', size: 0.7 }
-          ]
-        },
-        Reception: {
-          src: 'assets/Reception.jpg',
-          hotspots: [
-            { target: 'Living_Room', position: '5 1.6 -1', img: 'assets/link.png', size: 0.6 }
-          ]
-        },
-        Corridor: {
-          src: 'assets/Corridor.jpg',
-          hotspots: [
+        Kitchen: { src: 'assets/Kitchen.jpg', hotspots: [ { target: 'Living_Room', position: '4 1.6 -7', img: 'assets/link2.png', size: 0.7 } ] },
+        Reception: { src: 'assets/Reception.jpg', hotspots: [ { target: 'Living_Room', position: '5 1.6 -1', img: 'assets/link.png', size: 0.6 } ] },
+        Corridor: { src: 'assets/Corridor.jpg', hotspots: [
             { target: 'Bathroom', position: '3 1.6 -0.5', img: 'assets/link2.png', size: 0.9 },
             { target: 'Bedroom', position: '-0.2 1.6 -3.5', img: 'assets/link2.png', size: 0.7 },
             { target: 'Living_Room', position: '1 1.6 3', img: 'assets/link2.png', size: 0.8 }
           ]
         },
-        Bathroom: {
-          src: 'assets/Bathroom.jpg',
-          hotspots: [
-            { target: 'Corridor', position: '-1 1.6 4', img: 'assets/link1.png', size: 0.6 }
-          ]
-        },
-        Bedroom: {
-          src: 'assets/Bedroom.jpg',
-          hotspots: [
-            { target: 'Corridor', position: '-0.5 1.6 4', img: 'assets/link1.png', size: 0.7 }
-          ]
-        }
+        Bathroom: { src: 'assets/Bathroom.jpg', hotspots: [ { target: 'Corridor', position: '-1 1.6 4', img: 'assets/link1.png', size: 0.6 } ] },
+        Bedroom: { src: 'assets/Bedroom.jpg', hotspots: [ { target: 'Corridor', position: '-0.5 1.6 4', img: 'assets/link1.png', size: 0.7 } ] }
       };
 
-      let isTransitioning = false; // علم لمنع تبديل متكرر أثناء الانتقال
+      let isTransitioning = false;
+      let currentSky = 'A'; // 'A' or 'B'
+
+      // Utility: preload image into a-assets with id 'img-<sceneName>' if not exists
+      function ensureAssetImage(sceneName, url) {
+        const id = `img-${sceneName}`;
+        const assets = document.querySelector('#assets');
+        if (!document.getElementById(id)) {
+          const img = document.createElement('img');
+          img.setAttribute('id', id);
+          img.setAttribute('src', url);
+          assets.appendChild(img);
+        }
+        return `#${id}`;
+      }
 
       function makeGlowDataURL(size = 512, colorCenter = '255,240,200', colorMid = '0,128,255') {
         const canvas = document.createElement('canvas');
@@ -115,18 +107,28 @@
         return canvas.toDataURL();
       }
 
-      // فصل إنشاء الـ hotspots في دالة خاصة حتى نتمكن من استدعائها بعد انتهاء الانتقال
+      // إزالة جميع glow assets المولدة سابقاً لتجنب التراكم
+      function cleanupGlowAssets() {
+        const assets = document.querySelector('#assets');
+        const imgs = assets.querySelectorAll('img');
+        imgs.forEach(img => {
+          if (img.id && img.id.startsWith('glow-')) img.remove();
+        });
+      }
+
+      // إنشاء الـ hotspots
       function createHotspots(sceneName) {
         const hotspotContainer = document.querySelector('#hotspotContainer');
         hotspotContainer.innerHTML = '';
+        cleanupGlowAssets();
 
         scenes[sceneName].hotspots.forEach((hs, idx) => {
-          const glowId = `glow-img-${sceneName}-${idx}-${Date.now()}`;
+          const glowId = `glow-${sceneName}-${idx}-${Date.now()}`;
           const dataURL = makeGlowDataURL(512);
           const glowImg = document.createElement('img');
           glowImg.setAttribute('id', glowId);
           glowImg.setAttribute('src', dataURL);
-          document.querySelector('a-assets').appendChild(glowImg);
+          document.querySelector('#assets').appendChild(glowImg);
 
           // main hotspot
           const el = document.createElement('a-plane');
@@ -141,14 +143,14 @@
           // glow plane
           const glow = document.createElement('a-plane');
           glow.setAttribute('position', hs.position);
-          const glowScale = (hs.size || 0.6) * 1.2;
+          const glowScale = (hs.size || 0.6) * 1.6;
           glow.setAttribute('width', glowScale);
           glow.setAttribute('height', glowScale);
           glow.setAttribute('look-at', '#cameraRig');
           glow.setAttribute('material', `src: #${glowId}; transparent: true; shader: flat; depthTest: false; opacity: 0`);
           glow.setAttribute('visible', 'false');
 
-          // label فوق الهوتسبوت
+          // label (مخبأ افتراضياً)
           const label = document.createElement('a-text');
           label.setAttribute('value', hs.target.replace('_', ' '));
           label.setAttribute('align', 'center');
@@ -157,10 +159,10 @@
           label.setAttribute('look-at', '#cameraRig');
           const pos = hs.position.split(' ');
           label.setAttribute('position', `${pos[0]} ${parseFloat(pos[1]) + 0.6} ${pos[2]}`);
-          label.setAttribute('scale', '0 0 0'); 
+          label.setAttribute('scale', '0 0 0');
           label.setAttribute('visible', 'true');
 
-          // Mouse interactions
+          // الأحداث
           el.addEventListener('mouseenter', () => {
             if (isTransitioning) return;
             el.removeAttribute('animation__pulse');
@@ -189,12 +191,12 @@
           });
 
           el.addEventListener('click', () => {
-            if (isTransitioning) return; // منع تبديل متعدد أثناء الانتقال
+            if (isTransitioning) return;
             const audio = document.querySelector('#transitionSound');
             audio.pause();
             audio.currentTime = 0;
             audio.play().catch(() => {});
-            changeScene(hs.target, false);
+            changeScene(hs.target);
           });
 
           hotspotContainer.appendChild(glow);
@@ -203,59 +205,61 @@
         });
       }
 
-      // الدالة المسؤولة عن الانتقال مع تأثير التلاشي المتداخل (crossfade)
+      // دالة الانتقال المحسنة: تستخدم skyA و skyB وتتأكد من تحميل الصورة في a-assets أولاً
       function changeScene(sceneName, instant = false) {
         if (isTransitioning) return;
         isTransitioning = true;
 
-        const sceneEl = document.querySelector('a-scene');
-        const oldSky = document.querySelector('#sky');
+        const skyA = document.querySelector('#skyA');
+        const skyB = document.querySelector('#skyB');
         const audio = document.querySelector('#transitionSound');
 
-        // تحديث نص الـ HUD فوراً
+        // تحديث HUD سريعاً
         document.querySelector('#sceneLabel').setAttribute('value', sceneName.replace('_', ' '));
 
-        // حالة التحميل الفوري (أول تحميل أو طلب بدون تأثير)
-        if (instant || !oldSky.getAttribute('src')) {
-          oldSky.setAttribute('src', scenes[sceneName].src);
-          oldSky.setAttribute('material', 'shader: flat; opacity: 1; transparent: true;');
-          // أنشئ الـ hotspots فوراً
+        // ضمان تحميل الصورة في الأصول
+        const assetRef = ensureAssetImage(sceneName, scenes[sceneName].src);
+
+        // إذا قمنا بطلب التحميل الفوري (الأول) أو أردنا التبديل بلا تأثير
+        if (instant) {
+          // اجعل skyA مرئياً وskyB مخفياً كنقطة بداية
+          skyA.setAttribute('material', `src: ${assetRef}; shader: flat; opacity: 1; transparent: true; side: double; depthTest: false`);
+          skyB.setAttribute('material', `src: ${assetRef}; shader: flat; opacity: 0; transparent: true; side: double; depthTest: false`);
           createHotspots(sceneName);
           isTransitioning = false;
           return;
         }
 
-        // إنشاء سماء جديدة فوق القديمة ببدء شفاف
-        const newSky = document.createElement('a-sky');
-        newSky.setAttribute('id', `sky-new-${Date.now()}`);
-        newSky.setAttribute('src', scenes[sceneName].src);
-        newSky.setAttribute('rotation', oldSky.getAttribute('rotation') || '0 -90 0');
-        newSky.setAttribute('material', 'shader: flat; opacity: 0; transparent: true; depthTest: false');
-        sceneEl.appendChild(newSky);
+        const duration = 800;
+        // اختيار السماء الجديدة (نبدل بين A و B)
+        const showSky = currentSky === 'A' ? skyB : skyA;
+        const hideSky = currentSky === 'A' ? skyA : skyB;
 
-        // تعطيل التفاعل مع الهوتسبوت الحالية أثناء الانتقال
+        // إعداد السماء التي ستظهر
+        showSky.setAttribute('rotation', hideSky.getAttribute('rotation') || '0 -90 0');
+        showSky.setAttribute('material', `src: ${assetRef}; shader: flat; opacity: 0; transparent: true; side: double; depthTest: false`);
+
+        // تعطيل التفاعل مع الهوتسبوت أثناء الانتقال
         document.querySelectorAll('.hotspot').forEach(el => el.classList.add('disabled'));
 
-        // تشغيل أنيميشن التلاشي
-        const duration = 800; // المدة بالـ ms
-        newSky.setAttribute('animation__fadein', `property: material.opacity; to: 1; dur: ${duration}; easing: easeInOutQuad`);
-        oldSky.setAttribute('animation__fadeout', `property: material.opacity; to: 0; dur: ${duration}; easing: easeInOutQuad`);
+        // تفعيل الأنيميشن (A-Frame animation component)
+        showSky.setAttribute('animation__fadein', `property: material.opacity; to: 1; dur: ${duration}; easing: easeInOutQuad`);
+        hideSky.setAttribute('animation__fadeout', `property: material.opacity; to: 0; dur: ${duration}; easing: easeInOutQuad`);
 
-        // بعد انتهاء التلاشي: إزالة السماء القديمة، إعادة تسمية الجديدة، وإنشاء الـ hotspots للمشهد الجديد
+        // بعد انتهاء التلاشي
         setTimeout(() => {
-          try { oldSky.parentNode.removeChild(oldSky); } catch(e){}
-          newSky.setAttribute('id', 'sky');
+          // تحديث مؤشر السماء الحالية
+          currentSky = currentSky === 'A' ? 'B' : 'A';
 
-          // إنشاء الهوتسبوتس الخاصة بالمشهد الجديد
+          // إنشاء الهوتسبوتس للمشهد الجديد
           createHotspots(sceneName);
 
           isTransitioning = false;
         }, duration + 50);
       }
 
-      // تهيئة الصفحة
       window.addEventListener('load', () => {
-        // السماح بتشغيل الصوت عند أول تفاعل للمستخدم (سياسة متصفحات الصوت)
+        // السماح بتشغيل الصوت عند أول تفاعل
         document.body.addEventListener('click', () => {
           const audio = document.querySelector('#transitionSound');
           audio.play().catch(() => {});
