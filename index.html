@@ -16,33 +16,35 @@
 <a-scene>
   <a-assets id="assets"></a-assets>
 
-  <a-entity id="cameraRig" camera look-controls position="0 1.6 0">
-    <!-- مؤشر مرئي دائمًا -->
-    <a-cursor
-      id="cursor"
-      raycaster="objects: .hotspot"
-      fuse="false"
-      geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
-      material="color: white; shader: flat; depthTest: false; depthWrite: false">
-    </a-cursor>
+  <a-entity id="cameraRig" position="0 1.6 0">
+    <a-camera look-controls>
+      <!-- مؤشر مرئي دائمًا -->
+      <a-cursor
+        id="cursor"
+        raycaster="objects: .hotspot"
+        fuse="false"
+        geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
+        material="color: white; shader: flat; depthTest: false; depthWrite: false">
+      </a-cursor>
 
-    <!-- HUD: اسم المشهد -->
-    <a-entity id="hudGroup" position="-1.2 0.8 -1">
-      <a-plane 
-        id="hudBg"
-        width="0.45"
-        height="0.12"
-        material="color: #000000; opacity: 0.5; side: double; transparent: true; depthTest: false; depthWrite: false">
-      </a-plane>
-      <a-text 
-        id="sceneLabel"
-        value="Loading..."
-        position="0 0 0.01"
-        align="center"
-        color="#FFFFFF"
-        width="0.9">
-      </a-text>
-    </a-entity>
+      <!-- HUD: اسم المشهد -->
+      <a-entity id="hudGroup" position="-1.2 0.8 -1">
+        <a-plane 
+          id="hudBg"
+          width="0.45"
+          height="0.12"
+          material="color: #000000; opacity: 0.5; side: double; transparent: true; depthTest: false; depthWrite: false">
+        </a-plane>
+        <a-text 
+          id="sceneLabel"
+          value="Loading..."
+          position="0 0 0.01"
+          align="center"
+          color="#FFFFFF"
+          width="0.9">
+        </a-text>
+      </a-entity>
+    </a-camera>
   </a-entity>
 
   <a-sky id="skyA" rotation="0 -90 0" material="shader: flat; opacity: 1; transparent: true; side: back"></a-sky>
