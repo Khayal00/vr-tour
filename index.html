@@ -1,263 +1,247 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="utf-8">
-  <title>VR Tour with Enhanced HUD Scene Name</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-  <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
-  <style>
-    body { margin: 0; overflow: hidden; background: #000; }
-    .hotspot { cursor: pointer; }
-    .info-panel {
-      position: fixed;
-      top: 20px;
-      left: 20px;
-      background: rgba(0, 0, 0, 0.7);
-      color: white;
-      padding: 15px;
-      border-radius: 8px;
-      font-family: Arial, sans-serif;
-      max-width: 400px;
-      z-index: 1000;
-    }
-    .info-panel h2 { margin-top: 0; }
-    .info-panel ul { padding-left: 20px; }
-    .info-panel li { margin-bottom: 8px; }
-    .hint {
-      position: fixed;
-      bottom: 20px;
-      left: 0;
-      right: 0;
-      text-align: center;
-      color: rgba(255, 255, 255, 0.7);
-      font-family: Arial, sans-serif;
-      font-size: 14px;
-      z-index: 1000;
-    }
-  </style>
-</head>
-<body>
-  <div class="info-panel">
-    <h2>Enhanced VR Tour</h2>
-    <p>This VR tour includes an improved HUD with scene names positioned at the top center of the screen.</p>
-    <p>Features:</p>
-    <ul>
-      <li>Fixed top-center scene name display</li>
-      <li>Semi-transparent background with rounded corners</li>
-      <li>Smooth animations during scene transitions</li>
-      <li>Enhanced hotspot visual effects</li>
-      <li>Better visual hierarchy and styling</li>
-    </ul>
-  </div>
-  
-  <div class="hint">
-    Click on hotspots to navigate between scenes | Look around by dragging the view
-  </div>
-  
-  <a-scene>
-    <a-entity id="cameraRig" camera look-controls position="0 1.6 0">
-      <a-cursor
-        rayOrigin="mouse"
-        raycaster="objects: .hotspot"
-        fuse="false"
-        geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
-        material="color: white; shader: flat">
-      </a-cursor>
+  <head>
+    <meta charset="utf-8">
+    <title>VR Tour with HUD Scene Name</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
+    <style>
+      body { margin: 0; }
+      .hotspot { cursor: pointer; }
+    </style>
+  </head>
+  <body>
+    <a-scene>
+      <a-entity id="cameraRig" camera look-controls position="0 1.6 0">
+        <a-cursor
+          rayOrigin="mouse"
+          raycaster="objects: .hotspot"
+          fuse="false"
+          geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
+          material="color: white; shader: flat">
+        </a-cursor>
 
-      <!-- Enhanced HUD: Scene Name -->
-      <a-entity id="hudContainer" position="0 0.4 -1">
-        <a-plane 
-          id="hudBackground"
-          width="2.5" 
-          height="0.35"
-          position="0 0 -0.01"
-          material="color: #1a1a1a; opacity: 0.85; side: double; transparent: true; shader: flat"
-          radius="0.1">
-        </a-plane>
+        <!-- HUD: اسم المشهد -->
         <a-text 
           id="sceneLabel"
           value="Living Room"
-          position="0 0 0"
+          position="-1.2 0.8 -1"
           align="center"
           color="#FFFFFF"
-          font="https://cdn.aframe.io/fonts/Roboto-msdf.json"
-          shader="msdf"
-          width="3">
+          width="1">
         </a-text>
+
+        <!-- المستطيل الشفاف الثابت مقابل الكاميرا -->
+        <a-entity id="hudPlane" position="-1.2 0.8 -1">
+          <a-plane 
+            width="0.3" 
+            height="0.1"
+            material="color: #000000; opacity: 0.5; side: double; transparent: true">
+          </a-plane>
+        </a-entity>
+
       </a-entity>
-    </a-entity>
 
-    <a-sky id="sky" rotation="0 -90 0"></a-sky>
-    <a-entity id="hotspotContainer"></a-entity>
-    <a-assets>
-      <audio id="transitionSound" src="https://cdn.glitch.me/9d6f9f3c-1a5a-4d9d-9b6d-5d8e0b9b9b9b/transition.mp3"></audio>
-      <img id="link" src="https://cdn.glitch.global/2d6c27d9-4c1b-4b6b-8c1d-1c1b1b1b1b1b/link.png">
-      <img id="link1" src="https://cdn.glitch.global/2d6c27d9-4c1b-4b6b-8c1d-1c1b1b1b1b1b/link1.png">
-      <img id="link2" src="https://cdn.glitch.global/2d6c27d9-4c1b-4b6b-8c1d-1c1b1b1b1b1b/link2.png">
-    </a-assets>
-  </a-scene>
+      <!-- Sky مزدوج للـ crossfade -->
+      <a-sky id="skyA" rotation="0 -90 0" material="shader: flat; opacity: 1; transparent: true"></a-sky>
+      <a-sky id="skyB" rotation="0 -90 0" material="shader: flat; opacity: 0; transparent: true"></a-sky>
 
-  <script>
-    const scenes = {
-      Living_Room: {
-        src: 'https://cdn.glitch.me/9d6f9f3c-1a5a-4d9d-9b6d-5d8e0b9b9b9b/Living_Room.jpg',
-        hotspots: [
-          { target: 'Kitchen', position: '-3 1.6 4', img: '#link2', size: 0.8 },
-          { target: 'Reception', position: '-3 1.6 -1.7', img: '#link', size: 0.6 },
-          { target: 'Corridor', position: '3 1.6 3', img: '#link1', size: 1 }
-        ]
-      },
-      Kitchen: {
-        src: 'https://cdn.glitch.me/9d6f9f3c-1a5a-4d9d-9b6d-5d8e0b9b9b9b/Kitchen.jpg',
-        hotspots: [
-          { target: 'Living_Room', position: '4 1.6 -7', img: '#link2', size: 0.7 }
-        ]
-      },
-      Reception: {
-        src: 'https://cdn.glitch.me/9d6f9f3c-1a5a-4d9d-9b6d-5d8e0b9b9b9b/Reception.jpg',
-        hotspots: [
-          { target: 'Living_Room', position: '5 1.6 -1', img: '#link', size: 0.6 }
-        ]
-      },
-      Corridor: {
-        src: 'https://cdn.glitch.me/9d6f9f3c-1a5a-4d9d-9b6d-5d8e0b9b9b9b/Corridor.jpg',
-        hotspots: [
-          { target: 'Bathroom', position: '3 1.6 -0.5', img: '#link2', size: 0.9 },
-          { target: 'Bedroom', position: '-0.2 1.6 -3.5', img: '#link2', size: 0.7 },
-          { target: 'Living_Room', position: '1 1.6 3', img: '#link2', size: 0.8 }
-        ]
-      },
-      Bathroom: {
-        src: 'https://cdn.glitch.me/9d6f9f3c-1a5a-4d9d-9b6d-5d8e0b9b9b9b/Bathroom.jpg',
-        hotspots: [
-          { target: 'Corridor', position: '-1 1.6 4', img: '#link1', size: 0.6 }
-        ]
-      },
-      Bedroom: {
-        src: 'https://cdn.glitch.me/9d6f9f3c-1a5a-4d9d-9b6d-5d8e0b9b9b9b/Bedroom.jpg',
-        hotspots: [
-          { target: 'Corridor', position: '-0.5 1.6 4', img: '#link1', size: 0.7 }
-        ]
+      <a-entity id="hotspotContainer"></a-entity>
+
+      <a-assets>
+        <audio id="transitionSound" src="assets/transition.mp3"></audio>
+      </a-assets>
+    </a-scene>
+
+    <script>
+      // إعدادات الانتقال (يمكنك تغييرها بسهولة)
+      const transitionDuration = 1200; // مدة الانتقال بالمللي ثانية
+      const transitionEasing = 'easeInOutQuad'; // نوع الـ easing
+
+      const scenes = {
+        Living_Room: {
+          src: 'assets/Living_Room.jpg',
+          hotspots: [
+            { target: 'Kitchen', position: '-3 1.6 4', img: 'assets/link2.png', size: 0.8 },
+            { target: 'Reception', position: '-3 1.6 -1.7', img: 'assets/link.png', size: 0.6 },
+            { target: 'Corridor', position: '3 1.6 3', img: 'assets/link1.png', size: 1 }
+          ]
+        },
+        Kitchen: {
+          src: 'assets/Kitchen.jpg',
+          hotspots: [
+            { target: 'Living_Room', position: '4 1.6 -7', img: 'assets/link2.png', size: 0.7 }
+          ]
+        },
+        Reception: {
+          src: 'assets/Reception.jpg',
+          hotspots: [
+            { target: 'Living_Room', position: '5 1.6 -1', img: 'assets/link.png', size: 0.6 }
+          ]
+        },
+        Corridor: {
+          src: 'assets/Corridor.jpg',
+          hotspots: [
+            { target: 'Bathroom', position: '3 1.6 -0.5', img: 'assets/link2.png', size: 0.9 },
+            { target: 'Bedroom', position: '-0.2 1.6 -3.5', img: 'assets/link2.png', size: 0.7 },
+            { target: 'Living_Room', position: '1 1.6 3', img: 'assets/link2.png', size: 0.8 }
+          ]
+        },
+        Bathroom: {
+          src: 'assets/Bathroom.jpg',
+          hotspots: [
+            { target: 'Corridor', position: '-1 1.6 4', img: 'assets/link1.png', size: 0.6 }
+          ]
+        },
+        Bedroom: {
+          src: 'assets/Bedroom.jpg',
+          hotspots: [
+            { target: 'Corridor', position: '-0.5 1.6 4', img: 'assets/link1.png', size: 0.7 }
+          ]
+        }
+      };
+
+      // مولد توهج
+      function makeGlowDataURL(size = 512, colorCenter = '255,240,200', colorMid = '0,128,255') {
+        const canvas = document.createElement('canvas');
+        canvas.width = canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        const grad = ctx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
+        grad.addColorStop(0, `rgba(${colorCenter}, 0.95)`);
+        grad.addColorStop(0.25, `rgba(${colorMid}, 0.7)`);
+        grad.addColorStop(0.5, `rgba(${colorMid}, 0.4)`);
+        grad.addColorStop(1, `rgba(${colorMid}, 0)`);
+        ctx.fillStyle = grad;
+        ctx.fillRect(0,0,size,size);
+        return canvas.toDataURL();
       }
-    };
 
-    function makeGlowDataURL(size = 512, colorCenter = '255,240,200', colorMid = '0,128,255') {
-      const canvas = document.createElement('canvas');
-      canvas.width = canvas.height = size;
-      const ctx = canvas.getContext('2d');
-      const grad = ctx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
-      grad.addColorStop(0, `rgba(${colorCenter}, 0.95)`);
-      grad.addColorStop(0.25, `rgba(${colorMid}, 0.7)`);
-      grad.addColorStop(0.5, `rgba(${colorMid}, 0.4)`);
-      grad.addColorStop(1, `rgba(${colorMid}, 0)`);
-      ctx.fillStyle = grad;
-      ctx.fillRect(0,0,size,size);
-      return canvas.toDataURL();
-    }
+      let activeSky = 'A'; // يبدأ skyA
 
-    function changeScene(sceneName) {
-      const sky = document.querySelector('#sky');
-      const hotspotContainer = document.querySelector('#hotspotContainer');
-      const audio = document.querySelector('#transitionSound');
-      const sceneLabel = document.querySelector('#sceneLabel');
-
-      // Animate scene label change
-      sceneLabel.setAttribute('animation', 'property: scale; to: 1.5 1.5 1.5; dur: 200; easing: easeOutQuad');
-      setTimeout(() => {
-        sky.setAttribute('src', scenes[sceneName].src);
-        hotspotContainer.innerHTML = '';
-        sceneLabel.setAttribute('value', sceneName.replace('_', ' '));
-        sceneLabel.setAttribute('animation', 'property: scale; to: 1 1 1; dur: 300; easing: easeOutQuad');
-      }, 200);
-
-      scenes[sceneName].hotspots.forEach((hs, idx) => {
-        const glowId = `glow-img-${sceneName}-${idx}-${Date.now()}`;
-        const dataURL = makeGlowDataURL(512);
-        const glowImg = document.createElement('img');
-        glowImg.setAttribute('id', glowId);
-        glowImg.setAttribute('src', dataURL);
-        document.querySelector('a-assets').appendChild(glowImg);
-
-        // Main hotspot
-        const el = document.createElement('a-plane');
-        el.setAttribute('class', 'hotspot');
-        el.setAttribute('position', hs.position);
-        el.setAttribute('width', hs.size || 0.6);
-        el.setAttribute('height', hs.size || 0.6);
-        el.setAttribute('material', `src: ${hs.img}; transparent: true; shader: flat`);
-        el.setAttribute('look-at', '#cameraRig');
-        el.setAttribute('animation__pulse', 'property: scale; dir: alternate; dur: 1500; loop: true; to: 1.3 1.3 1.3');
-
-        // Glow plane
-        const glow = document.createElement('a-plane');
-        glow.setAttribute('position', hs.position);
-        const glowScale = (hs.size || 0.6) * 1.2;
-        glow.setAttribute('width', glowScale);
-        glow.setAttribute('height', glowScale);
-        glow.setAttribute('look-at', '#cameraRig');
-        glow.setAttribute('material', `src: #${glowId}; transparent: true; shader: flat; depthTest: false; opacity: 0`);
-        glow.setAttribute('visible', 'false');
-
-        // Label above hotspot
-        const label = document.createElement('a-text');
-        label.setAttribute('value', hs.target.replace('_', ' '));
-        label.setAttribute('align', 'center');
-        label.setAttribute('color', '#FFFFFF');
-        label.setAttribute('width', 4);
-        label.setAttribute('look-at', '#cameraRig');
-        const pos = hs.position.split(' ');
-        label.setAttribute('position', `${pos[0]} ${parseFloat(pos[1]) + 0.6} ${pos[2]}`);
-        label.setAttribute('scale', '0 0 0'); 
-        label.setAttribute('visible', 'true');
-
-        // Mouse interactions
-        el.addEventListener('mouseenter', () => {
-          el.removeAttribute('animation__pulse');
-          el.setAttribute('animation__hover', 'property: scale; to: 1.5 1.5 1.5; dur: 180; easing: easeOutQuad');
-          label.removeAttribute('animation__scalefadeout');
-          label.setAttribute('animation__scalefadein', 'property: scale; to: 1 1 1; dur: 300; easing: easeOutQuad');
-          glow.setAttribute('visible', 'true');
-          glow.removeAttribute('animation__fadeout');
-          glow.setAttribute('animation__fadein', 'property: material.opacity; to: 0.85; dur: 200; easing: easeOutQuad');
-          glow.removeAttribute('animation__glowscaleback');
-          glow.setAttribute('animation__glowscale', 'property: scale; to: 1.25 1.25 1.25; dur: 200; easing: easeOutQuad');
-        });
-
-        el.addEventListener('mouseleave', () => {
-          el.removeAttribute('animation__hover');
-          el.setAttribute('scale', '1 1 1');
-          el.setAttribute('animation__pulse', 'property: scale; dir: alternate; dur: 1500; loop: true; to: 1.3 1.3 1.3');
-          label.removeAttribute('animation__scalefadein');
-          label.setAttribute('animation__scalefadeout', 'property: scale; to: 0 0 0; dur: 300; easing: easeOutQuad');
-          glow.removeAttribute('animation__fadein');
-          glow.setAttribute('animation__fadeout', 'property: material.opacity; to: 0; dur: 300; easing: easeOutQuad');
-          glow.removeAttribute('animation__glowscale');
-          glow.setAttribute('animation__glowscaleback', 'property: scale; to: 1 1 1; dur: 300; easing: easeOutQuad');
-          setTimeout(() => { try { glow.setAttribute('visible', 'false'); } catch(e){} }, 320);
-        });
-
-        el.addEventListener('click', () => {
-          audio.pause();
-          audio.currentTime = 0;
-          audio.play().catch(() => {});
-          changeScene(hs.target);
-        });
-
-        hotspotContainer.appendChild(glow);
-        hotspotContainer.appendChild(el);
-        hotspotContainer.appendChild(label);
-      });
-    }
-
-    window.addEventListener('load', () => {
-      document.body.addEventListener('click', () => {
+      function changeScene(sceneName) {
+        const skyA = document.querySelector('#skyA');
+        const skyB = document.querySelector('#skyB');
+        const hotspotContainer = document.querySelector('#hotspotContainer');
         const audio = document.querySelector('#transitionSound');
-        audio.play().catch(() => {});
-      }, { once: true });
+        const sceneLabel = document.querySelector('#sceneLabel');
 
-      changeScene('Living_Room');
-    });
-  </script>
-</body>
+        const fromSky = activeSky === 'A' ? skyA : skyB;
+        const toSky   = activeSky === 'A' ? skyB : skyA;
+
+        // تجهيز الصورة الجديدة
+        toSky.setAttribute('src', scenes[sceneName].src);
+        toSky.setAttribute('material', `shader: flat; opacity: 0; transparent: true`);
+
+        // تشغيل crossfade
+        fromSky.setAttribute('animation__fadeout', {
+          property: 'material.opacity',
+          to: 0,
+          dur: transitionDuration,
+          easing: transitionEasing
+        });
+        toSky.setAttribute('animation__fadein', {
+          property: 'material.opacity',
+          to: 1,
+          dur: transitionDuration,
+          easing: transitionEasing
+        });
+
+        // بعد اكتمال الانتقال
+        setTimeout(() => {
+          hotspotContainer.innerHTML = '';
+          sceneLabel.setAttribute('value', sceneName.replace('_', ' '));
+
+          scenes[sceneName].hotspots.forEach((hs, idx) => {
+            const glowId = `glow-img-${sceneName}-${idx}-${Date.now()}`;
+            const dataURL = makeGlowDataURL(512);
+            const glowImg = document.createElement('img');
+            glowImg.setAttribute('id', glowId);
+            glowImg.setAttribute('src', dataURL);
+            document.querySelector('a-assets').appendChild(glowImg);
+
+            // hotspot
+            const el = document.createElement('a-plane');
+            el.setAttribute('class', 'hotspot');
+            el.setAttribute('position', hs.position);
+            el.setAttribute('width', hs.size || 0.6);
+            el.setAttribute('height', hs.size || 0.6);
+            el.setAttribute('material', `src: url(${hs.img}); transparent: true; shader: flat`);
+            el.setAttribute('look-at', '#cameraRig');
+            el.setAttribute('animation__pulse', 'property: scale; dir: alternate; dur: 1500; loop: true; to: 1.3 1.3 1.3');
+
+            // glow
+            const glow = document.createElement('a-plane');
+            glow.setAttribute('position', hs.position);
+            const glowScale = (hs.size || 0.6) * 1.2;
+            glow.setAttribute('width', glowScale);
+            glow.setAttribute('height', glowScale);
+            glow.setAttribute('look-at', '#cameraRig');
+            glow.setAttribute('material', `src: #${glowId}; transparent: true; shader: flat; depthTest: false; opacity: 0`);
+            glow.setAttribute('visible', 'false');
+
+            // label
+            const label = document.createElement('a-text');
+            label.setAttribute('value', hs.target.replace('_', ' '));
+            label.setAttribute('align', 'center');
+            label.setAttribute('color', '#FFFFFF');
+            label.setAttribute('width', 4);
+            label.setAttribute('look-at', '#cameraRig');
+            const pos = hs.position.split(' ');
+            label.setAttribute('position', `${pos[0]} ${parseFloat(pos[1]) + 0.6} ${pos[2]}`);
+            label.setAttribute('scale', '0 0 0'); 
+            label.setAttribute('visible', 'true');
+
+            // events
+            el.addEventListener('mouseenter', () => {
+              el.removeAttribute('animation__pulse');
+              el.setAttribute('animation__hover', 'property: scale; to: 1.5 1.5 1.5; dur: 180; easing: easeOutQuad');
+              label.removeAttribute('animation__scalefadeout');
+              label.setAttribute('animation__scalefadein', 'property: scale; to: 1 1 1; dur: 300; easing: easeOutQuad');
+              glow.setAttribute('visible', 'true');
+              glow.removeAttribute('animation__fadeout');
+              glow.setAttribute('animation__fadein', 'property: material.opacity; to: 0.85; dur: 200; easing: easeOutQuad');
+              glow.removeAttribute('animation__glowscale');
+              glow.setAttribute('animation__glowscale', 'property: scale; to: 1.25 1.25 1.25; dur: 200; easing: easeOutQuad');
+            });
+
+            el.addEventListener('mouseleave', () => {
+              el.removeAttribute('animation__hover');
+              el.setAttribute('scale', '1 1 1');
+              el.setAttribute('animation__pulse', 'property: scale; dir: alternate; dur: 1500; loop: true; to: 1.3 1.3 1.3');
+              label.removeAttribute('animation__scalefadein');
+              label.setAttribute('animation__scalefadeout', 'property: scale; to: 0 0 0; dur: 300; easing: easeOutQuad');
+              glow.removeAttribute('animation__fadein');
+              glow.setAttribute('animation__fadeout', 'property: material.opacity; to: 0; dur: 300; easing: easeOutQuad');
+            });
+
+            el.addEventListener('click', () => {
+              audio.pause();
+              audio.currentTime = 0;
+              audio.play().catch(() => {});
+              changeScene(hs.target);
+            });
+
+            hotspotContainer.appendChild(glow);
+            hotspotContainer.appendChild(el);
+            hotspotContainer.appendChild(label);
+          });
+
+          // تبديل السماء الفعالة
+          activeSky = activeSky === 'A' ? 'B' : 'A';
+
+        }, transitionDuration);
+      }
+
+      // بدء التشغيل
+      window.addEventListener('load', () => {
+        document.body.addEventListener('click', () => {
+          const audio = document.querySelector('#transitionSound');
+          audio.play().catch(() => {});
+        }, { once: true });
+
+        changeScene('Living_Room');
+      });
+    </script>
+  </body>
 </html>
