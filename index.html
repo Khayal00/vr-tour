@@ -2,83 +2,17 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>VR Tour with Professional Transitions</title>
+    <title>VR Tour with HUD Scene Name (Crossfade)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
     <style>
-      body { 
-        margin: 0; 
-        overflow: hidden;
-        font-family: 'Arial', sans-serif;
-      }
+      body { margin: 0; }
       .hotspot { cursor: pointer; }
-      
-      /* تأثيرات الانتقال الجديدة */
-      .transition-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-        z-index: 1000;
-        opacity: 0;
-        transition: opacity 0.3s ease-in-out;
-      }
-      
-      #rippleEffect {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 0;
-        height: 0;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.8);
-        transform: translate(-50%, -50%);
-        opacity: 0;
-        z-index: 1001;
-      }
-      
-      @keyframes ripple {
-        0% {
-          width: 0;
-          height: 0;
-          opacity: 0.8;
-        }
-        100% {
-          width: 200vmax;
-          height: 200vmax;
-          opacity: 0;
-        }
-      }
-      
-      #hudPlane {
-        transition: all 0.5s ease-in-out;
-      }
-      
-      .scene-transition {
-        animation: fadeIn 1s ease-out;
-      }
-      
-      @keyframes fadeIn {
-        from {
-          opacity: 0;
-          transform: scale(0.95);
-        }
-        to {
-          opacity: 1;
-          transform: scale(1);
-        }
-      }
+      .hotspot.disabled { pointer-events: none; opacity: 0.6; }
     </style>
   </head>
   <body>
-    <!-- طبقة تأثير الانتقال -->
-    <div id="transitionOverlay" class="transition-overlay"></div>
-    <div id="rippleEffect"></div>
-    
     <a-scene>
       <a-entity id="cameraRig" camera look-controls position="0 1.6 0">
         <a-cursor
@@ -107,16 +41,21 @@
             material="color: #000000; opacity: 0.5; side: double; transparent: true">
           </a-plane>
         </a-entity>
+
       </a-entity>
 
-      <a-sky id="sky" rotation="0 -90 0"></a-sky>
+      <!-- السماء الافتراضية (سيُستبدل عند الانتقال) -->
+      <a-sky id="sky" rotation="0 -90 0" material="shader: flat; opacity: 1; transparent: true"></a-sky>
+
       <a-entity id="hotspotContainer"></a-entity>
+
       <a-assets>
         <audio id="transitionSound" src="assets/transition.mp3"></audio>
       </a-assets>
     </a-scene>
 
     <script>
+      // تعريف المشاهد والـ hotspots (كما في كودك)
       const scenes = {
         Living_Room: {
           src: 'assets/Living_Room.jpg',
@@ -160,6 +99,8 @@
         }
       };
 
+      let isTransitioning = false; // علم لمنع تبديل متكرر أثناء الانتقال
+
       function makeGlowDataURL(size = 512, colorCenter = '255,240,200', colorMid = '0,128,255') {
         const canvas = document.createElement('canvas');
         canvas.width = canvas.height = size;
@@ -174,67 +115,11 @@
         return canvas.toDataURL();
       }
 
-      // دالة لإنشاء تأثير التموج
-      function createRippleEffect(x, y, color = 'rgba(255, 255, 255, 0.8)') {
-        const ripple = document.getElementById('rippleEffect');
-        ripple.style.backgroundColor = color;
-        ripple.style.left = `${x}px`;
-        ripple.style.top = `${y}px`;
-        ripple.style.width = '0';
-        ripple.style.height = '0';
-        ripple.style.opacity = '0.8';
-        
-        // إزالة أي تأثير سابق
-        ripple.style.animation = 'none';
-        ripple.offsetHeight; // إعادة التدفق
-        
-        // تطبيق التأثير الجديد
-        ripple.style.animation = 'ripple 1s ease-out forwards';
-        
-        return ripple;
-      }
-
-      // دالة الانتقال بين المشاهد مع تأثيرات
-      async function changeScene(sceneName, origin) {
-        const transitionOverlay = document.getElementById('transitionOverlay');
-        const audio = document.querySelector('#transitionSound');
+      // فصل إنشاء الـ hotspots في دالة خاصة حتى نتمكن من استدعائها بعد انتهاء الانتقال
+      function createHotspots(sceneName) {
         const hotspotContainer = document.querySelector('#hotspotContainer');
-        const hudPlane = document.querySelector('#hudPlane');
-        const sceneLabel = document.querySelector('#sceneLabel');
-        
-        // تشغيل صوت الانتقال
-        audio.pause();
-        audio.currentTime = 0;
-        audio.play().catch(() => {});
-        
-        // إخفاء النقاط التفاعلية الحالية
         hotspotContainer.innerHTML = '';
-        
-        // إنشاء تأثير التموج
-        if (origin) {
-          const ripple = createRippleEffect(origin.clientX, origin.clientY);
-          
-          // بدء تأثير الانتقال
-          transitionOverlay.style.opacity = '1';
-          transitionOverlay.style.background = 'radial-gradient(circle at center, transparent 0%, white 100%)';
-          transitionOverlay.style.backgroundPosition = `${origin.clientX}px ${origin.clientY}px`;
-          
-          // الانتظار لمدة 0.5 ثانية
-          await new Promise(resolve => setTimeout(resolve, 500));
-        }
-        
-        // تغيير صورة السماء
-        const sky = document.querySelector('#sky');
-        sky.setAttribute('src', scenes[sceneName].src);
-        
-        // تحديث HUD باسم المشهد
-        sceneLabel.setAttribute('value', sceneName.replace('_', ' '));
-        
-        // تأثير للـ HUD
-        hudPlane.setAttribute('animation', 'property: position.y; to: 1.0; dur: 300; easing: easeOutQuad');
-        sceneLabel.setAttribute('animation', 'property: position.y; to: 1.0; dur: 300; easing: easeOutQuad');
-        
-        // إنشاء النقاط التفاعلية للمشهد الجديد
+
         scenes[sceneName].hotspots.forEach((hs, idx) => {
           const glowId = `glow-img-${sceneName}-${idx}-${Date.now()}`;
           const dataURL = makeGlowDataURL(512);
@@ -277,6 +162,7 @@
 
           // Mouse interactions
           el.addEventListener('mouseenter', () => {
+            if (isTransitioning) return;
             el.removeAttribute('animation__pulse');
             el.setAttribute('animation__hover', 'property: scale; to: 1.5 1.5 1.5; dur: 180; easing: easeOutQuad');
             label.removeAttribute('animation__scalefadeout');
@@ -289,6 +175,7 @@
           });
 
           el.addEventListener('mouseleave', () => {
+            if (isTransitioning) return;
             el.removeAttribute('animation__hover');
             el.setAttribute('scale', '1 1 1');
             el.setAttribute('animation__pulse', 'property: scale; dir: alternate; dur: 1500; loop: true; to: 1.3 1.3 1.3');
@@ -301,38 +188,81 @@
             setTimeout(() => { try { glow.setAttribute('visible', 'false'); } catch(e){} }, 320);
           });
 
-          el.addEventListener('click', (e) => {
-            changeScene(hs.target, e);
+          el.addEventListener('click', () => {
+            if (isTransitioning) return; // منع تبديل متعدد أثناء الانتقال
+            const audio = document.querySelector('#transitionSound');
+            audio.pause();
+            audio.currentTime = 0;
+            audio.play().catch(() => {});
+            changeScene(hs.target, false);
           });
 
           hotspotContainer.appendChild(glow);
           hotspotContainer.appendChild(el);
           hotspotContainer.appendChild(label);
         });
-        
-        // إعادة الـ HUD إلى مكانه
-        setTimeout(() => {
-          hudPlane.removeAttribute('animation');
-          hudPlane.setAttribute('position', '-1.2 0.8 -1');
-          
-          sceneLabel.removeAttribute('animation');
-          sceneLabel.setAttribute('position', '-1.2 0.8 -1');
-        }, 300);
-        
-        // إزالة تأثير الانتقال
-        setTimeout(() => {
-          transitionOverlay.style.opacity = '0';
-        }, 800);
       }
 
+      // الدالة المسؤولة عن الانتقال مع تأثير التلاشي المتداخل (crossfade)
+      function changeScene(sceneName, instant = false) {
+        if (isTransitioning) return;
+        isTransitioning = true;
+
+        const sceneEl = document.querySelector('a-scene');
+        const oldSky = document.querySelector('#sky');
+        const audio = document.querySelector('#transitionSound');
+
+        // تحديث نص الـ HUD فوراً
+        document.querySelector('#sceneLabel').setAttribute('value', sceneName.replace('_', ' '));
+
+        // حالة التحميل الفوري (أول تحميل أو طلب بدون تأثير)
+        if (instant || !oldSky.getAttribute('src')) {
+          oldSky.setAttribute('src', scenes[sceneName].src);
+          oldSky.setAttribute('material', 'shader: flat; opacity: 1; transparent: true;');
+          // أنشئ الـ hotspots فوراً
+          createHotspots(sceneName);
+          isTransitioning = false;
+          return;
+        }
+
+        // إنشاء سماء جديدة فوق القديمة ببدء شفاف
+        const newSky = document.createElement('a-sky');
+        newSky.setAttribute('id', `sky-new-${Date.now()}`);
+        newSky.setAttribute('src', scenes[sceneName].src);
+        newSky.setAttribute('rotation', oldSky.getAttribute('rotation') || '0 -90 0');
+        newSky.setAttribute('material', 'shader: flat; opacity: 0; transparent: true; depthTest: false');
+        sceneEl.appendChild(newSky);
+
+        // تعطيل التفاعل مع الهوتسبوت الحالية أثناء الانتقال
+        document.querySelectorAll('.hotspot').forEach(el => el.classList.add('disabled'));
+
+        // تشغيل أنيميشن التلاشي
+        const duration = 800; // المدة بالـ ms
+        newSky.setAttribute('animation__fadein', `property: material.opacity; to: 1; dur: ${duration}; easing: easeInOutQuad`);
+        oldSky.setAttribute('animation__fadeout', `property: material.opacity; to: 0; dur: ${duration}; easing: easeInOutQuad`);
+
+        // بعد انتهاء التلاشي: إزالة السماء القديمة، إعادة تسمية الجديدة، وإنشاء الـ hotspots للمشهد الجديد
+        setTimeout(() => {
+          try { oldSky.parentNode.removeChild(oldSky); } catch(e){}
+          newSky.setAttribute('id', 'sky');
+
+          // إنشاء الهوتسبوتس الخاصة بالمشهد الجديد
+          createHotspots(sceneName);
+
+          isTransitioning = false;
+        }, duration + 50);
+      }
+
+      // تهيئة الصفحة
       window.addEventListener('load', () => {
-        document.body.addEventListener('click', (e) => {
+        // السماح بتشغيل الصوت عند أول تفاعل للمستخدم (سياسة متصفحات الصوت)
+        document.body.addEventListener('click', () => {
           const audio = document.querySelector('#transitionSound');
           audio.play().catch(() => {});
-          changeScene('Living_Room', e);
         }, { once: true });
 
-        changeScene('Living_Room');
+        // تحميل المشهد الأول مباشرة دون تأثير تلاشي
+        changeScene('Living_Room', true);
       });
     </script>
   </body>
