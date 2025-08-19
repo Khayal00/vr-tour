@@ -16,16 +16,16 @@
 <a-scene>
   <a-assets id="assets"></a-assets>
 
-  <a-entity id="cameraRig" camera look-controls position="0 1.6 0">
-    <!-- مؤشر مرئي دائمًا -->
-    <a-cursor
-      id="cursor"
-      raycaster="objects: .hotspot"
-      fuse="false"
-      geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
-      material="color: white; shader: flat; depthTest: false; depthWrite: false"
-      visible="true">
-    </a-cursor>
+  <a-entity id="cameraRig" camera look-controls position="0 1.6 0" raycaster="objects: .hotspot">
+    <!-- مؤشر دائم ومرئي أمام الكاميرا -->
+    <a-entity position="0 0 -1">
+      <a-ring
+        radius-inner="0.02"
+        radius-outer="0.03"
+        color="white"
+        material="shader: flat; depthTest: false; depthWrite: false">
+      </a-ring>
+    </a-entity>
 
     <!-- HUD: اسم المشهد -->
     <a-entity id="hudGroup" position="-1.2 0.8 -1">
@@ -57,6 +57,7 @@
 </a-scene>
 
 <script>
+// --- بيانات المشاهد ---
 const scenes = {
   Living_Room: { src: 'assets/Living_Room.jpg', hotspots: [
       { target: 'Kitchen', position: '-3 1.6 4', img: 'assets/link2.png', size: 0.8 },
@@ -76,10 +77,12 @@ const scenes = {
   Bedroom: { src: 'assets/Bedroom.jpg', hotspots: [ { target: 'Corridor', position: '-0.5 1.6 4', img: 'assets/link1.png', size: 0.7 } ] }
 };
 
+// --- المتغيرات ---
 let isTransitioning = false;
 let currentSky = 'A';
 function easeInOutQuad(t){ return t<0.5?2*t*t:-1+(4-2*t)*t; }
 
+// --- مساعد تحميل الصور ---
 function ensureAssetImageElement(sceneName,url){
   const id = `img-${sceneName}`;
   const assets = document.querySelector('#assets');
@@ -94,6 +97,7 @@ function ensureAssetImageElement(sceneName,url){
   return img;
 }
 
+// --- مساعد توليد توهج ---
 function makeGlowDataURL(size=512,colorCenter='255,240,200',colorMid='0,128,255'){
   const canvas=document.createElement('canvas'); canvas.width=canvas.height=size;
   const ctx=canvas.getContext('2d');
@@ -102,12 +106,12 @@ function makeGlowDataURL(size=512,colorCenter='255,240,200',colorMid='0,128,255'
   grad.addColorStop(0.5,`rgba(${colorMid},0.4)`); grad.addColorStop(1,`rgba(${colorMid},0)`);
   ctx.fillStyle=grad; ctx.fillRect(0,0,size,size); return canvas.toDataURL();
 }
-
 function cleanupGlowAssets(){
   const assets=document.querySelector('#assets');
   assets.querySelectorAll('img').forEach(img=>{ if(img.id.startsWith('glow-')) img.remove(); });
 }
 
+// --- إنشاء الهوت سبوت ---
 function createHotspots(sceneName){
   const container=document.querySelector('#hotspotContainer');
   container.innerHTML=''; cleanupGlowAssets();
@@ -168,6 +172,7 @@ function createHotspots(sceneName){
   });
 }
 
+// --- تغيير المشهد ---
 async function changeScene(sceneName, instant=false, duration=450){
   if(isTransitioning) return;
   isTransitioning=true;
@@ -215,6 +220,7 @@ async function changeScene(sceneName, instant=false, duration=450){
   });
 }
 
+// --- بداية التحميل ---
 window.addEventListener('load',()=>{
   document.body.addEventListener('click',()=>{
     const audio=document.querySelector('#transitionSound');
