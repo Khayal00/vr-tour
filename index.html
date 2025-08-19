@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>VR Tour — Smooth Crossfade + HUD + Hotspot Fade-in</title>
+  <title>VR Tour — Smooth Crossfade + HUD + Hotspot Fade-in + Labels</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
   <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
@@ -55,7 +55,6 @@
 </a-scene>
 
 <script>
-  // ------------------ scenes ------------------
   const scenes = {
     Living_Room: { src: 'assets/Living_Room.jpg', hotspots: [
         { target: 'Kitchen', position: '-3 1.6 4', img: 'assets/link2.png', size: 0.8 },
@@ -75,139 +74,106 @@
     Bedroom: { src: 'assets/Bedroom.jpg', hotspots: [ { target: 'Corridor', position: '-0.5 1.6 4', img: 'assets/link1.png', size: 0.7 } ] }
   };
 
-  // ------------------ state ------------------
   let isTransitioning = false;
   let currentSky = 'A';
+  function easeInOutQuad(t){ return t<0.5?2*t*t:-1+(4-2*t)*t; }
 
-  function easeInOutQuad(t) { return t<0.5 ? 2*t*t : -1 + (4-2*t)*t; }
-
-  function ensureAssetImageElement(sceneName, url) {
+  function ensureAssetImageElement(sceneName,url){
     const id = `img-${sceneName}`;
     const assets = document.querySelector('#assets');
     let img = document.getElementById(id);
-    if (!img) {
+    if(!img){
       img = document.createElement('img');
-      img.setAttribute('id', id);
-      img.setAttribute('crossorigin', 'anonymous');
-      img.setAttribute('src', url);
+      img.setAttribute('id',id);
+      img.setAttribute('crossorigin','anonymous');
+      img.setAttribute('src',url);
       assets.appendChild(img);
     }
     return img;
   }
 
-  function makeGlowDataURL(size = 512, colorCenter = '255,240,200', colorMid = '0,128,255') {
-    const canvas = document.createElement('canvas');
-    canvas.width = canvas.height = size;
-    const ctx = canvas.getContext('2d');
-    const grad = ctx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
-    grad.addColorStop(0, `rgba(${colorCenter},0.95)`);
-    grad.addColorStop(0.25, `rgba(${colorMid},0.7)`);
-    grad.addColorStop(0.5, `rgba(${colorMid},0.4)`);
-    grad.addColorStop(1, `rgba(${colorMid},0)`);
-    ctx.fillStyle = grad;
-    ctx.fillRect(0,0,size,size);
-    return canvas.toDataURL();
+  function makeGlowDataURL(size=512,colorCenter='255,240,200',colorMid='0,128,255'){
+    const canvas=document.createElement('canvas'); canvas.width=canvas.height=size;
+    const ctx=canvas.getContext('2d');
+    const grad=ctx.createRadialGradient(size/2,size/2,0,size/2,size/2,size/2);
+    grad.addColorStop(0,`rgba(${colorCenter},0.95)`); grad.addColorStop(0.25,`rgba(${colorMid},0.7)`);
+    grad.addColorStop(0.5,`rgba(${colorMid},0.4)`); grad.addColorStop(1,`rgba(${colorMid},0)`);
+    ctx.fillStyle=grad; ctx.fillRect(0,0,size,size); return canvas.toDataURL();
   }
 
-  function cleanupGlowAssets() {
-    const assets = document.querySelector('#assets');
-    const imgs = assets.querySelectorAll('img');
-    imgs.forEach(img => { if (img.id && img.id.startsWith('glow-')) img.remove(); });
+  function cleanupGlowAssets(){
+    const assets=document.querySelector('#assets');
+    assets.querySelectorAll('img').forEach(img=>{ if(img.id.startsWith('glow-')) img.remove(); });
   }
 
-  // ------------------ hotspots ------------------
-  function createHotspots(sceneName, visible = true) {
-    const hotspotContainer = document.querySelector('#hotspotContainer');
-    hotspotContainer.innerHTML = '';
-    cleanupGlowAssets();
-
-    scenes[sceneName].hotspots.forEach((hs, idx) => {
-      const glowId = `glow-${sceneName}-${idx}-${Date.now()}`;
-      const glowImg = document.createElement('img');
-      glowImg.setAttribute('id', glowId);
-      glowImg.setAttribute('src', makeGlowDataURL(512));
+  function createHotspots(sceneName, visible=false){
+    const container=document.querySelector('#hotspotContainer');
+    container.innerHTML=''; cleanupGlowAssets();
+    scenes[sceneName].hotspots.forEach((hs,idx)=>{
+      const glowId=`glow-${sceneName}-${idx}-${Date.now()}`;
+      const glowImg=document.createElement('img'); glowImg.setAttribute('id',glowId); glowImg.setAttribute('src',makeGlowDataURL(512));
       document.querySelector('#assets').appendChild(glowImg);
 
-      const el = document.createElement('a-plane');
-      el.setAttribute('class', 'hotspot');
-      el.setAttribute('position', hs.position);
-      el.setAttribute('width', hs.size || 0.6);
-      el.setAttribute('height', hs.size || 0.6);
-      el.setAttribute('material', `src: url(${hs.img}); transparent: true; shader: flat; opacity:0`);
-      el.setAttribute('look-at', '#cameraRig');
-      el.setAttribute('animation__pulse', 'property: scale; dir: alternate; dur: 1500; loop: true; to: 1.3 1.3 1.3');
-      el.setAttribute('visible', visible);
+      const el=document.createElement('a-plane');
+      el.setAttribute('class','hotspot'); el.setAttribute('position',hs.position);
+      el.setAttribute('width',hs.size||0.6); el.setAttribute('height',hs.size||0.6);
+      el.setAttribute('material',`src: url(${hs.img}); transparent: true; shader: flat; opacity:0`);
+      el.setAttribute('look-at','#cameraRig'); el.setAttribute('animation__pulse','property: scale; dir: alternate; dur: 1500; loop: true; to:1.3 1.3 1.3');
+      el.setAttribute('visible',visible);
 
-      const glow = document.createElement('a-plane');
-      glow.setAttribute('position', hs.position);
-      const glowScale = (hs.size || 0.6) * 1.6;
-      glow.setAttribute('width', glowScale);
-      glow.setAttribute('height', glowScale);
-      glow.setAttribute('look-at', '#cameraRig');
-      glow.setAttribute('material', `src: #${glowId}; transparent: true; shader: flat; depthTest: false; opacity:0`);
-      glow.setAttribute('visible', false);
+      const glow=document.createElement('a-plane');
+      glow.setAttribute('position',hs.position);
+      const glowScale=(hs.size||0.6)*1.6;
+      glow.setAttribute('width',glowScale); glow.setAttribute('height',glowScale);
+      glow.setAttribute('look-at','#cameraRig');
+      glow.setAttribute('material',`src: #${glowId}; transparent: true; shader: flat; depthTest: false; opacity:0`);
+      glow.setAttribute('visible',false);
 
-      const label = document.createElement('a-text');
-      label.setAttribute('value', hs.target.replace('_', ' '));
-      label.setAttribute('align', 'center');
-      label.setAttribute('color', '#FFFFFF');
-      label.setAttribute('width', 4);
-      label.setAttribute('look-at', '#cameraRig');
-      const pos = hs.position.split(' ');
-      label.setAttribute('position', `${pos[0]} ${parseFloat(pos[1]) + 0.6} ${pos[2]}`);
-      label.setAttribute('scale', '0 0 0');
-      label.setAttribute('visible', visible);
+      const pos=hs.position.split(' ');
+      const label=document.createElement('a-text');
+      label.setAttribute('value', hs.target.replace('_',' '));
+      label.setAttribute('align','center'); label.setAttribute('color','#FFFFFF'); label.setAttribute('width',4);
+      label.setAttribute('look-at','#cameraRig'); label.setAttribute('position',`${pos[0]} ${parseFloat(pos[1])+0.6} ${pos[2]}`);
+      label.setAttribute('scale','0 0 0'); label.setAttribute('visible',true); // visible دائمًا
 
-      el.addEventListener('mouseenter', () => {
-        if (isTransitioning) return;
+      el.addEventListener('mouseenter',()=>{
+        if(isTransitioning) return;
         el.removeAttribute('animation__pulse');
-        el.setAttribute('animation__hover', 'property: scale; to: 1.5 1.5 1.5; dur: 180; easing: easeOutQuad');
+        el.setAttribute('animation__hover','property: scale; to:1.5 1.5 1.5; dur:180; easing:easeOutQuad');
         label.removeAttribute('animation__scalefadeout');
-        label.setAttribute('animation__scalefadein', 'property: scale; to: 1 1 1; dur: 300; easing: easeOutQuad');
-        glow.setAttribute('visible', true);
-        glow.removeAttribute('animation__fadeout');
-        glow.setAttribute('animation__fadein', 'property: material.opacity; to:0.85; dur:200; easing:easeOutQuad');
-        glow.removeAttribute('animation__glowscaleback');
-        glow.setAttribute('animation__glowscale', 'property: scale; to:1.25 1.25 1.25; dur:200; easing:easeOutQuad');
+        label.setAttribute('animation__scalefadein','property: scale; to:1 1 1; dur:300; easing:easeOutQuad');
+        glow.setAttribute('visible',true); glow.removeAttribute('animation__fadeout'); glow.setAttribute('animation__fadein','property: material.opacity; to:0.85; dur:200; easing:easeOutQuad');
+        glow.removeAttribute('animation__glowscaleback'); glow.setAttribute('animation__glowscale','property: scale; to:1.25 1.25 1.25; dur:200; easing:easeOutQuad');
       });
 
-      el.addEventListener('mouseleave', () => {
-        if (isTransitioning) return;
-        el.removeAttribute('animation__hover');
-        el.setAttribute('scale','1 1 1');
-        el.setAttribute('animation__pulse','property: scale; dir: alternate; dur: 1500; loop: true; to: 1.3 1.3 1.3');
-        label.removeAttribute('animation__scalefadein');
-        label.setAttribute('animation__scalefadeout','property: scale; to:0 0 0; dur:300; easing:easeOutQuad');
-        glow.removeAttribute('animation__fadein');
-        glow.setAttribute('animation__fadeout','property: material.opacity; to:0; dur:300; easing:easeOutQuad');
-        glow.removeAttribute('animation__glowscale');
-        glow.setAttribute('animation__glowscaleback','property: scale; to:1 1 1; dur:300; easing:easeOutQuad');
-        setTimeout(()=>{ try{ glow.setAttribute('visible','false'); } catch(e){} },320);
+      el.addEventListener('mouseleave',()=>{
+        if(isTransitioning) return;
+        el.removeAttribute('animation__hover'); el.setAttribute('scale','1 1 1');
+        el.setAttribute('animation__pulse','property: scale; dir: alternate; dur: 1500; loop: true; to:1.3 1.3 1.3');
+        label.removeAttribute('animation__scalefadein'); label.setAttribute('animation__scalefadeout','property: scale; to:0 0 0; dur:300; easing:easeOutQuad');
+        glow.removeAttribute('animation__fadein'); glow.setAttribute('animation__fadeout','property: material.opacity; to:0; dur:300; easing:easeOutQuad');
+        glow.removeAttribute('animation__glowscale'); glow.setAttribute('animation__glowscaleback','property: scale; to:1 1 1; dur:300; easing:easeOutQuad');
+        setTimeout(()=>{ try{ glow.setAttribute('visible','false'); }catch(e){} },320);
       });
 
-      el.addEventListener('click', () => {
-        if (isTransitioning) return;
-        const audio = document.querySelector('#transitionSound');
-        audio.pause(); audio.currentTime = 0; audio.play().catch(()=>{});
+      el.addEventListener('click',()=>{
+        if(isTransitioning) return;
+        const audio=document.querySelector('#transitionSound'); audio.pause(); audio.currentTime=0; audio.play().catch(()=>{});
         changeScene(hs.target);
       });
 
-      hotspotContainer.appendChild(glow);
-      hotspotContainer.appendChild(el);
-      hotspotContainer.appendChild(label);
+      container.appendChild(glow); container.appendChild(el); container.appendChild(label);
     });
   }
 
-  // ------------------ crossfade with hotspot fade-in ------------------
-  async function changeScene(sceneName, instant=false, duration=450) {
-    if (isTransitioning) return;
-    isTransitioning = true;
+  async function changeScene(sceneName, instant=false, duration=450){
+    if(isTransitioning) return;
+    isTransitioning=true;
 
-    const skyA = document.querySelector('#skyA');
-    const skyB = document.querySelector('#skyB');
-    document.querySelector('#sceneLabel').setAttribute('value', sceneName.replace('_',' '));
-    const imgEl = ensureAssetImageElement(sceneName, scenes[sceneName].src);
-    try{ if(!imgEl.complete) await imgEl.decode(); } catch(e){ console.warn(e); }
+    const skyA=document.querySelector('#skyA'); const skyB=document.querySelector('#skyB');
+    document.querySelector('#sceneLabel').setAttribute('value',sceneName.replace('_',' '));
+    const imgEl=ensureAssetImageElement(sceneName,scenes[sceneName].src);
+    try{ if(!imgEl.complete) await imgEl.decode(); }catch(e){ console.warn(e); }
 
     if(instant){
       skyA.setAttribute('material',`src: #img-${sceneName}; shader: flat; opacity:1; transparent:true; side:back`);
@@ -215,23 +181,18 @@
       currentSky='A'; createHotspots(sceneName,true); isTransitioning=false; return;
     }
 
-    const showSky = currentSky==='A'?skyB:skyA;
-    const hideSky = currentSky==='A'?skyA:skyB;
-
-    createHotspots(sceneName,false);
-    const hotspotEls = document.querySelectorAll('.hotspot');
+    const showSky=currentSky==='A'?skyB:skyA; const hideSky=currentSky==='A'?skyA:skyB;
+    createHotspots(sceneName,false); const hotspotEls=document.querySelectorAll('.hotspot');
 
     showSky.setAttribute('material',`src: #img-${sceneName}; shader: flat; opacity:0; transparent:true; side:back`);
     document.querySelectorAll('.hotspot').forEach(el=>el.classList.add('disabled'));
 
-    const showMesh = showSky.getObject3D('mesh');
-    const hideMesh = hideSky.getObject3D('mesh');
+    const showMesh=showSky.getObject3D('mesh'); const hideMesh=hideSky.getObject3D('mesh');
+    const start=performance.now();
 
-    let start=performance.now();
     requestAnimationFrame(function frame(now){
       let t=(now-start)/duration; if(t>1)t=1;
-      const eased = easeInOutQuad(t);
-
+      const eased=easeInOutQuad(t);
       if(showMesh && hideMesh){
         try{
           if(Array.isArray(showMesh.material)) showMesh.material.forEach(m=>m.opacity=eased);
@@ -244,11 +205,14 @@
         }
       }
 
-      // fade-in hotspots gradually after 30% of transition
+      // fade-in hotspots and labels after 30%
       if(t>0.3){
         hotspotEls.forEach(el=>{
           el.setAttribute('visible',true);
           el.setAttribute('animation__fadein','property: material.opacity; to:1; dur:300; easing:easeOutQuad');
+          const lbl=el.nextSibling.nextSibling;
+          lbl.removeAttribute('animation__scalefadein');
+          lbl.setAttribute('animation__scalefadein','property: scale; to:1 1 1; dur:300; easing:easeOutQuad');
         });
       }
 
@@ -263,10 +227,9 @@
 
   window.addEventListener('load',()=>{
     document.body.addEventListener('click',()=>{
-      const audio = document.querySelector('#transitionSound');
+      const audio=document.querySelector('#transitionSound');
       audio.play().catch(()=>{});
     },{once:true});
-
     changeScene('Living_Room',true);
   });
 </script>
