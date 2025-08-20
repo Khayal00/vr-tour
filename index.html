@@ -66,14 +66,14 @@
 
     <!-- المشهد -->
     <a-scene>
-      <a-entity id="cameraRig" camera look-controls position="0 1.6 0">
-        <!-- مؤشر يعمل بالماوس + gaze للـ VR -->
+      <a-entity camera look-controls position="0 1.6 0">
+        <!-- المؤشر مصحح -->
         <a-cursor
           id="cursor"
-          rayOrigin="entity"
           fuse="true"
           fuseTimeout="1000"
-          geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
+          raycaster="objects: .hotspot"
+          geometry="primitive: ring; radiusInner: 0.01; radiusOuter: 0.02"
           material="color: white; shader: flat">
         </a-cursor>
       </a-entity>
@@ -130,7 +130,6 @@
         Bedroom:    { src: '#imgBedroom',   hotspots: [ { target: 'Corridor', position: '-0.5 1.6 4', img: 'assets/link1.png', size: 0.6 } ] }
       };
 
-      // رسم توهج ديناميكي
       function makeGlowDataURL(size = 512, colorCenter = '255,240,200', colorMid = '0,128,255') {
         const canvas = document.createElement('canvas');
         canvas.width = canvas.height = size;
@@ -145,7 +144,6 @@
         return canvas.toDataURL();
       }
 
-      // إنشاء هوت سبوتات (مع دعم gaze & click)
       function createHotspots(sceneName) {
         const hotspotContainer = document.querySelector('#hotspotContainer');
         hotspotContainer.innerHTML = '';
@@ -192,7 +190,6 @@
           label.setAttribute('scale', '0 0 0');
           label.setAttribute('visible', 'true');
 
-          // تفاعلات ماوس + gaze
           const triggerSceneChange = () => { changeScene(hs.target); };
           el.addEventListener('click', triggerSceneChange);
           el.addEventListener('mouseenter', () => {
@@ -211,7 +208,6 @@
         });
       }
 
-      // ====== RAF-based crossfade ======
       let currentFadeRAF = null;
       function setSkyOpacity(skyEl, value) {
         try {
@@ -258,7 +254,6 @@
         currentFadeRAF = requestAnimationFrame(step);
       }
 
-      // ====== شاشة الترحيب + التحميل ======
       const assets = document.querySelector('a-assets');
       const progressBar = document.getElementById('progressBar');
       const startBtn = document.getElementById('startBtn');
