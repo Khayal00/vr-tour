@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>VR Tour with Welcome Screen - Quest-Safe Crossfade</title>
+    <title>VR Tour with Welcome Screen - Quest Gaze & Laser</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <!-- A-Frame -->
@@ -40,11 +40,17 @@
     <a-scene renderer="colorManagement: true; antialias: true">
       <!-- الكاميرا + المؤشر -->
       <a-entity id="cameraRig" position="0 1.6 0">
-        <a-entity camera look-controls></a-entity>
-        <!-- مؤشر Gaze -->
-        <a-cursor id="cursor" raycaster="objects: .hotspot" fuse="true" fuse-timeout="800"
-                  geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
-                  material="color: white; shader: flat"></a-cursor>
+        <a-entity camera look-controls>
+          <!-- مؤشر Gaze يتحرك مع الرأس -->
+          <a-cursor id="cursor"
+                    fuse="true" fuse-timeout="800"
+                    geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
+                    material="color: #4facfe; shader: flat; opacity: 0.9"
+                    raycaster="objects: .hotspot"
+                    animation__pulse="property: scale; dir: alternate; dur: 1000; loop: true; to: 1.3 1.3 1.3">
+          </a-cursor>
+        </a-entity>
+
         <!-- ليزر وحدة التحكم -->
         <a-entity laser-controls="hand: right" raycaster="objects: .hotspot"></a-entity>
         <a-entity laser-controls="hand: left"  raycaster="objects: .hotspot"></a-entity>
@@ -116,7 +122,6 @@
         const scene = scenes[sceneName] || { hotspots: [] };
 
         scene.hotspots.forEach((hs, idx) => {
-          // توليد صورة التوهج
           const glowId = `glow-img-${sceneName}-${idx}-${Date.now()}`;
           const dataURL = makeGlowDataURL(512);
           const glowImg = document.createElement('img');
@@ -124,7 +129,6 @@
           glowImg.setAttribute('src', dataURL);
           document.querySelector('a-assets').appendChild(glowImg);
 
-          // الأيقونة
           const el = document.createElement('a-plane');
           el.setAttribute('class', 'hotspot');
           el.setAttribute('position', hs.position);
@@ -138,7 +142,6 @@
             el.setAttribute('animation__pulse', 'property: scale; dir: alternate; dur: 1500; loop: true; to: 1.3 1.3 1.3');
           });
 
-          // التوهج
           const glow = document.createElement('a-plane');
           glow.setAttribute('position', hs.position);
           const glowScale = (hs.size || 0.6) * 1.2;
@@ -148,7 +151,6 @@
           glow.setAttribute('material', `src: #${glowId}; transparent: true; shader: flat; depthTest: false; opacity: 0`);
           glow.setAttribute('visible', 'false');
 
-          // اللابل (اسم الهدف)
           const label = document.createElement('a-text');
           label.setAttribute('value', hs.target.replace('_', ' '));
           label.setAttribute('align', 'center');
@@ -160,7 +162,6 @@
           label.setAttribute('scale', '0 0 0');
           label.setAttribute('visible', 'true');
 
-          // تفاعلات المؤشر
           el.addEventListener('mouseenter', () => {
             el.removeAttribute('animation__pulse');
             el.setAttribute('animation__hover', 'property: scale; to: 1.5 1.5 1.5; dur: 180; easing: easeOutQuad');
@@ -188,7 +189,6 @@
 
           el.addEventListener('click', () => { changeScene(hs.target); });
 
-          // إضافة العناصر
           const container = document.querySelector('#hotspotContainer');
           container.appendChild(glow);
           container.appendChild(el);
