@@ -1,150 +1,282 @@
 <!DOCTYPE html>
-<html lang="ar">
-<head>
-  <meta charset="utf-8">
-  <title>VR Tour - Quest Crossfade with Laser Cursor</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-  <style>
-    body { margin: 0; }
-    #welcomeScreen {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.85);
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      color: white; font-family: sans-serif;
-      z-index: 10;
-    }
-    #startBtn {
-      margin-top: 20px;
-      padding: 10px 25px;
-      border: none;
-      border-radius: 8px;
-      font-size: 20px;
-      background: #2196f3;
-      color: white;
-      cursor: pointer;
-    }
-  </style>
-</head>
-<body>
-  <!-- شاشة الترحيب -->
-  <div id="welcomeScreen">
-    <h1>أهلاً بك في الجولة الافتراضية</h1>
-    <button id="startBtn">ابدأ الجولة</button>
-  </div>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>VR Tour with Welcome Screen - Quest-Safe Crossfade</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <a-scene>
-    <!-- السماوات -->
-    <a-sky id="skyFront" src="#imgLiving" material="shader: flat; transparent: true; opacity: 1;"></a-sky>
-    <a-sky id="skyBack" material="shader: flat; transparent: true; opacity: 0;"></a-sky>
+    <!-- A-Frame -->
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
 
-    <!-- الصور -->
-    <a-assets>
-      <img id="imgLiving" src="assets/living.jpg">
-      <img id="imgHall" src="assets/hall.jpg">
-      <img id="imgGarden" src="assets/garden.jpg">
-    </a-assets>
+    <style>
+      body { margin: 0; overflow: hidden; font-family: Arial, sans-serif; }
 
-    <!-- HUD للنصوص -->
-    <a-entity id="hud" position="0 1.6 -2"></a-entity>
-
-    <!-- الكنترولر بالليزر -->
-    <a-entity laser-controls="hand: right"
-              raycaster="objects: .hotspot; showLine: true"
-              cursor="rayOrigin: mouse; fuse: false"></a-entity>
-
-    <a-entity laser-controls="hand: left"
-              raycaster="objects: .hotspot; showLine: true"
-              cursor="rayOrigin: mouse; fuse: false"></a-entity>
-
-  </a-scene>
-
-  <script>
-    const scenes = {
-      living: {
-        img: "#imgLiving",
-        hotspots: [
-          {pos: "2 1.5 -3", to: "hall", label: "إلى الصالة"}
-        ]
-      },
-      hall: {
-        img: "#imgHall",
-        hotspots: [
-          {pos: "-2 1.5 -3", to: "living", label: "إلى غرفة المعيشة"},
-          {pos: "0 1.5 -3", to: "garden", label: "إلى الحديقة"}
-        ]
-      },
-      garden: {
-        img: "#imgGarden",
-        hotspots: [
-          {pos: "0 1.5 -3", to: "hall", label: "إلى الصالة"}
-        ]
+      /* شاشة الترحيب */
+      #welcomeScreen {
+        position: fixed; top:0; left:0; width:100%; height:100%;
+        background: linear-gradient(135deg,#1a1a1a,#000000);
+        display:flex; flex-direction:column; align-items:center; justify-content:center;
+        color:white; z-index:9999;
       }
-    };
+      #welcomeScreen h1 { font-size: 2.5em; margin-bottom: 20px; text-shadow: 0 0 8px rgba(255,255,255,0.6); }
+      #instructions { font-size: 1em; margin-bottom: 30px; opacity: 0.85; }
+      .progress-container { width: 60%; background: rgba(255,255,255,0.2); border-radius: 8px; overflow: hidden; height: 20px; margin-bottom: 25px; }
+      .progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, #4facfe, #00f2fe); transition: width 0.3s; }
+      #startBtn { padding: 12px 28px; border: none; border-radius: 30px; background: #4facfe; color: white; font-size: 1.1em; cursor: pointer; display:none; }
+      #startBtn:hover { background: #00f2fe; }
+    </style>
+  </head>
+  <body>
+    <!-- شاشة الترحيب -->
+    <div id="welcomeScreen">
+      <h1>✨ VR Tour ✨</h1>
+      <div id="instructions">استخدم الماوس/النظر أو وحدات التحكم للتنقّل</div>
+      <div class="progress-container"><div id="progressBar" class="progress-bar"></div></div>
+      <button id="startBtn">ابدأ الجولة</button>
+    </div>
 
-    let currentScene = "living";
-    const skyFront = document.querySelector("#skyFront");
-    const skyBack = document.querySelector("#skyBack");
-    const hud = document.querySelector("#hud");
+    <!-- المشهد -->
+    <a-scene renderer="colorManagement: true; antialias: true">
+      <!-- الكاميرا + المؤشر (يدعم الماوس + Gaze) -->
+      <a-entity id="cameraRig" position="0 1.6 0">
+        <a-entity camera look-controls></a-entity>
+        <!-- مؤشر Gaze (VR) + يدعم النقر في 2D أيضاً) -->
+        <a-cursor id="cursor" raycaster="objects: .hotspot" fuse="true" fuse-timeout="800"
+                  geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
+                  material="color: white; shader: flat"></a-cursor>
+        <!-- ليزر وحدة التحكم (اختياري، مفيد على Quest) -->
+        <a-entity laser-controls="hand: right" raycaster="objects: .hotspot"></a-entity>
+        <a-entity laser-controls="hand: left"  raycaster="objects: .hotspot"></a-entity>
 
-    function loadScene(sceneName) {
-      const scene = scenes[sceneName];
-      if (!scene) return;
+        <!-- HUD -->
+        <a-text id="sceneLabel" value="" position="-1.2 0.8 -1" align="center" color="#FFFFFF" width="1"></a-text>
+        <a-entity id="hudPlane" position="-1.2 0.8 -1">
+          <a-plane width="0.3" height="0.1" material="color: #000000; opacity: 0.5; side: double; transparent: true"></a-plane>
+        </a-entity>
+      </a-entity>
 
-      // إعداد صورة السماء الخلفية
-      skyBack.setAttribute("src", scene.img);
+      <!-- سماءان للـ crossfade (لا نحذف أي منهما؛ نتحكم فقط بالـ opacity) -->
+      <a-sky id="skyFront" rotation="0 -90 0" src="#imgLiving"
+             material="shader: flat; transparent: true; opacity: 1"></a-sky>
+      <a-sky id="skyBack" rotation="0 -90 0"
+             material="shader: flat; transparent: true; opacity: 0"></a-sky>
 
-      // أنيميشن للانتقال
-      skyBack.setAttribute("animation__fadein", {
-        property: "material.opacity",
-        from: 0, to: 1, dur: 2000, easing: "easeInOutQuad"
+      <a-entity id="hotspotContainer"></a-entity>
+
+      <a-assets>
+        <audio id="transitionSound" src="assets/transition.mp3"></audio>
+        <!-- صور المشاهد -->
+        <img id="imgLiving"   src="assets/Living_Room.jpg">
+        <img id="imgKitchen"  src="assets/Kitchen.jpg">
+        <img id="imgReception"src="assets/Reception.jpg">
+        <img id="imgCorridor" src="assets/Corridor.jpg">
+        <img id="imgBathroom" src="assets/Bathroom.jpg">
+        <img id="imgBedroom"  src="assets/Bedroom.jpg">
+      </a-assets>
+    </a-scene>
+
+    <script>
+      // ===== تعريف المشاهد والهوت سبوت =====
+      const scenes = {
+        Living_Room: {
+          src: '#imgLiving',
+          hotspots: [
+            { target: 'Kitchen',    position: '-3 1.6 4',    img: 'assets/link2.png', size: 0.6 },
+            { target: 'Reception',  position: '-3 1.6 -1.7', img: 'assets/link.png',  size: 0.6 },
+            { target: 'Corridor',   position: '3 1.6 3',     img: 'assets/link1.png', size: 0.6 }
+          ]
+        },
+        Kitchen:    { src: '#imgKitchen',   hotspots: [ { target: 'Living_Room', position: '4 1.6 -7',  img: 'assets/link2.png', size: 0.8 } ] },
+        Reception:  { src: '#imgReception', hotspots: [ { target: 'Living_Room', position: '5 1.6 -1',   img: 'assets/link.png',  size: 0.6 } ] },
+        Corridor:   {
+          src: '#imgCorridor',
+          hotspots: [
+            { target: 'Bathroom',    position: '3 1.6 -0.5',   img: 'assets/link2.png', size: 0.6 },
+            { target: 'Bedroom',     position: '-0.2 1.6 -3.5',img: 'assets/link2.png', size: 0.6 },
+            { target: 'Living_Room', position: '1 1.6 3',      img: 'assets/link2.png', size: 0.6 }
+          ]
+        },
+        Bathroom:   { src: '#imgBathroom',  hotspots: [ { target: 'Corridor', position: '-1 1.6 4',  img: 'assets/link1.png', size: 0.6 } ] },
+        Bedroom:    { src: '#imgBedroom',   hotspots: [ { target: 'Corridor', position: '-0.5 1.6 4', img: 'assets/link1.png', size: 0.6 } ] }
+      };
+
+      // ===== رسم توهج ديناميكي (Glow) =====
+      function makeGlowDataURL(size = 512, colorCenter = '255,240,200', colorMid = '0,128,255') {
+        const canvas = document.createElement('canvas');
+        canvas.width = canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        const grad = ctx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
+        grad.addColorStop(0, `rgba(${colorCenter}, 0.95)`);
+        grad.addColorStop(0.25, `rgba(${colorMid}, 0.7)`);
+        grad.addColorStop(0.5, `rgba(${colorMid}, 0.4)`);
+        grad.addColorStop(1, `rgba(${colorMid}, 0)`);
+        ctx.fillStyle = grad; ctx.fillRect(0,0,size,size);
+        return canvas.toDataURL();
+      }
+
+      // ===== إنشاء هوت سبوتات المشهد =====
+      function createHotspots(sceneName) {
+        const hotspotContainer = document.querySelector('#hotspotContainer');
+        hotspotContainer.innerHTML = '';
+        const scene = scenes[sceneName] || { hotspots: [] };
+
+        scene.hotspots.forEach((hs, idx) => {
+          // توليد صورة التوهج داخل a-assets
+          const glowId = `glow-img-${sceneName}-${idx}-${Date.now()}`;
+          const dataURL = makeGlowDataURL(512);
+          const glowImg = document.createElement('img');
+          glowImg.setAttribute('id', glowId);
+          glowImg.setAttribute('src', dataURL);
+          document.querySelector('a-assets').appendChild(glowImg);
+
+          // الأيقونة
+          const el = document.createElement('a-plane');
+          el.setAttribute('class', 'hotspot');
+          el.setAttribute('position', hs.position);
+          el.setAttribute('width', hs.size || 0.6);
+          el.setAttribute('height', hs.size || 0.6);
+          el.setAttribute('material', `src: url(${hs.img}); transparent: true; shader: flat; opacity: 1`);
+          el.setAttribute('look-at', '#cameraRig');
+          el.setAttribute('scale', '0 0 0');
+          el.setAttribute('animation__popin', 'property: scale; to: 1 1 1; dur: 600; easing: easeOutBack');
+          el.addEventListener('animationcomplete__popin', () => {
+            el.setAttribute('animation__pulse', 'property: scale; dir: alternate; dur: 1500; loop: true; to: 1.3 1.3 1.3');
+          });
+
+          // التوهج
+          const glow = document.createElement('a-plane');
+          glow.setAttribute('position', hs.position);
+          const glowScale = (hs.size || 0.6) * 1.2;
+          glow.setAttribute('width', glowScale);
+          glow.setAttribute('height', glowScale);
+          glow.setAttribute('look-at', '#cameraRig');
+          glow.setAttribute('material', `src: #${glowId}; transparent: true; shader: flat; depthTest: false; opacity: 0`);
+          glow.setAttribute('visible', 'false');
+
+          // اللابل
+          const label = document.createElement('a-text');
+          label.setAttribute('value', hs.target.replace('_', ' '));
+          label.setAttribute('align', 'center');
+          label.setAttribute('color', '#FFFFFF');
+          label.setAttribute('width', 4);
+          label.setAttribute('look-at', '#cameraRig');
+          const pos = hs.position.split(' ');
+          label.setAttribute('position', `${pos[0]} ${parseFloat(pos[1]) + 0.6} ${pos[2]}`);
+          label.setAttribute('scale', '0 0 0');
+          label.setAttribute('visible', 'true');
+
+          // تفاعلات المؤشر/النظر
+          el.addEventListener('mouseenter', () => {
+            el.removeAttribute('animation__pulse');
+            el.setAttribute('animation__hover', 'property: scale; to: 1.5 1.5 1.5; dur: 180; easing: easeOutQuad');
+            label.removeAttribute('animation__scalefadeout');
+            label.setAttribute('animation__scalefadein', 'property: scale; to: 1 1 1; dur: 300; easing: easeOutQuad');
+            glow.setAttribute('visible', 'true');
+            glow.removeAttribute('animation__fadeout');
+            glow.setAttribute('animation__fadein', 'property: material.opacity; to: 0.85; dur: 200; easing: easeOutQuad');
+            glow.removeAttribute('animation__glowscaleback');
+            glow.setAttribute('animation__glowscale', 'property: scale; to: 1.25 1.25 1.25; dur: 200; easing: easeOutQuad');
+          });
+
+          el.addEventListener('mouseleave', () => {
+            el.removeAttribute('animation__hover');
+            el.setAttribute('scale', '1 1 1');
+            el.setAttribute('animation__pulse', 'property: scale; dir: alternate; dur: 1500; loop: true; to: 1.3 1.3 1.3');
+            label.removeAttribute('animation__scalefadein');
+            label.setAttribute('animation__scalefadeout', 'property: scale; to: 0 0 0; dur: 300; easing: easeOutQuad');
+            glow.removeAttribute('animation__fadein');
+            glow.setAttribute('animation__fadeout', 'property: material.opacity; to: 0; dur: 300; easing: easeOutQuad');
+            glow.removeAttribute('animation__glowscale');
+            glow.setAttribute('animation__glowscaleback', 'property: scale; to: 1 1 1; dur: 300; easing: easeOutQuad');
+            setTimeout(() => { try { glow.setAttribute('visible', 'false'); } catch(e){} }, 320);
+          });
+
+          el.addEventListener('click', () => { changeScene(hs.target); });
+
+          // إضافة العناصر بالترتيب
+          const container = document.querySelector('#hotspotContainer');
+          container.appendChild(glow);
+          container.appendChild(el);
+          container.appendChild(label);
+        });
+      }
+
+      // ===== تغيير المشهد باستخدام Animation Component (موثوق على Quest) =====
+      function changeScene(sceneName, duration = 1500) {
+        const next = scenes[sceneName];
+        if (!next) return;
+
+        const skyFront = document.querySelector('#skyFront');
+        const skyBack  = document.querySelector('#skyBack');
+        const hotspotContainer = document.querySelector('#hotspotContainer');
+        const audio = document.querySelector('#transitionSound');
+
+        // أخفي الهوت سبوتات القديمة فورًا
+        hotspotContainer.innerHTML = '';
+
+        // حضّر صورة المشهد الجديد على skyBack
+        skyBack.setAttribute('src', next.src);
+        skyBack.setAttribute('material', 'shader: flat; transparent: true; opacity: 0');
+
+        // شغّل صوت الانتقال (اختياري)
+        try { audio.pause(); audio.currentTime = 0; audio.play().catch(()=>{}); } catch(e){}
+
+        // أزل أي أنيميشن سابق حتى لا تتداخل
+        ['animation__fadein','animation__fadeout'].forEach(a => { skyBack.removeAttribute(a); skyFront.removeAttribute(a); });
+
+        // فعّل الـ Fade In/Out
+        skyBack.setAttribute('animation__fadein', {
+          property: 'material.opacity', from: 0, to: 1, dur: duration, easing: 'easeInOutQuad'
+        });
+        skyFront.setAttribute('animation__fadeout', {
+          property: 'material.opacity', from: 1, to: 0, dur: duration, easing: 'easeInOutQuad'
+        });
+
+        // بعد انتهاء الحركة، ثبّت المشهد الجديد في الأمام
+        setTimeout(() => {
+          skyFront.setAttribute('src', next.src);
+          skyFront.setAttribute('material', 'shader: flat; transparent: true; opacity: 1');
+          // ملاحظة: لا نحذف src من skyBack لتجنّب مشاكل على Quest؛ فقط نرجع شفافيته للصفر
+          skyBack.setAttribute('material', 'shader: flat; transparent: true; opacity: 0');
+
+          // حدث الـ HUD
+          document.querySelector('#sceneLabel').setAttribute('value', sceneName.replace('_', ' '));
+
+          // أنشئ هوت سبوتات المشهد الجديد
+          createHotspots(sceneName);
+        }, duration);
+      }
+
+      // ===== شاشة الترحيب + التحميل =====
+      const assets = document.querySelector('a-assets');
+      const progressBar = document.getElementById('progressBar');
+      const startBtn = document.getElementById('startBtn');
+      const welcomeScreen = document.getElementById('welcomeScreen');
+
+      // بعض المتصفحات قد لا تدعم progressBytes — هذا فالباك بسيط
+      assets.addEventListener('progress', (e) => {
+        const loaded = e.detail && e.detail.loadedBytes ? e.detail.loadedBytes : 0;
+        const total  = e.detail && e.detail.totalBytes  ? e.detail.totalBytes  : 0;
+        const percent = total > 0 ? Math.floor((loaded/total)*100) : 0;
+        progressBar.style.width = percent + '%';
       });
-      skyFront.setAttribute("animation__fadeout", {
-        property: "material.opacity",
-        from: 1, to: 0, dur: 2000, easing: "easeInOutQuad"
+
+      assets.addEventListener('loaded', () => {
+        progressBar.style.width = '100%';
+        startBtn.style.display = 'block';
       });
 
-      // بعد 2 ثانية، تثبيت المشهد
-      setTimeout(() => {
-        skyFront.setAttribute("src", scene.img);
-        skyFront.setAttribute("material", "opacity", 1);
-        skyBack.setAttribute("material", "opacity", 0);
-      }, 2000);
+      startBtn.addEventListener('click', () => {
+        // اخفاء شاشة الترحيب
+        welcomeScreen.style.transition = 'opacity 0.7s';
+        welcomeScreen.style.opacity = '0';
+        setTimeout(() => { welcomeScreen.style.display = 'none'; }, 700);
 
-      // مسح الهوت سبوتس القديمة
-      document.querySelectorAll(".hotspot").forEach(el => el.remove());
-      hud.innerHTML = "";
-
-      // إنشاء الهوت سبوتس الجديدة
-      scene.hotspots.forEach(hs => {
-        const spot = document.createElement("a-entity");
-        spot.setAttribute("geometry", "primitive: circle; radius: 0.2");
-        spot.setAttribute("material", "color: #00bcd4; opacity: 0.8; shader: flat");
-        spot.setAttribute("position", hs.pos);
-        spot.setAttribute("class", "hotspot");
-        spot.setAttribute("look-at", "[camera]");
-        spot.addEventListener("click", () => loadScene(hs.to));
-        document.querySelector("a-scene").appendChild(spot);
-
-        // النص في HUD
-        const text = document.createElement("a-text");
-        text.setAttribute("value", hs.label);
-        text.setAttribute("align", "center");
-        text.setAttribute("color", "#fff");
-        text.setAttribute("position", "0 -0.5 0");
-        hud.appendChild(text);
+        // ابدأ بالمشهد الأول
+        document.querySelector('#sceneLabel').setAttribute('value', 'Living Room');
+        createHotspots('Living_Room');
       });
-
-      currentScene = sceneName;
-    }
-
-    document.querySelector("#startBtn").addEventListener("click", () => {
-      document.querySelector("#welcomeScreen").style.display = "none";
-      loadScene(currentScene);
-    });
-  </script>
-</body>
+    </script>
+  </body>
 </html>
