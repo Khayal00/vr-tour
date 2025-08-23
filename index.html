@@ -2,17 +2,14 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>VR Tour with Welcome Screen - Quest Gaze & Laser</title>
+    <title>VR Tour with Glowing Gaze Cursor</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <!-- A-Frame -->
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
 
     <style>
       body { margin: 0; overflow: hidden; font-family: Arial, sans-serif; }
-
-      /* شاشة الترحيب */
       #welcomeScreen {
         position: fixed; top:0; left:0; width:100%; height:100%;
         background: linear-gradient(135deg,#1a1a1a,#000000);
@@ -28,7 +25,6 @@
     </style>
   </head>
   <body>
-    <!-- شاشة الترحيب -->
     <div id="welcomeScreen">
       <h1>✨ VR Tour ✨</h1>
       <div id="instructions">استخدم الماوس/النظر أو وحدات التحكم للتنقّل</div>
@@ -36,19 +32,31 @@
       <button id="startBtn">ابدأ الجولة</button>
     </div>
 
-    <!-- المشهد -->
     <a-scene renderer="colorManagement: true; antialias: true">
-      <!-- الكاميرا + المؤشر -->
+      <!-- الكاميرا + المؤشر المتوهج -->
       <a-entity id="cameraRig" position="0 1.6 0">
         <a-entity camera look-controls>
-          <!-- مؤشر Gaze يتحرك مع الرأس -->
-          <a-cursor id="cursor"
-                    fuse="true" fuse-timeout="800"
-                    geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
-                    material="color: #4facfe; shader: flat; opacity: 0.9"
-                    raycaster="objects: .hotspot"
-                    animation__pulse="property: scale; dir: alternate; dur: 1000; loop: true; to: 1.3 1.3 1.3">
-          </a-cursor>
+          <a-entity id="cursorContainer">
+            <!-- الحلقة الأساسية للـ gaze -->
+            <a-cursor id="cursor"
+                      fuse="true" fuse-timeout="800"
+                      geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
+                      material="color: #4facfe; shader: flat; opacity: 0.9"
+                      raycaster="objects: .hotspot">
+              <a-animation attribute="scale"
+                           from="1 1 1" to="1.3 1.3 1.3"
+                           dur="1000"
+                           direction="alternate"
+                           repeat="indefinite"
+                           easing="easeInOutSine"></a-animation>
+            </a-cursor>
+
+            <!-- حلقة التوهج المتحركة -->
+            <a-ring radius-inner="0.035" radius-outer="0.06"
+                    material="color: #00f2fe; shader: flat; opacity: 0.4; side: double"
+                    animation="property: scale; from: 1 1 1; to: 1.4 1.4 1.4; dur: 1200; easing: easeInOutSine; dir: alternate; loop: true">
+            </a-ring>
+          </a-entity>
         </a-entity>
 
         <!-- ليزر وحدة التحكم -->
@@ -56,17 +64,12 @@
         <a-entity laser-controls="hand: left"  raycaster="objects: .hotspot"></a-entity>
       </a-entity>
 
-      <!-- سماءان للـ crossfade -->
-      <a-sky id="skyFront" rotation="0 -90 0" src="#imgLiving"
-             material="shader: flat; transparent: true; opacity: 1"></a-sky>
-      <a-sky id="skyBack" rotation="0 -90 0"
-             material="shader: flat; transparent: true; opacity: 0"></a-sky>
-
+      <a-sky id="skyFront" rotation="0 -90 0" src="#imgLiving" material="shader: flat; transparent: true; opacity: 1"></a-sky>
+      <a-sky id="skyBack" rotation="0 -90 0" material="shader: flat; transparent: true; opacity: 0"></a-sky>
       <a-entity id="hotspotContainer"></a-entity>
 
       <a-assets>
         <audio id="transitionSound" src="assets/transition.mp3"></audio>
-        <!-- صور المشاهد -->
         <img id="imgLiving"   src="assets/Living_Room.jpg">
         <img id="imgKitchen"  src="assets/Kitchen.jpg">
         <img id="imgReception"src="assets/Reception.jpg">
@@ -77,7 +80,6 @@
     </a-scene>
 
     <script>
-      // ===== تعريف المشاهد والهوت سبوت =====
       const scenes = {
         Living_Room: {
           src: '#imgLiving',
@@ -101,7 +103,6 @@
         Bedroom:    { src: '#imgBedroom',   hotspots: [ { target: 'Corridor', position: '-0.5 1.6 4', img: 'assets/link1.png', size: 0.6 } ] }
       };
 
-      // ===== رسم توهج ديناميكي =====
       function makeGlowDataURL(size = 512, colorCenter = '255,240,200', colorMid = '0,128,255') {
         const canvas = document.createElement('canvas');
         canvas.width = canvas.height = size;
@@ -115,7 +116,6 @@
         return canvas.toDataURL();
       }
 
-      // ===== إنشاء هوت سبوتات المشهد =====
       function createHotspots(sceneName) {
         const hotspotContainer = document.querySelector('#hotspotContainer');
         hotspotContainer.innerHTML = '';
@@ -196,7 +196,6 @@
         });
       }
 
-      // ===== تغيير المشهد =====
       function changeScene(sceneName, duration = 1500) {
         const next = scenes[sceneName];
         if (!next) return;
@@ -229,7 +228,6 @@
         }, duration);
       }
 
-      // ===== شاشة الترحيب =====
       const assets = document.querySelector('a-assets');
       const progressBar = document.getElementById('progressBar');
       const startBtn = document.getElementById('startBtn');
