@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>VR Tour with Glowing Gaze Cursor</title>
+    <title>VR Tour with Gaze Color Change</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
@@ -33,15 +33,14 @@
     </div>
 
     <a-scene renderer="colorManagement: true; antialias: true">
-      <!-- الكاميرا + المؤشر المتوهج -->
+      <!-- الكاميرا + المؤشر -->
       <a-entity id="cameraRig" position="0 1.6 0">
         <a-entity camera look-controls>
           <a-entity id="cursorContainer">
-            <!-- الحلقة الأساسية للـ gaze -->
             <a-cursor id="cursor"
                       fuse="true" fuse-timeout="800"
                       geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
-                      material="color: #4facfe; shader: flat; opacity: 0.9"
+                      material="color: white; shader: flat; opacity: 0.9; side: double; depthTest: false"
                       raycaster="objects: .hotspot">
               <a-animation attribute="scale"
                            from="1 1 1" to="1.3 1.3 1.3"
@@ -51,7 +50,6 @@
                            easing="easeInOutSine"></a-animation>
             </a-cursor>
 
-            <!-- حلقة التوهج المتحركة -->
             <a-ring radius-inner="0.035" radius-outer="0.06"
                     material="color: #00f2fe; shader: flat; opacity: 0.4; side: double"
                     animation="property: scale; from: 1 1 1; to: 1.4 1.4 1.4; dur: 1200; easing: easeInOutSine; dir: alternate; loop: true">
@@ -59,7 +57,6 @@
           </a-entity>
         </a-entity>
 
-        <!-- ليزر وحدة التحكم -->
         <a-entity laser-controls="hand: right" raycaster="objects: .hotspot"></a-entity>
         <a-entity laser-controls="hand: left"  raycaster="objects: .hotspot"></a-entity>
       </a-entity>
@@ -162,7 +159,10 @@
           label.setAttribute('scale', '0 0 0');
           label.setAttribute('visible', 'true');
 
+          // تغيير لون المؤشر عند المرور على الهوت سبوت
           el.addEventListener('mouseenter', () => {
+            const cursor = document.querySelector('#cursor');
+            cursor.setAttribute('material', 'color: #00f2fe'); // أزرق
             el.removeAttribute('animation__pulse');
             el.setAttribute('animation__hover', 'property: scale; to: 1.5 1.5 1.5; dur: 180; easing: easeOutQuad');
             label.removeAttribute('animation__scalefadeout');
@@ -175,6 +175,8 @@
           });
 
           el.addEventListener('mouseleave', () => {
+            const cursor = document.querySelector('#cursor');
+            cursor.setAttribute('material', 'color: white'); // أبيض
             el.removeAttribute('animation__hover');
             el.setAttribute('scale', '1 1 1');
             el.setAttribute('animation__pulse', 'property: scale; dir: alternate; dur: 1500; loop: true; to: 1.3 1.3 1.3');
@@ -196,7 +198,7 @@
         });
       }
 
-      function changeScene(sceneName, duration = 1500) {
+      function changeScene(sceneName, duration = 700) { // سرعة الانتقال أسرع
         const next = scenes[sceneName];
         if (!next) return;
 
