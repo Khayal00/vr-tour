@@ -39,7 +39,7 @@
           <a-entity id="cursorContainer" position="0 0 -1">
             <a-cursor id="cursor"
                       fuse="true" fuse-timeout="800"
-                      geometry="primitive: ring; radiusInner: 0.01; radiusOuter: 0.015"
+                      geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.04"
                       material="color: white; shader: flat; opacity: 0.9; side: double; depthTest: false"
                       raycaster="objects: .hotspot">
               <a-animation attribute="scale"
@@ -154,10 +154,9 @@
           label.setAttribute('scale', '0 0 0');
           label.setAttribute('visible', 'true');
 
-          // تغيير لون المؤشر عند المرور على الهوت سبوت
           el.addEventListener('mouseenter', () => {
             const cursor = document.querySelector('#cursor');
-            cursor.setAttribute('material', 'color: #00f2fe'); // أزرق
+            cursor.setAttribute('material', 'color: #00f2fe'); 
             el.removeAttribute('animation__pulse');
             el.setAttribute('animation__hover', 'property: scale; to: 1.5 1.5 1.5; dur: 180; easing: easeOutQuad');
             label.removeAttribute('animation__scalefadeout');
@@ -171,7 +170,7 @@
 
           el.addEventListener('mouseleave', () => {
             const cursor = document.querySelector('#cursor');
-            cursor.setAttribute('material', 'color: white'); // أبيض
+            cursor.setAttribute('material', 'color: white');
             el.removeAttribute('animation__hover');
             el.setAttribute('scale', '1 1 1');
             el.setAttribute('animation__pulse', 'property: scale; dir: alternate; dur: 1500; loop: true; to: 1.3 1.3 1.3');
