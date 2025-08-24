@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>VR Tour with Gaze Color Change</title>
+    <title>VR Tour with Gaze Circular Progress</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
@@ -18,8 +18,6 @@
       }
       #welcomeScreen h1 { font-size: 2.5em; margin-bottom: 20px; text-shadow: 0 0 8px rgba(255,255,255,0.6); }
       #instructions { font-size: 1em; margin-bottom: 30px; opacity: 0.85; }
-      .progress-container { width: 60%; background: rgba(255,255,255,0.2); border-radius: 8px; overflow: hidden; height: 20px; margin-bottom: 25px; }
-      .progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, #4facfe, #00f2fe); transition: width 0.3s; }
       #startBtn { padding: 12px 28px; border: none; border-radius: 30px; background: #4facfe; color: white; font-size: 1.1em; cursor: pointer; display:none; }
       #startBtn:hover { background: #00f2fe; }
     </style>
@@ -28,7 +26,6 @@
     <div id="welcomeScreen">
       <h1>✨ VR Tour ✨</h1>
       <div id="instructions">استخدم الماوس/النظر أو وحدات التحكم للتنقّل</div>
-      <div class="progress-container"><div id="progressBar" class="progress-bar"></div></div>
       <button id="startBtn">ابدأ الجولة</button>
     </div>
 
@@ -37,26 +34,22 @@
       <a-entity id="cameraRig" position="0 1.6 0">
         <a-entity camera look-controls>
           <a-entity id="cursorContainer" position="0 0 -1">
-            <a-cursor id="cursor"
-                      fuse="true" fuse-timeout="1600"
-                      geometry="primitive: ring; radiusInner: 0.01; radiusOuter: 0.02"
-                      material="color: white; shader: flat; opacity: 0.9; side: double; depthTest: false"
-                      raycaster="objects: .hotspot">
-              <a-animation attribute="scale"
-                           from="1 1 1" to="1.1 1.1 1.1"
-                           dur="1000"
-                           direction="alternate"
-                           repeat="indefinite"
-                           easing="easeInOutSine"></a-animation>
-            </a-cursor>
-
-            <a-ring radius-inner="0.02" radius-outer="0.03"
-                    material="color: #FFFFFF; shader: flat; opacity: 0.9; side: double"
-                    animation="property: scale; from: 1 1 1; to: 1.1 1.1 1.1; dur: 1200; easing: easeInOutSine; dir: alternate; loop: true">
+            <!-- المؤشر العادي -->
+            <a-ring id="cursor"
+                    radius-inner="0.01" radius-outer="0.02"
+                    material="color: white; shader: flat; opacity: 0.9; side: double; depthTest: false"
+                    raycaster="objects: .hotspot">
+            </a-ring>
+            <!-- حلقة التقدم حول المؤشر -->
+            <a-ring id="cursorProgress"
+                    radius-inner="0.025" radius-outer="0.03"
+                    theta-start="0" theta-length="0"
+                    material="color: #00f2fe; shader: flat; opacity: 0.9; side: double"
+                    visible="false"
+                    rotation="-90 0 0">
             </a-ring>
           </a-entity>
         </a-entity>
-
         <a-entity laser-controls="hand: right" raycaster="objects: .hotspot"></a-entity>
         <a-entity laser-controls="hand: left"  raycaster="objects: .hotspot"></a-entity>
       </a-entity>
@@ -159,10 +152,12 @@
           label.setAttribute('scale', '0 0 0');
           label.setAttribute('visible', 'true');
 
-          // تغيير لون المؤشر عند المرور على الهوت سبوت
+          const cursor = document.querySelector('#cursor');
+          const cursorProgress = document.querySelector('#cursorProgress');
+
           el.addEventListener('mouseenter', () => {
-            const cursor = document.querySelector('#cursor');
-            cursor.setAttribute('material', 'color: #00f2fe'); // أزرق
+            // تغيير لون المؤشر
+            cursor.setAttribute('material', 'color: #00f2fe');
             el.removeAttribute('animation__pulse');
             el.setAttribute('animation__hover', 'property: scale; to: 1.5 1.5 1.5; dur: 180; easing: easeOutQuad');
             label.removeAttribute('animation__scalefadeout');
@@ -172,11 +167,21 @@
             glow.setAttribute('animation__fadein', 'property: material.opacity; to: 0.85; dur: 200; easing: easeOutQuad');
             glow.removeAttribute('animation__glowscaleback');
             glow.setAttribute('animation__glowscale', 'property: scale; to: 1.25 1.25 1.25; dur: 200; easing: easeOutQuad');
+
+            // حلقة التقدم
+            cursorProgress.setAttribute('visible', 'true');
+            cursorProgress.setAttribute('theta-length', 0);
+            cursorProgress.setAttribute('animation__progress', {
+              property: 'thetaLength',
+              from: 0,
+              to: 360,
+              dur: 1600, // نفس fuse-timeout
+              easing: 'linear'
+            });
           });
 
           el.addEventListener('mouseleave', () => {
-            const cursor = document.querySelector('#cursor');
-            cursor.setAttribute('material', 'color: white'); // أبيض
+            cursor.setAttribute('material', 'color: white');
             el.removeAttribute('animation__hover');
             el.setAttribute('scale', '1 1 1');
             el.setAttribute('animation__pulse', 'property: scale; dir: alternate; dur: 1500; loop: true; to: 1.3 1.3 1.3');
@@ -186,6 +191,11 @@
             glow.setAttribute('animation__fadeout', 'property: material.opacity; to: 0; dur: 300; easing: easeOutQuad');
             glow.removeAttribute('animation__glowscale');
             glow.setAttribute('animation__glowscaleback', 'property: scale; to: 1 1 1; dur: 300; easing: easeOutQuad');
+
+            cursorProgress.removeAttribute('animation__progress');
+            cursorProgress.setAttribute('theta-length', 0);
+            cursorProgress.setAttribute('visible', 'false');
+
             setTimeout(() => { try { glow.setAttribute('visible', 'false'); } catch(e){} }, 320);
           });
 
@@ -231,19 +241,10 @@
       }
 
       const assets = document.querySelector('a-assets');
-      const progressBar = document.getElementById('progressBar');
       const startBtn = document.getElementById('startBtn');
       const welcomeScreen = document.getElementById('welcomeScreen');
 
-      assets.addEventListener('progress', (e) => {
-        const loaded = e.detail && e.detail.loadedBytes ? e.detail.loadedBytes : 0;
-        const total  = e.detail && e.detail.totalBytes  ? e.detail.totalBytes  : 0;
-        const percent = total > 0 ? Math.floor((loaded/total)*100) : 0;
-        progressBar.style.width = percent + '%';
-      });
-
       assets.addEventListener('loaded', () => {
-        progressBar.style.width = '100%';
         startBtn.style.display = 'block';
       });
 
