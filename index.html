@@ -51,7 +51,7 @@
             </a-cursor>
 
             <a-ring radius-inner="0.02" radius-outer="0.03"
-                    material="color: #FFFFFF; shader: flat; opacity: 0.2; side: double"
+                    material="color: #FFFFFF; shader: flat; opacity: 1; side: double"
                     animation="property: scale; from: 1 1 1; to: 1.1 1.1 1.1; dur: 1200; easing: easeInOutSine; dir: alternate; loop: true">
             </a-ring>
           </a-entity>
@@ -127,8 +127,6 @@
           document.querySelector('a-assets').appendChild(glowImg);
 
           const el = document.createElement('a-plane');
-          el.addEventListener('click', () => { changeScene(hs.target); });
-          el.addEventListener('touchstart', () => { changeScene(hs.target); });
           el.setAttribute('class', 'hotspot');
           el.setAttribute('position', hs.position);
           el.setAttribute('width', hs.size || 0.6);
