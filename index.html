@@ -38,12 +38,12 @@
         <a-entity camera look-controls>
           <a-entity id="cursorContainer" position="0 0 -1">
             <a-cursor id="cursor"
-                      fuse="true" fuse-timeout="800"
-                      geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
+                      fuse="true" fuse-timeout="1600"
+                      geometry="primitive: ring; radiusInner: 0.01; radiusOuter: 0.02"
                       material="color: white; shader: flat; opacity: 0.9; side: double; depthTest: false"
                       raycaster="objects: .hotspot">
               <a-animation attribute="scale"
-                           from="1 1 1" to="1.3 1.3 1.3"
+                           from="1 1 1" to="1.1 1.1 1.1"
                            dur="1000"
                            direction="alternate"
                            repeat="indefinite"
