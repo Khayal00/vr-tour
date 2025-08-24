@@ -39,7 +39,7 @@
           <a-entity id="cursorContainer" position="0 0 -1">
             <a-cursor id="cursor"
                       fuse="true" fuse-timeout="800"
-                      geometry="primitive: ring; radiusInner: 0.01; radiusOuter: 0.015"
+                      geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
                       material="color: white; shader: flat; opacity: 0.9; side: double; depthTest: false"
                       raycaster="objects: .hotspot">
               <a-animation attribute="scale"
@@ -49,6 +49,11 @@
                            repeat="indefinite"
                            easing="easeInOutSine"></a-animation>
             </a-cursor>
+
+            <a-ring radius-inner="0.035" radius-outer="0.06"
+                    material="color: #00f2fe; shader: flat; opacity: 0.4; side: double"
+                    animation="property: scale; from: 1 1 1; to: 1.4 1.4 1.4; dur: 1200; easing: easeInOutSine; dir: alternate; loop: true">
+            </a-ring>
           </a-entity>
         </a-entity>
 
