@@ -38,7 +38,7 @@
         <a-entity camera look-controls>
           <a-entity id="cursorContainer" position="0 0 -1">
             <a-cursor id="cursor"
-                      fuse="true" fuse-timeout="1600"
+                      fuse="true" fuse-timeout="800"
                       geometry="primitive: ring; radiusInner: 0.01; radiusOuter: 0.02"
                       material="color: white; shader: flat; opacity: 0.4; side: double; depthTest: false"
                       raycaster="objects: .hotspot">
@@ -51,7 +51,7 @@
             </a-cursor>
 
             <a-ring radius-inner="0.02" radius-outer="0.03"
-                    material="color: #FFFF00; shader: flat; opacity: 0.2; side: double"
+                    material="color: #FFFFFF; shader: flat; opacity: 0.2; side: double"
                     animation="property: scale; from: 1 1 1; to: 1.1 1.1 1.1; dur: 1200; easing: easeInOutSine; dir: alternate; loop: true">
             </a-ring>
           </a-entity>
