@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>VR Tour with Gaze Circular Progress</title>
+    <title>VR Tour with Circular Cursor Progress</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
@@ -34,17 +34,17 @@
       <a-entity id="cameraRig" position="0 1.6 0">
         <a-entity camera look-controls>
           <a-entity id="cursorContainer" position="0 0 -1">
-            <!-- المؤشر العادي -->
+            <!-- المؤشر الأبيض الأساسي -->
             <a-ring id="cursor"
                     radius-inner="0.01" radius-outer="0.02"
-                    material="color: white; shader: flat; opacity: 0.9; side: double; depthTest: false"
-                    raycaster="objects: .hotspot">
+                    material="color: white; shader: flat; opacity: 0.9; side: double; depthTest: false">
             </a-ring>
             <!-- حلقة التقدم حول المؤشر -->
             <a-ring id="cursorProgress"
+                    position="0 0 -0.001"
                     radius-inner="0.025" radius-outer="0.03"
                     theta-start="0" theta-length="0"
-                    material="color: #00f2fe; shader: flat; opacity: 0.9; side: double"
+                    material="color: #00f2fe; shader: flat; opacity: 0.9; side: double; depthTest: false"
                     visible="false"
                     rotation="-90 0 0">
             </a-ring>
@@ -156,7 +156,6 @@
           const cursorProgress = document.querySelector('#cursorProgress');
 
           el.addEventListener('mouseenter', () => {
-            // تغيير لون المؤشر
             cursor.setAttribute('material', 'color: #00f2fe');
             el.removeAttribute('animation__pulse');
             el.setAttribute('animation__hover', 'property: scale; to: 1.5 1.5 1.5; dur: 180; easing: easeOutQuad');
@@ -175,7 +174,7 @@
               property: 'thetaLength',
               from: 0,
               to: 360,
-              dur: 1600, // نفس fuse-timeout
+              dur: 1600,
               easing: 'linear'
             });
           });
