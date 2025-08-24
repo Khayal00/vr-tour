@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>VR Tour with Gaze Color Change</title>
+    <title>VR Tour with Circular Progress Cursor</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
@@ -33,26 +33,23 @@
     </div>
 
     <a-scene renderer="colorManagement: true; antialias: true">
-      <!-- الكاميرا + المؤشر -->
       <a-entity id="cameraRig" position="0 1.6 0">
         <a-entity camera look-controls>
           <a-entity id="cursorContainer" position="0 0 -1">
-            <a-cursor id="cursor"
-                      fuse="true" fuse-timeout="1600"
-                      geometry="primitive: ring; radiusInner: 0.01; radiusOuter: 0.02"
-                      material="color: white; shader: flat; opacity: 0.9; side: double; depthTest: false"
-                      raycaster="objects: .hotspot">
-              <a-animation attribute="scale"
-                           from="1 1 1" to="1.1 1.1 1.1"
-                           dur="1000"
-                           direction="alternate"
-                           repeat="indefinite"
-                           easing="easeInOutSine"></a-animation>
-            </a-cursor>
+            <!-- الحلقة الرئيسية -->
+            <a-ring id="cursorRing"
+                    radius-inner="0.007" radius-outer="0.014"
+                    material="color: white; shader: flat; opacity: 1; side: double"
+                    raycaster="objects: .hotspot">
+            </a-ring>
 
-            <a-ring radius-inner="0.02" radius-outer="0.03"
-                    material="color: #FFFFFF; shader: flat; opacity: 1; side: double"
-                    animation="property: scale; from: 1 1 1; to: 1.1 1.1 1.1; dur: 1200; easing: easeInOutSine; dir: alternate; loop: true">
+            <!-- شريط التقدم الدائري -->
+            <a-ring id="progressRing"
+                    radius-inner="0.016" radius-outer="0.02"
+                    material="color: #00f2fe; shader: flat; opacity: 0.7; side: double"
+                    rotation="-90 0 0"
+                    visible="false"
+                    theta-length="0">
             </a-ring>
           </a-entity>
         </a-entity>
@@ -100,32 +97,12 @@
         Bedroom:    { src: '#imgBedroom',   hotspots: [ { target: 'Corridor', position: '-0.5 1.6 4', img: 'assets/link1.png', size: 0.6 } ] }
       };
 
-      function makeGlowDataURL(size = 512, colorCenter = '255,240,200', colorMid = '0,128,255') {
-        const canvas = document.createElement('canvas');
-        canvas.width = canvas.height = size;
-        const ctx = canvas.getContext('2d');
-        const grad = ctx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
-        grad.addColorStop(0, `rgba(${colorCenter}, 0.95)`);
-        grad.addColorStop(0.25, `rgba(${colorMid}, 0.7)`);
-        grad.addColorStop(0.5, `rgba(${colorMid}, 0.4)`);
-        grad.addColorStop(1, `rgba(${colorMid}, 0)`);
-        ctx.fillStyle = grad; ctx.fillRect(0,0,size,size);
-        return canvas.toDataURL();
-      }
-
       function createHotspots(sceneName) {
         const hotspotContainer = document.querySelector('#hotspotContainer');
         hotspotContainer.innerHTML = '';
         const scene = scenes[sceneName] || { hotspots: [] };
 
         scene.hotspots.forEach((hs, idx) => {
-          const glowId = `glow-img-${sceneName}-${idx}-${Date.now()}`;
-          const dataURL = makeGlowDataURL(512);
-          const glowImg = document.createElement('img');
-          glowImg.setAttribute('id', glowId);
-          glowImg.setAttribute('src', dataURL);
-          document.querySelector('a-assets').appendChild(glowImg);
-
           const el = document.createElement('a-plane');
           el.setAttribute('class', 'hotspot');
           el.setAttribute('position', hs.position);
@@ -135,18 +112,10 @@
           el.setAttribute('look-at', '#cameraRig');
           el.setAttribute('scale', '0 0 0');
           el.setAttribute('animation__popin', 'property: scale; to: 1 1 1; dur: 600; easing: easeOutBack');
+
           el.addEventListener('animationcomplete__popin', () => {
             el.setAttribute('animation__pulse', 'property: scale; dir: alternate; dur: 1500; loop: true; to: 1.3 1.3 1.3');
           });
-
-          const glow = document.createElement('a-plane');
-          glow.setAttribute('position', hs.position);
-          const glowScale = (hs.size || 0.6) * 1.4;
-          glow.setAttribute('width', glowScale);
-          glow.setAttribute('height', glowScale);
-          glow.setAttribute('look-at', '#cameraRig');
-          glow.setAttribute('material', `src: #${glowId}; transparent: true; shader: flat; depthTest: false; opacity: 0`);
-          glow.setAttribute('visible', 'false');
 
           const label = document.createElement('a-text');
           label.setAttribute('value', hs.target.replace('_', ' '));
@@ -159,42 +128,40 @@
           label.setAttribute('scale', '0 0 0');
           label.setAttribute('visible', 'true');
 
-          // تغيير لون المؤشر عند المرور على الهوت سبوت
+          const cursorRing = document.querySelector('#cursorRing');
+          const progressRing = document.querySelector('#progressRing');
+          let fuseInterval;
+
           el.addEventListener('mouseenter', () => {
-            const cursor = document.querySelector('#cursor');
-            cursor.setAttribute('material', 'color: #00f2fe'); // أزرق
-            el.removeAttribute('animation__pulse');
-            el.setAttribute('animation__hover', 'property: scale; to: 1.5 1.5 1.5; dur: 180; easing: easeOutQuad');
+            cursorRing.setAttribute('material', 'color: #00f2fe');
             label.removeAttribute('animation__scalefadeout');
             label.setAttribute('animation__scalefadein', 'property: scale; to: 1 1 1; dur: 300; easing: easeOutQuad');
-            glow.setAttribute('visible', 'true');
-            glow.removeAttribute('animation__fadeout');
-            glow.setAttribute('animation__fadein', 'property: material.opacity; to: 0.85; dur: 200; easing: easeOutQuad');
-            glow.removeAttribute('animation__glowscaleback');
-            glow.setAttribute('animation__glowscale', 'property: scale; to: 1.25 1.25 1.25; dur: 200; easing: easeOutQuad');
+
+            // إظهار شريط التقدم
+            progressRing.setAttribute('visible', 'true');
+            progressRing.setAttribute('theta-length', 0);
+            let progress = 0;
+            fuseInterval = setInterval(() => {
+              progress += 4; // يزيد كل 64ms تقريبًا للوصول 100% بعد ~1.6s
+              if (progress > 360) progress = 360;
+              progressRing.setAttribute('theta-length', progress);
+            }, 64);
           });
 
           el.addEventListener('mouseleave', () => {
-            const cursor = document.querySelector('#cursor');
-            cursor.setAttribute('material', 'color: white'); // أبيض
-            el.removeAttribute('animation__hover');
-            el.setAttribute('scale', '1 1 1');
-            el.setAttribute('animation__pulse', 'property: scale; dir: alternate; dur: 1500; loop: true; to: 1.3 1.3 1.3');
+            cursorRing.setAttribute('material', 'color: white');
             label.removeAttribute('animation__scalefadein');
             label.setAttribute('animation__scalefadeout', 'property: scale; to: 0 0 0; dur: 300; easing: easeOutQuad');
-            glow.removeAttribute('animation__fadein');
-            glow.setAttribute('animation__fadeout', 'property: material.opacity; to: 0; dur: 300; easing: easeOutQuad');
-            glow.removeAttribute('animation__glowscale');
-            glow.setAttribute('animation__glowscaleback', 'property: scale; to: 1 1 1; dur: 300; easing: easeOutQuad');
-            setTimeout(() => { try { glow.setAttribute('visible', 'false'); } catch(e){} }, 320);
+
+            // إخفاء شريط التقدم
+            progressRing.setAttribute('visible', 'false');
+            clearInterval(fuseInterval);
           });
 
           el.addEventListener('click', () => { changeScene(hs.target); });
 
-          const container = document.querySelector('#hotspotContainer');
-          container.appendChild(glow);
-          container.appendChild(el);
-          container.appendChild(label);
+          hotspotContainer.appendChild(el);
+          hotspotContainer.appendChild(label);
         });
       }
 
