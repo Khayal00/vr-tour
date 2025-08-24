@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>VR Tour with Interactive Cursor</title>
+    <title>VR Tour with Gaze Color Change</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
@@ -33,33 +33,21 @@
     </div>
 
     <a-scene renderer="colorManagement: true; antialias: true">
-      <a-assets>
-        <audio id="transitionSound" src="assets/transition.mp3"></audio>
-        <img id="imgLiving"   src="assets/Living_Room.jpg">
-        <img id="imgKitchen"  src="assets/Kitchen.jpg">
-        <img id="imgReception"src="assets/Reception.jpg">
-        <img id="imgCorridor" src="assets/Corridor.jpg">
-        <img id="imgBathroom" src="assets/Bathroom.jpg">
-        <img id="imgBedroom"  src="assets/Bedroom.jpg">
-      </a-assets>
-
+      <!-- الكاميرا + المؤشر -->
       <a-entity id="cameraRig" position="0 1.6 0">
         <a-entity camera look-controls>
-          <!-- مؤشر تفاعلي -->
-          <a-cursor id="cursor" fuse="true" fuse-timeout="1600"
-                    geometry="primitive: ring; radiusInner: 0.007; radiusOuter: 0.014"
-                    material="color: white; shader: flat; opacity: 1; side: double"
-                    raycaster="objects: .hotspot">
+          <a-entity id="cursorContainer" position="0 0 -1">
+            <!-- الحلقة الثابتة بدون توهج -->
+            <a-cursor id="cursor"
+                      fuse="true" fuse-timeout="1600"
+                      geometry="primitive: ring; radiusInner: 0.01; radiusOuter: 0.02"
+                      material="color: white; shader: flat; opacity: 0.9; side: double; depthTest: false">
+            </a-cursor>
 
-            <!-- شريط التقدم الدائري -->
-            <a-ring id="progressRing"
-                    radius-inner="0.016" radius-outer="0.02"
-                    material="color: #00f2fe; shader: flat; opacity: 0.7; side: double"
-                    rotation="-90 0 0"
-                    theta-length="0"
-                    visible="false">
+            <a-ring radius-inner="0.02" radius-outer="0.03"
+                    material="color: #FFFFFF; shader: flat; opacity: 0.9; side: double">
             </a-ring>
-          </a-cursor>
+          </a-entity>
         </a-entity>
 
         <a-entity laser-controls="hand: right" raycaster="objects: .hotspot"></a-entity>
@@ -69,6 +57,16 @@
       <a-sky id="skyFront" rotation="0 -90 0" src="#imgLiving" material="shader: flat; transparent: true; opacity: 1"></a-sky>
       <a-sky id="skyBack" rotation="0 -90 0" material="shader: flat; transparent: true; opacity: 0"></a-sky>
       <a-entity id="hotspotContainer"></a-entity>
+
+      <a-assets>
+        <audio id="transitionSound" src="assets/transition.mp3"></audio>
+        <img id="imgLiving"   src="assets/Living_Room.jpg">
+        <img id="imgKitchen"  src="assets/Kitchen.jpg">
+        <img id="imgReception"src="assets/Reception.jpg">
+        <img id="imgCorridor" src="assets/Corridor.jpg">
+        <img id="imgBathroom" src="assets/Bathroom.jpg">
+        <img id="imgBedroom"  src="assets/Bedroom.jpg">
+      </a-assets>
     </a-scene>
 
     <script>
@@ -99,11 +97,8 @@
         const hotspotContainer = document.querySelector('#hotspotContainer');
         hotspotContainer.innerHTML = '';
         const scene = scenes[sceneName] || { hotspots: [] };
-        const cursor = document.querySelector('#cursor');
-        const progressRing = document.querySelector('#progressRing');
-        let fuseInterval;
 
-        scene.hotspots.forEach((hs) => {
+        scene.hotspots.forEach((hs, idx) => {
           const el = document.createElement('a-plane');
           el.setAttribute('class', 'hotspot');
           el.setAttribute('position', hs.position);
@@ -111,6 +106,12 @@
           el.setAttribute('height', hs.size || 0.6);
           el.setAttribute('material', `src: url(${hs.img}); transparent: true; shader: flat; opacity: 1`);
           el.setAttribute('look-at', '#cameraRig');
+          el.setAttribute('scale', '0 0 0');
+          el.setAttribute('animation__popin', 'property: scale; to: 1 1 1; dur: 600; easing: easeOutBack');
+
+          el.addEventListener('animationcomplete__popin', () => {
+            el.setAttribute('animation__pulse', 'property: scale; dir: alternate; dur: 1500; loop: true; to: 1.3 1.3 1.3');
+          });
 
           const label = document.createElement('a-text');
           label.setAttribute('value', hs.target.replace('_', ' '));
@@ -124,25 +125,22 @@
           label.setAttribute('visible', 'true');
 
           el.addEventListener('mouseenter', () => {
+            const cursor = document.querySelector('#cursor');
             cursor.setAttribute('material', 'color: #00f2fe'); // أزرق
+            el.removeAttribute('animation__pulse');
+            el.setAttribute('animation__hover', 'property: scale; to: 1.5 1.5 1.5; dur: 180; easing: easeOutQuad');
+            label.removeAttribute('animation__scalefadeout');
             label.setAttribute('animation__scalefadein', 'property: scale; to: 1 1 1; dur: 300; easing: easeOutQuad');
-
-            // شريط التقدم
-            progressRing.setAttribute('visible', 'true');
-            progressRing.setAttribute('theta-length', 0);
-            let progress = 0;
-            fuseInterval = setInterval(() => {
-              progress += 4;
-              if (progress > 360) progress = 360;
-              progressRing.setAttribute('theta-length', progress);
-            }, 64);
           });
 
           el.addEventListener('mouseleave', () => {
-            cursor.setAttribute('material', 'color: white');
+            const cursor = document.querySelector('#cursor');
+            cursor.setAttribute('material', 'color: white'); // أبيض
+            el.removeAttribute('animation__hover');
+            el.setAttribute('scale', '1 1 1');
+            el.setAttribute('animation__pulse', 'property: scale; dir: alternate; dur: 1500; loop: true; to: 1.3 1.3 1.3');
+            label.removeAttribute('animation__scalefadein');
             label.setAttribute('animation__scalefadeout', 'property: scale; to: 0 0 0; dur: 300; easing: easeOutQuad');
-            progressRing.setAttribute('visible', 'false');
-            clearInterval(fuseInterval);
           });
 
           el.addEventListener('click', () => { changeScene(hs.target); });
