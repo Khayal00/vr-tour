@@ -39,7 +39,7 @@
           <a-entity id="cursorContainer" position="0 0 -1">
             <a-cursor id="cursor"
                       fuse="true" fuse-timeout="800"
-                      geometry="primitive: ring; radiusInner: 0.01; radiusOuter: 0.02"
+                      geometry="primitive: ring; radiusInner: 0.001; radiusOuter: 0.001"
                       material="color: white; shader: flat; opacity: 0.4; side: double; depthTest: false"
                       raycaster="objects: .hotspot">
               <a-animation attribute="scale"
@@ -50,7 +50,7 @@
                            easing="easeInOutSine"></a-animation>
             </a-cursor>
 
-            <a-ring radius-inner="0.02" radius-outer="0.03"
+            <a-ring radius-inner="0.01" radius-outer="0.02"
                     material="color: #FFFFFF; shader: flat; opacity: 1; side: double"
                     animation="property: scale; from: 1 1 1; to: 1.1 1.1 1.1; dur: 1200; easing: easeInOutSine; dir: alternate; loop: true">
             </a-ring>
@@ -162,7 +162,7 @@
           // تغيير لون المؤشر عند المرور على الهوت سبوت
           el.addEventListener('mouseenter', () => {
             const cursor = document.querySelector('#cursor');
-            cursor.setAttribute('material', 'color: #00f2fe'); // أزرق
+            cursor.setAttribute('material', 'color: #FFFFFF'); // أزرق
             el.removeAttribute('animation__pulse');
             el.setAttribute('animation__hover', 'property: scale; to: 1.5 1.5 1.5; dur: 180; easing: easeOutQuad');
             label.removeAttribute('animation__scalefadeout');
